@@ -13,6 +13,9 @@ build/
 .turbo/
 out/
 
+# Lockfiles de apps (solo versionar el raíz)
+apps/*/pnpm-lock.yaml
+
 # Environment
 .env
 .env.local
@@ -51,6 +54,9 @@ certs/
 *.crt
 *.key
 *.pem
+
+# Supabase CLI temp files (contienen datos sensibles)
+supabase/.temp/
 
 # Uploads locales
 uploads/

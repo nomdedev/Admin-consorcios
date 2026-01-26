@@ -28,8 +28,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@vecinosimple/eslint-config": "file:packages/eslint-config",
-    "@vecinosimple/typescript-config": "file:packages/typescript-config",
+    "@vecinosimple/eslint-config": "workspace:*",
+    "@vecinosimple/typescript-config": "workspace:*",
     "husky": "^9.0.0",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.0",
