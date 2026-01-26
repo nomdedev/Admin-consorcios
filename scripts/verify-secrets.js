@@ -109,6 +109,11 @@ const envResult = checkEnvFile('.env', 'archivo .env');
 totalErrors += envResult.hasErrors ? 1 : 0;
 totalWarnings += envResult.hasWarnings ? 1 : 0;
 
+// Verificar .env.local
+const envLocalResult = checkEnvFile('.env.local', 'archivo .env.local');
+totalErrors += envLocalResult.hasErrors ? 1 : 0;
+totalWarnings += envLocalResult.hasWarnings ? 1 : 0;
+
 // Verificar variables de entorno del sistema
 console.log(`\n🔍 Verificando variables de entorno del sistema:`);
 Object.entries(REQUIRED_SECRETS).forEach(([key, config]) => {

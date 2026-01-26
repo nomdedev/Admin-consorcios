@@ -38,7 +38,7 @@ El script te pedirá:
 Ve a tu proyecto en Railway y configura estas variables:
 ```
 SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=<tu-service-role-key>
 SUPABASE_BUCKET=vecinosimple-uploads
 ```
 
@@ -73,10 +73,10 @@ Si el script no funciona, configura manualmente:
 ```bash
 # Agregar al final de .env
 SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=<tu-service-role-key>
 SUPABASE_BUCKET=vecinosimple-uploads
 NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<tu-anon-key>
 ```
 
 ### Crear Bucket Manualmente

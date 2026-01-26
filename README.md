@@ -1,221 +1,177 @@
-# VecinoSimple
+# Supabase CLI
 
-> **Plataforma SaaS B2B2C para administración de consorcios en Argentina**
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## ✅ SEGURIDAD - REPOSITORIO LIMPIO
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-**26 Enero 2026:** Este repositorio ha sido completamente recreado desde cero. No contiene historial contaminado ni secrets expuestos.
+This repository contains all the functionality for Supabase CLI.
 
-### 🔐 Reglas de Seguridad Implementadas
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-- ✅ **Repositorio completamente nuevo** - Sin historial contaminado
-- ✅ **Secrets nunca expuestos** - Solo templates y placeholders
-- ✅ **Variables de entorno protegidas** - `.env.local` ignorado por Git
-- ✅ **Scripts de generación seguros** - `scripts/generate-secrets.js`
-- ✅ **Validación automática** - `scripts/verify-secrets.js`
+## Getting started
 
-### 📋 Checklist de Seguridad
+### Install the CLI
 
-- [x] Repositorio recreado desde cero
-- [x] Secrets rotados en producción
-- [x] Variables de entorno verificadas
-- [ ] Deploy inicial completado
-- [ ] Funcionalidades probadas en producción
-
-## 🏗️ Arquitectura
-
-- **Monorepo:** Turborepo + pnpm workspaces
-- **Frontend:** Next.js 14 (App Router) + Radix UI + Tailwind
-- **Backend:** NestJS + Prisma + PostgreSQL
-- **Deploy:** Vercel (frontend) + Railway (backend)
-
-## 🏗️ Arquitectura
-
-- **Monorepo:** Turborepo + npm workspaces
-- **Frontend:** Next.js 14 (App Router) + Radix UI + Tailwind
-- **Backend:** NestJS + Prisma + PostgreSQL
-- **Deploy:** Vercel (frontend) + Railway (backend)
-
-## 🚀 Deploy por Servicio
-
-Cada servicio se deploya **independientemente** para mayor control y seguridad:
-
-### 🔍 Verificación Pre-Deploy
-
-Antes de cualquier deploy, ejecutar verificación:
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
 ```bash
-# Verificar una app específica
-bash scripts/pre-deploy-verification.sh admin-web
-bash scripts/pre-deploy-verification.sh resident-app
-bash scripts/pre-deploy-verification.sh staff-app
-
-# Verificar todas las apps
-bash scripts/pre-deploy-verification.sh all
+npm i supabase --save-dev
 ```
 
-### API Backend (Railway)
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
+
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
 ```bash
-cd apps/api && railway deploy
-# o usando script:
-bash scripts/deploy-api.sh
+supabase bootstrap
 ```
 
-### Admin Web (Vercel)
-```bash
-# Deploy directo
-cd apps/admin-web && vercel --prod
-
-# O usando script unificado
-bash scripts/deploy.sh admin-web
-# o script específico:
-bash scripts/deploy-admin-web.sh
-```
-
-### Resident App (Vercel)
-```bash
-# Deploy directo
-cd apps/resident-app && vercel --prod
-
-# O usando script unificado
-bash scripts/deploy.sh resident-app
-# o script específico:
-bash scripts/deploy-resident-app.sh
-```
-
-### Staff App (Vercel)
-```bash
-# Deploy directo
-cd apps/staff-app && vercel --prod
-
-# O usando script unificado
-bash scripts/deploy.sh staff-app
-# o script específico:
-bash scripts/deploy-staff-app.sh
-```
-
-### Deploy Masivo
-```bash
-# Deploy todas las apps de frontend
-bash scripts/deploy.sh all
-```
-
-### 🔄 Orden Recomendado
-1. **API Backend** (primero, los frontends dependen de él)
-2. **Admin Web**
-3. **Resident App**
-4. **Staff App**
-
-### ✅ Beneficios del Deploy Independiente
-- **Rollback selectivo** si algo falla
-- **Deploy incremental** solo de cambios
-- **Debugging aislado** por servicio
-- **Zero-downtime** en otros servicios
-- **Mejor CI/CD** pipelines
-
-## 📁 Estructura
-
-```
-vecinosimple/
-├── apps/
-│   ├── admin-web/        # Portal Administradores
-│   ├── resident-app/     # PWA Vecinos
-│   ├── staff-app/        # PWA Encargados (Offline)
-│   └── api/              # NestJS Backend
-├── packages/
-│   ├── ui/               # Design System
-│   ├── database/         # Prisma Schema
-│   ├── business-logic/   # Calculadores
-│   └── config/           # ESLint, TypeScript
-└── scripts/              # Utilidades
-```
-
-## 🔧 Scripts Disponibles
+Or using npx:
 
 ```bash
-# Desarrollo
-npm run dev              # Todos los servicios
-npm run build           # Build de producción
-npm run lint            # Linting
-npm run type-check      # TypeScript check
-
-# Base de datos
-npm run db:generate     # Generar Prisma client
-npm run db:push         # Push schema a DB
-npm run db:studio       # Prisma Studio
-npm run db:seed         # Datos de prueba
-
-# Testing
-npm run test            # Unit tests
-npm run test:e2e        # E2E tests
-
-# Deploy y verificación
-bash scripts/pre-deploy-verification.sh [app|all]  # Verificar antes de deploy
-bash scripts/deploy.sh [app|all]                   # Deploy unificado
-bash scripts/deploy-admin-web.sh                   # Deploy admin-web
-bash scripts/deploy-resident-app.sh                # Deploy resident-app
-bash scripts/deploy-staff-app.sh                   # Deploy staff-app
-bash scripts/pre-deploy-check.sh                   # Checklist completo
+npx supabase bootstrap
 ```
 
-## 🚨 Pre-Deploy Checklist
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
-Antes de cada deploy, ejecutar:
+## Docs
 
-```bash
-bash scripts/pre-deploy-check.sh
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
 ```
-
-Verifica:
-- ✅ Rama correcta (main/master)
-- ✅ No hay cambios sin commit
-- ✅ Dependencias instaladas
-- ✅ TypeScript sin errores
-- ✅ Linting pasa
-- ✅ Tests pasan
-- ✅ Build de producción OK
-- ✅ No archivos sensibles en git
-
-## 🔐 Variables de Entorno
-
-### Backend (Railway)
-```bash
-DATABASE_URL=postgresql://...
-JWT_SECRET=<generar-nuevo>
-SUPABASE_SERVICE_ROLE_KEY=<rotar>
-# ... ver .env.example
-```
-
-### Frontend (Vercel)
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<rotar>
-NEXTAUTH_SECRET=<generar-nuevo>
-# ... ver scripts/envs/vercel.*.env.template
-```
-
-## 📚 Documentación
-
-- [Arquitectura](./docs/architecture/)
-- [Guías de desarrollo](./docs/guides/)
-- [Seguridad](./docs/security/)
-- [Incident de seguridad](./SECURITY-INCIDENT-2026-01-26.md)
-
-## 🤝 Contribución
-
-1. Crear branch desde `master`
-2. Hacer cambios
-3. Ejecutar `npm run pre-deploy-check.sh`
-4. Crear PR con descripción detallada
-5. Esperar revisión y aprobación
-
-## 📞 Soporte
-
-- **Issues:** Para bugs y features
-- **Discussions:** Para preguntas generales
-- **Security:** Para vulnerabilidades (NO commitear secrets)
-
----
-
-**⚠️ Recordatorio:** Si encuentras cualquier archivo con secrets reales, repórtalo inmediatamente y no lo commitees.</content>
-<parameter name="filePath">d:\martin\Proyectos\Admin-consorcios\README.md

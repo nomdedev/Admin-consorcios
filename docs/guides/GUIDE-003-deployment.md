@@ -57,7 +57,7 @@
 NEXT_PUBLIC_API_URL=https://api.vecinosimple.com
 
 # Autenticación
-NEXTAUTH_SECRET=secret-de-produccion
+NEXTAUTH_SECRET=<generar con: openssl rand -base64 32>
 NEXTAUTH_URL=https://admin.vecinosimple.com
 ```
 
@@ -86,10 +86,10 @@ NEXTAUTH_URL=https://admin.vecinosimple.com
 
 ```env
 # Base de datos (Railway o Neon)
-DATABASE_URL=postgresql://user:pass@host:5432/vecinosimple
+DATABASE_URL=postgresql://user:password@host:5432/vecinosimple
 
 # JWT - CRÍTICO: Generar secreto seguro
-JWT_SECRET=tu-secreto-de-produccion-minimo-32-chars
+JWT_SECRET=<generar-con: openssl rand -hex 32>
 
 # Entorno
 NODE_ENV=production

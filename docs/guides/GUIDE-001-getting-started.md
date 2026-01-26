@@ -59,7 +59,7 @@ cp .env.example .env
 DATABASE_URL="postgresql://usuario:password@localhost:5432/vecinosimple"
 
 # JWT
-JWT_SECRET="tu-secreto-minimo-32-caracteres-aqui"
+JWT_SECRET="<generar-con: openssl rand -hex 32>"
 
 # Entorno
 NODE_ENV="development"
@@ -182,7 +182,7 @@ createdb vecinosimple
 
 Asegurarse de que `.env` tiene:
 ```env
-JWT_SECRET="minimo-32-caracteres-aleatorios"
+JWT_SECRET="<generar-con: openssl rand -hex 32>"
 ```
 
 ---
