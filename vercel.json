@@ -1,10 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rootDirectory": "apps/admin-web",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm run build",
+  "buildCommand": "cd apps/admin-web && pnpm run build",
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/admin-web/.next",
   "env": {
     "NODE_ENV": "production"
   }
