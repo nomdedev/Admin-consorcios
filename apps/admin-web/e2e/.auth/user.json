@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "auth-token",
+          "value": "test-token-for-e2e"
+        },
+        {
+          "name": "user",
+          "value": "{\"id\":\"user-test\",\"email\":\"test@vecinosimple.com\",\"nombre\":\"Usuario\",\"apellido\":\"Test\",\"rol\":\"ADMINISTRADOR\"}"
+        },
+        {
+          "name": "selectedConsorcio",
+          "value": "{\"id\":\"consorcio-test\",\"nombre\":\"Consorcio de Prueba\"}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "vecinosimple",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "postinstall": "pnpm -w --filter @vecinosimple/database run generate",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:generate": "npm run --workspace=@vecinosimple/database generate",
+    "db:migrate": "npm run --workspace=@vecinosimple/database migrate:dev",
+    "db:push": "npm run --workspace=@vecinosimple/database push",
+    "db:seed": "npm run --workspace=@vecinosimple/database seed",
+    "db:studio": "npm run --workspace=@vecinosimple/database studio",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@vecinosimple/eslint-config": "file:packages/eslint-config",
+    "@vecinosimple/typescript-config": "file:packages/typescript-config",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "turbo": "^2.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}

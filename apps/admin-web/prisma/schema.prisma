@@ -1,0 +1,1415 @@
+// VecinoSimple - Schema de Base de Datos
+// PostgreSQL + Prisma ORM
+// Versión: 1.0.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Rol {
+  SUPER_ADMIN          // VecinoSimple staff - acceso total
+  ADMINISTRADOR        // Dueño de la administración
+  ADMIN_STAFF          // Empleado del administrador (carga facturas, no borra consorcios)
+  PROPIETARIO          // Dueño de UF - vota y ve extraordinarios
+  INQUILINO            // Paga ordinarias, NO ve extraordinarios ni vota
+  ENCARGADO            // Staff del edificio (app offline)
+  AUDITOR              // Consejo de Propietarios - solo lectura financiera
+  PROVEEDOR_EXTERNO    // Sube facturas/fotos de trabajos realizados
+}
+
+enum TipoVinculoUF {
+  TITULAR_VOTANTE      // Usuario principal - ejerce el voto
+  COPROPIETARIO        // Ve todo pero NO vota (ej: cónyuge, heredero)
+  INQUILINO_PRINCIPAL  // Paga expensas
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  PENDIENTE_VERIFICACION
+  SUSPENDIDO
+}
+
+enum TipoUnidadFuncional {
+  DEPARTAMENTO
+  COCHERA
+  BAULERA
+  LOCAL_COMERCIAL
+  OFICINA
+}
+
+enum EstadoExpensa {
+  BORRADOR
+  LIQUIDADA
+  PUBLICADA
+  CERRADA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PROCESANDO
+  APROBADO
+  RECHAZADO
+  REEMBOLSADO
+}
+
+enum MetodoPago {
+  MERCADO_PAGO
+  TRANSFERENCIA
+  EFECTIVO
+  DEBITO_AUTOMATICO
+  SIRO
+}
+
+enum EstadoTicket {
+  ABIERTO
+  EN_PROGRESO
+  ESPERANDO_RESPUESTA
+  RESUELTO
+  CERRADO
+}
+
+enum PrioridadTicket {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum TipoMovimiento {
+  INGRESO
+  EGRESO
+  AJUSTE
+}
+
+enum EstadoAsamblea {
+  PROGRAMADA
+  EN_CURSO
+  FINALIZADA
+  CANCELADA
+}
+
+enum TipoVoto {
+  A_FAVOR
+  EN_CONTRA
+  ABSTENCION
+}
+
+// Estados para invitaciones de claiming
+enum EstadoInvitacion {
+  PENDIENTE
+  ACEPTADA
+  EXPIRADA
+  REVOCADA
+}
+
+// Tipos de alerta de emergencia
+enum TipoEmergencia {
+  CORTE_AGUA
+  CORTE_GAS
+  CORTE_LUZ
+  INCENDIO
+  EVACUACION
+  SEGURIDAD
+  OTRO
+}
+
+// Prioridad de notificación
+enum PrioridadNotificacion {
+  BAJA         // Solo in-app
+  NORMAL       // In-app + email
+  ALTA         // In-app + email + push
+  EMERGENCIA   // Todos los canales incluyendo WhatsApp
+}
+
+// Tipos de badge/logro
+enum TipoBadge {
+  PAGO_PUNTUAL      // Pagó antes del vencimiento
+  RACHA_PAGOS       // Pagó X meses consecutivos
+  VECINO_EJEMPLAR   // 6 meses al día
+  PARTICIPATIVO     // Asiste a asambleas
+  COLABORADOR       // Reporta problemas útiles
+}
+
+// ============================================================================
+// MODELOS PRINCIPALES
+// ============================================================================
+
+/// Organización que agrupa múltiples consorcios (ej: una administración)
+model Organizacion {
+  id        String   @id @default(cuid())
+  nombre    String
+  cuit      String   @unique
+  email     String
+  telefono  String?
+  direccion String?
+  logo      String?  // URL de imagen
+  
+  // Configuración de facturación
+  planActual       String   @default("basico")
+  limiteConsorcios Int      @default(5)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  consorcios Consorcio[]
+  usuarios   Usuario[]
+  
+  @@map("organizaciones")
+}
+
+/// Representa un edificio/consorcio de propietarios
+model Consorcio {
+  id              String   @id @default(cuid())
+  organizacionId  String
+  
+  nombre          String
+  direccion       String
+  localidad       String
+  provincia       String   @default("Buenos Aires")
+  codigoPostal    String?
+  cuit            String?  // CUIT del consorcio
+  
+  // Datos bancarios (van directo al consorcio, no a VecinoSimple)
+  cbu             String?  // Encriptado
+  aliasCbu        String?
+  banco           String?
+  
+  // Configuración
+  diaVencimiento     Int      @default(10)
+  tasaInteresMora    Decimal  @default(0) @db.Decimal(5, 2)  // % mensual
+  periodoGracia      Int      @default(0)  // días
+  
+  // Coeficientes totales (debe sumar 100)
+  coeficienteTotal   Decimal  @default(100) @db.Decimal(10, 6)
+  
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  organizacion       Organizacion       @relation(fields: [organizacionId], references: [id])
+  unidadesFuncionales UnidadFuncional[]
+  usuariosConsorcio  UsuarioConsorcio[]
+  expensas           Expensa[]
+  gastos             Gasto[]
+  ticketsMantenimiento TicketMantenimiento[]
+  comunicados        Comunicado[]
+  asambleas          Asamblea[]
+  amenities          Amenity[]
+  proveedores        ProveedorConsorcio[]
+  documentos         Documento[]
+  invitacionesUnidad InvitacionUnidad[]
+  reglasReserva      ReglaReservaAmenity[]
+  alertasEmergencia  AlertaEmergencia[]
+  snapshotsExpensa   SnapshotExpensa[]
+  
+  @@index([organizacionId])
+  @@map("consorcios")
+}
+
+/// Usuario del sistema (puede tener múltiples roles en múltiples consorcios)
+model Usuario {
+  id              String        @id @default(cuid())
+  organizacionId  String?       // Null para super_admin
+  
+  email           String        @unique
+  emailVerificado Boolean       @default(false)
+  
+  // Datos personales
+  dni             String?       // Encriptado
+  nombre          String
+  apellido        String
+  telefono        String?       // Encriptado
+  avatarUrl       String?
+  
+  // Preferencias de accesibilidad
+  preferenciasModo    String    @default("completo") // "completo" | "simplificado"
+  preferenciasTema    String    @default("auto")     // "claro" | "oscuro" | "auto"
+  preferenciasTexto   Int       @default(16)         // Tamaño base en px
+  
+  // Autenticación
+  passwordHash    String?       // Argon2 (null si solo usa magic link)
+  magicLinkToken  String?
+  magicLinkExpira DateTime?
+  refreshToken    String?
+  
+  // 2FA
+  twoFactorEnabled Boolean      @default(false)
+  twoFactorSecret  String?
+  
+  estado          EstadoUsuario @default(PENDIENTE_VERIFICACION)
+  ultimoAcceso    DateTime?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  organizacion    Organizacion? @relation(fields: [organizacionId], references: [id])
+  rolesConsorcio  UsuarioConsorcio[]
+  pagos           Pago[]
+  ticketsCreados  TicketMantenimiento[] @relation("TicketCreador")
+  ticketsAsignados TicketMantenimiento[] @relation("TicketAsignado")
+  comentariosTicket ComentarioTicket[]
+  reservas        ReservaAmenity[]
+  votosAsamblea   VotoAsamblea[]
+  auditLogs       AuditLog[]
+  notificaciones  Notificacion[]
+  badgesObtenidos BadgeUsuario[]
+  penalizaciones  PenalizacionReserva[]
+  alertasCreadas  AlertaEmergencia[]
+  
+  @@index([organizacionId])
+  @@index([email])
+  @@map("usuarios")
+}
+
+/// Relación Usuario-Consorcio con rol específico
+model UsuarioConsorcio {
+  id           String   @id @default(cuid())
+  usuarioId    String
+  consorcioId  String
+  
+  rol          Rol
+  
+  // Para propietarios/inquilinos: referencia a la UF
+  unidadFuncionalId String?
+  
+  // Tipo de vínculo con la UF (solo para PROPIETARIO/INQUILINO)
+  tipoVinculo  TipoVinculoUF?
+  
+  // Permisos granulares para ADMIN_STAFF
+  puedeCargarGastos    Boolean @default(false)
+  puedeVerConciliacion Boolean @default(false)
+  puedeEnviarComunicados Boolean @default(false)
+  
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  
+  usuario         Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  consorcio       Consorcio        @relation(fields: [consorcioId], references: [id], onDelete: Cascade)
+  unidadFuncional UnidadFuncional? @relation(fields: [unidadFuncionalId], references: [id])
+  
+  @@unique([usuarioId, consorcioId, rol])
+  @@index([consorcioId])
+  @@map("usuarios_consorcios")
+}
+
+/// Unidad Funcional (departamento, cochera, etc.)
+model UnidadFuncional {
+  id           String               @id @default(cuid())
+  consorcioId  String
+  
+  codigo       String               // Ej: "1A", "PB-B", "Cochera 15"
+  piso         String?
+  numero       String?
+  tipo         TipoUnidadFuncional  @default(DEPARTAMENTO)
+  
+  // Coeficiente de participación (% del total)
+  coeficiente  Decimal              @db.Decimal(10, 6)
+  
+  // Superficie
+  superficieM2 Decimal?             @db.Decimal(10, 2)
+  
+  activo       Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  
+  consorcio    Consorcio            @relation(fields: [consorcioId], references: [id], onDelete: Cascade)
+  usuarios     UsuarioConsorcio[]
+  movimientos  MovimientoCuentaCorriente[]
+  detallesExpensa DetalleExpensa[]
+  invitaciones InvitacionUnidad[]
+  
+  @@unique([consorcioId, codigo])
+  @@index([consorcioId])
+  @@map("unidades_funcionales")
+}
+
+// ============================================================================
+// MÓDULO FINANCIERO
+// ============================================================================
+
+/// Liquidación mensual de expensas del consorcio
+model Expensa {
+  id           String        @id @default(cuid())
+  consorcioId  String
+  
+  periodo      String        // Formato: "2024-01" (año-mes)
+  
+  // Montos totales
+  totalGastosOrdinarios     Decimal @db.Decimal(12, 2)
+  totalGastosExtraordinarios Decimal @db.Decimal(12, 2) @default(0)
+  totalIngresos             Decimal @db.Decimal(12, 2) @default(0)
+  fondoReserva              Decimal @db.Decimal(12, 2) @default(0)
+  
+  fechaVencimiento DateTime
+  fechaSegundoVencimiento DateTime?
+  recargoSegundoVencimiento Decimal? @db.Decimal(5, 2) // %
+  
+  estado       EstadoExpensa @default(BORRADOR)
+  
+  // Metadata
+  observaciones String?
+  publicadaAt   DateTime?
+  cerradaAt     DateTime?
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  consorcio    Consorcio     @relation(fields: [consorcioId], references: [id])
+  gastos       Gasto[]
+  detalles     DetalleExpensa[]
+  
+  @@unique([consorcioId, periodo])
+  @@index([consorcioId])
+  @@index([periodo])
+  @@map("expensas")
+}
+
+/// Detalle de expensa por unidad funcional
+model DetalleExpensa {
+  id                  String          @id @default(cuid())
+  expensaId           String
+  unidadFuncionalId   String
+  
+  // Montos calculados para esta UF
+  montoOrdinario      Decimal         @db.Decimal(12, 2)
+  montoExtraordinario Decimal         @db.Decimal(12, 2) @default(0)
+  saldoAnterior       Decimal         @db.Decimal(12, 2) @default(0)
+  intereses           Decimal         @db.Decimal(12, 2) @default(0)
+  bonificacion        Decimal         @db.Decimal(12, 2) @default(0)
+  
+  // Total a pagar
+  total               Decimal         @db.Decimal(12, 2)
+  
+  createdAt           DateTime        @default(now())
+  
+  expensa             Expensa         @relation(fields: [expensaId], references: [id], onDelete: Cascade)
+  unidadFuncional     UnidadFuncional @relation(fields: [unidadFuncionalId], references: [id])
+  
+  @@unique([expensaId, unidadFuncionalId])
+  @@index([expensaId])
+  @@map("detalles_expensa")
+}
+
+/// Gasto individual del consorcio
+model Gasto {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  expensaId    String?  // Null si aún no está asignado a una liquidación
+  
+  concepto     String
+  descripcion  String?
+  monto        Decimal  @db.Decimal(12, 2)
+  
+  // Categorización
+  categoriaId  String?
+  esExtraordinario Boolean @default(false)
+  esProrrateable   Boolean @default(true)
+  
+  // Comprobante (transparencia)
+  tipoComprobante String?  // "factura_a", "factura_b", "ticket", "recibo"
+  numeroComprobante String?
+  caeAfip         String?  // Código de Autorización Electrónico
+  fechaComprobante DateTime?
+  proveedorId     String?
+  
+  // Archivo adjunto (obligatorio para transparencia)
+  archivoUrl      String?
+  archivoNombre   String?
+  
+  fechaGasto      DateTime
+  fechaRegistro   DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  consorcio       Consorcio         @relation(fields: [consorcioId], references: [id])
+  expensa         Expensa?          @relation(fields: [expensaId], references: [id])
+  categoria       CategoriaGasto?   @relation(fields: [categoriaId], references: [id])
+  proveedor       Proveedor?        @relation(fields: [proveedorId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([expensaId])
+  @@index([fechaGasto])
+  @@map("gastos")
+}
+
+/// Categorías de gastos (para reportes)
+model CategoriaGasto {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  descripcion String?
+  icono       String?
+  orden       Int      @default(0)
+  
+  gastos      Gasto[]
+  
+  @@map("categorias_gasto")
+}
+
+/// Cuenta corriente del vecino (saldo acumulado)
+model MovimientoCuentaCorriente {
+  id                  String          @id @default(cuid())
+  unidadFuncionalId   String
+  
+  tipo                TipoMovimiento
+  concepto            String
+  monto               Decimal         @db.Decimal(12, 2)
+  saldoResultante     Decimal         @db.Decimal(12, 2)
+  
+  // Referencias opcionales
+  pagoId              String?         @unique
+  expensaPeriodo      String?
+  
+  fecha               DateTime        @default(now())
+  
+  unidadFuncional     UnidadFuncional @relation(fields: [unidadFuncionalId], references: [id])
+  pago                Pago?           @relation(fields: [pagoId], references: [id])
+  
+  @@index([unidadFuncionalId])
+  @@index([fecha])
+  @@map("movimientos_cuenta_corriente")
+}
+
+/// Pago realizado por un vecino
+model Pago {
+  id           String      @id @default(cuid())
+  usuarioId    String
+  
+  monto        Decimal     @db.Decimal(12, 2)
+  metodoPago   MetodoPago
+  estado       EstadoPago  @default(PENDIENTE)
+  
+  // Referencias de pasarela de pago
+  mercadoPagoId       String?   @unique
+  mercadoPagoStatus   String?
+  transferenciaRef    String?
+  
+  // Detalle
+  concepto            String
+  periodosAbonados    String[]  // ["2024-01", "2024-02"]
+  
+  // Comprobante generado
+  comprobanteUrl      String?
+  
+  fechaPago           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  usuario             Usuario   @relation(fields: [usuarioId], references: [id])
+  movimientoCuenta    MovimientoCuentaCorriente?
+  
+  @@index([usuarioId])
+  @@index([estado])
+  @@map("pagos")
+}
+
+// ============================================================================
+// MÓDULO DE RECLAMOS/MANTENIMIENTO
+// ============================================================================
+
+/// Ticket de mantenimiento o reclamo
+model TicketMantenimiento {
+  id           String          @id @default(cuid())
+  consorcioId  String
+  creadorId    String
+  asignadoId   String?
+  
+  titulo       String
+  descripcion  String
+  ubicacion    String?         // "Hall de entrada", "Piso 3", etc.
+  
+  prioridad    PrioridadTicket @default(MEDIA)
+  estado       EstadoTicket    @default(ABIERTO)
+  
+  // Archivos adjuntos (fotos del problema)
+  archivos     ArchivoTicket[]
+  
+  fechaResolucion DateTime?
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  consorcio    Consorcio       @relation(fields: [consorcioId], references: [id])
+  creador      Usuario         @relation("TicketCreador", fields: [creadorId], references: [id])
+  asignado     Usuario?        @relation("TicketAsignado", fields: [asignadoId], references: [id])
+  comentarios  ComentarioTicket[]
+  
+  @@index([consorcioId])
+  @@index([estado])
+  @@map("tickets_mantenimiento")
+}
+
+model ArchivoTicket {
+  id        String   @id @default(cuid())
+  ticketId  String
+  url       String
+  nombre    String
+  tipo      String   // "image/jpeg", "application/pdf", etc.
+  tamano    Int      // bytes
+  
+  createdAt DateTime @default(now())
+  
+  ticket    TicketMantenimiento @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@map("archivos_ticket")
+}
+
+model ComentarioTicket {
+  id        String   @id @default(cuid())
+  ticketId  String
+  usuarioId String
+  
+  contenido String
+  esInterno Boolean  @default(false) // Solo visible para admins
+  
+  createdAt DateTime @default(now())
+  
+  ticket    TicketMantenimiento @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  usuario   Usuario             @relation(fields: [usuarioId], references: [id])
+  
+  @@index([ticketId])
+  @@map("comentarios_ticket")
+}
+
+// ============================================================================
+// MÓDULO DE COMUNICADOS
+// ============================================================================
+
+model Comunicado {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  
+  titulo       String
+  contenido    String   @db.Text
+  importante   Boolean  @default(false)
+  
+  // Programación
+  publicarDesde DateTime @default(now())
+  publicarHasta DateTime?
+  
+  // Notificaciones
+  enviarEmail     Boolean @default(false)
+  enviarWhatsapp  Boolean @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  consorcio    Consorcio @relation(fields: [consorcioId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([publicarDesde])
+  @@map("comunicados")
+}
+
+// ============================================================================
+// MÓDULO DE ASAMBLEAS
+// ============================================================================
+
+model Asamblea {
+  id           String          @id @default(cuid())
+  consorcioId  String
+  
+  titulo       String
+  descripcion  String?
+  fecha        DateTime
+  lugar        String?         // "SUM" o "Virtual" 
+  linkVirtual  String?         // Link de videollamada
+  
+  estado       EstadoAsamblea  @default(PROGRAMADA)
+  quorumRequerido Decimal      @db.Decimal(5, 2) // % de coeficientes
+  
+  // Acta generada automáticamente
+  actaUrl      String?
+  actaHash     String?         // Hash para verificar integridad
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  consorcio    Consorcio       @relation(fields: [consorcioId], references: [id])
+  puntosOrden  PuntoOrdenDia[]
+  asistencias  AsistenciaAsamblea[]
+  
+  @@index([consorcioId])
+  @@index([fecha])
+  @@map("asambleas")
+}
+
+model PuntoOrdenDia {
+  id          String   @id @default(cuid())
+  asambleaId  String
+  
+  orden       Int
+  titulo      String
+  descripcion String?
+  
+  // Resultado de la votación
+  requiereVotacion Boolean @default(false)
+  mayoriaRequerida Decimal? @db.Decimal(5, 2) // % para aprobar
+  
+  createdAt   DateTime @default(now())
+  
+  asamblea    Asamblea       @relation(fields: [asambleaId], references: [id], onDelete: Cascade)
+  votos       VotoAsamblea[]
+  
+  @@index([asambleaId])
+  @@map("puntos_orden_dia")
+}
+
+model AsistenciaAsamblea {
+  id          String   @id @default(cuid())
+  asambleaId  String
+  usuarioId   String
+  
+  presente    Boolean  @default(false)
+  representadoPor String? // Nombre de apoderado
+  poderUrl    String?  // Documento de poder
+  
+  horaRegistro DateTime?
+  
+  asamblea    Asamblea @relation(fields: [asambleaId], references: [id], onDelete: Cascade)
+  
+  @@unique([asambleaId, usuarioId])
+  @@map("asistencias_asamblea")
+}
+
+model VotoAsamblea {
+  id              String        @id @default(cuid())
+  puntoOrdenId    String
+  usuarioId       String
+  
+  voto            TipoVoto
+  coeficienteVoto Decimal       @db.Decimal(10, 6) // Peso del voto
+  
+  // Auditoría (inmutable)
+  timestampVoto   DateTime      @default(now())
+  hashVoto        String        // Hash para verificar integridad
+  
+  puntoOrden      PuntoOrdenDia @relation(fields: [puntoOrdenId], references: [id], onDelete: Cascade)
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
+  
+  @@unique([puntoOrdenId, usuarioId])
+  @@map("votos_asamblea")
+}
+
+// ============================================================================
+// MÓDULO DE AMENITIES
+// ============================================================================
+
+model Amenity {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  
+  nombre       String   // "SUM", "Parrilla", "Pileta"
+  descripcion  String?
+  capacidad    Int?
+  
+  // Configuración de reservas
+  requiereAprobacion Boolean @default(false)
+  anticipacionMinima Int     @default(24)  // horas
+  anticipacionMaxima Int     @default(720) // horas (30 días)
+  duracionMaxima     Int     @default(4)   // horas por reserva
+  
+  // Costo
+  costoReserva Decimal? @db.Decimal(10, 2)
+  
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  consorcio    Consorcio        @relation(fields: [consorcioId], references: [id])
+  reservas     ReservaAmenity[]
+  reglas       ReglaReservaAmenity[]
+  
+  @@index([consorcioId])
+  @@map("amenities")
+}
+
+model ReservaAmenity {
+  id         String   @id @default(cuid())
+  amenityId  String
+  usuarioId  String
+  
+  fechaInicio DateTime
+  fechaFin    DateTime
+  
+  motivo      String?
+  aprobada    Boolean?  // null = pendiente
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  amenity     Amenity  @relation(fields: [amenityId], references: [id])
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  penalizacion PenalizacionReserva?
+  
+  @@index([amenityId])
+  @@index([fechaInicio])
+  @@map("reservas_amenity")
+}
+
+// ============================================================================
+// PROVEEDORES Y MARKETPLACE
+// ============================================================================
+
+model Proveedor {
+  id          String   @id @default(cuid())
+  
+  razonSocial String
+  cuit        String   @unique
+  email       String?
+  telefono    String?
+  direccion   String?
+  
+  // Categorías de servicio
+  servicios   String[] // ["plomeria", "electricidad", "limpieza"]
+  
+  // Rating del marketplace
+  puntuacionPromedio Decimal? @db.Decimal(3, 2)
+  cantidadResenas    Int      @default(0)
+  
+  // Usuario asociado (para autogestión con rol PROVEEDOR_EXTERNO)
+  usuarioId   String?  @unique
+  
+  verificado  Boolean  @default(false)
+  activo      Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  gastos      Gasto[]
+  consorcios  ProveedorConsorcio[]
+  trabajos    TrabajoProveedor[]
+  
+  @@map("proveedores")
+}
+
+model ProveedorConsorcio {
+  id           String   @id @default(cuid())
+  proveedorId  String
+  consorcioId  String
+  
+  esFavorito   Boolean  @default(false)
+  nota         String?  // Notas internas del admin
+  
+  createdAt    DateTime @default(now())
+  
+  proveedor    Proveedor @relation(fields: [proveedorId], references: [id])
+  consorcio    Consorcio @relation(fields: [consorcioId], references: [id])
+  
+  @@unique([proveedorId, consorcioId])
+  @@map("proveedores_consorcios")
+}
+
+// ============================================================================
+// DOCUMENTOS Y ARCHIVOS
+// ============================================================================
+
+model Documento {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  
+  nombre       String
+  descripcion  String?
+  categoria    String   // "reglamento", "acta", "contrato", "plano", "otro"
+  
+  archivoUrl   String
+  archivoNombre String
+  archivoTipo  String
+  archivoTamano Int
+  
+  esPublico    Boolean  @default(true) // Visible para todos los vecinos
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  consorcio    Consorcio @relation(fields: [consorcioId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([categoria])
+  @@map("documentos")
+}
+
+// ============================================================================
+// NOTIFICACIONES
+// ============================================================================
+
+model Notificacion {
+  id         String   @id @default(cuid())
+  usuarioId  String
+  
+  titulo     String
+  mensaje    String
+  tipo       String   // "pago", "reclamo", "comunicado", "asamblea", "vencimiento"
+  
+  // Referencia al objeto relacionado
+  referenciaId   String?
+  referenciaTipo String?
+  
+  leida      Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  @@index([usuarioId])
+  @@index([leida])
+  @@map("notificaciones")
+}
+
+// ============================================================================
+// AUDITORÍA (INMUTABLE)
+// ============================================================================
+
+/// Log de auditoría para trazabilidad legal
+model AuditLog {
+  id         String   @id @default(cuid())
+  usuarioId  String?
+  
+  accion     String   // "CREATE", "UPDATE", "DELETE"
+  entidad    String   // "Gasto", "Pago", "VotoAsamblea"
+  entidadId  String
+  
+  // Snapshot de los datos (JSON)
+  datosAnteriores Json?
+  datosNuevos     Json?
+  
+  ip         String?
+  userAgent  String?
+  
+  timestamp  DateTime @default(now())
+  
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id])
+  
+  @@index([entidad, entidadId])
+  @@index([timestamp])
+  @@index([usuarioId])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// OFFLINE SYNC (Staff App)
+// ============================================================================
+
+/// Cola de sincronización para operaciones offline
+model SyncQueue {
+  id           String   @id @default(cuid())
+  
+  deviceId     String   // Identificador del dispositivo
+  usuarioId    String
+  consorcioId  String
+  
+  operacion    String   // "CREATE", "UPDATE"
+  entidad      String   // "BitacoraSeguridad", "RecepcionPaquete"
+  datos        Json     // Payload de la operación
+  
+  timestamp    DateTime // Timestamp del cliente (offline)
+  
+  procesado    Boolean  @default(false)
+  procesadoAt  DateTime?
+  error        String?
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([procesado])
+  @@index([deviceId])
+  @@map("sync_queue")
+}
+
+/// Bitácora de seguridad del encargado
+model BitacoraSeguridad {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  usuarioId    String   // Encargado
+  
+  tipo         String   // "ronda", "ingreso_visita", "incidente", "novedad"
+  descripcion  String
+  ubicacion    String?
+  
+  // Datos de visitante (si aplica)
+  visitanteNombre String?
+  visitanteDni    String?
+  visitanteDestino String? // "3A", "Administración"
+  
+  fotoUrl      String?
+  
+  // Para sincronización offline
+  localId      String?  @unique // UUID generado en el dispositivo
+  syncedAt     DateTime?
+  
+  timestamp    DateTime // Fecha/hora del evento (puede ser offline)
+  createdAt    DateTime @default(now())
+  
+  @@index([consorcioId])
+  @@index([timestamp])
+  @@map("bitacora_seguridad")
+}
+
+/// Registro de paquetería
+model RecepcionPaquete {
+  id            String   @id @default(cuid())
+  consorcioId   String
+  usuarioId     String   // Encargado que recibe
+  
+  destinatarioUF String  // Código de UF destino
+  remitente      String  // "Mercado Libre", "Correo Argentino"
+  descripcion    String?
+  
+  fotoUrl        String?
+  
+  // Estados
+  recibidoAt     DateTime @default(now())
+  entregadoAt    DateTime?
+  entregadoA     String?  // Nombre de quien retira
+  firmaDni       String?  // DNI de quien retira
+  
+  // Para sincronización offline
+  localId        String?  @unique
+  syncedAt       DateTime?
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([consorcioId])
+  @@index([destinatarioUF])
+  @@map("recepcion_paquetes")
+}
+
+// ============================================================================
+// LIQUIDACIÓN DE SUELDOS (SIMPLIFICADO - Sin lógica SUTERH)
+// ============================================================================
+
+/// Empleado del consorcio (encargado, ayudante, etc.)
+model EmpleadoConsorcio {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  
+  nombre       String
+  apellido     String
+  cuil         String   // Encriptado
+  categoria    String   // "Encargado Permanente", "Ayudante", etc.
+  
+  fechaIngreso DateTime
+  fechaEgreso  DateTime?
+  activo       Boolean  @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  liquidaciones LiquidacionSueldo[]
+  
+  @@index([consorcioId])
+  @@map("empleados_consorcio")
+}
+
+/// Liquidación de sueldo importada (NO calculada internamente)
+/// La lógica SUTERH es externa - solo almacenamos el resultado
+model LiquidacionSueldo {
+  id           String   @id @default(cuid())
+  empleadoId   String
+  consorcioId  String
+  
+  periodo      String   // "2024-01"
+  
+  // Montos finales (importados, no calculados)
+  sueldoBruto     Decimal @db.Decimal(12, 2)
+  deducciones     Decimal @db.Decimal(12, 2) @default(0)
+  sueldoNeto      Decimal @db.Decimal(12, 2)
+  cargasSociales  Decimal @db.Decimal(12, 2) @default(0) // Aportes patronales
+  
+  // Archivos importados
+  reciboPdfUrl    String?  // PDF del recibo de sueldo
+  f931PdfUrl      String?  // Formulario AFIP
+  
+  // Referencia a la expensa donde se incluyó
+  expensaId       String?
+  
+  fechaPago       DateTime?
+  observaciones   String?
+  
+  createdAt       DateTime @default(now())
+  
+  empleado        EmpleadoConsorcio @relation(fields: [empleadoId], references: [id])
+  
+  @@unique([empleadoId, periodo])
+  @@index([consorcioId])
+  @@index([periodo])
+  @@map("liquidaciones_sueldo")
+}
+
+// ============================================================================
+// PROVEEDORES EXTERNOS (Autogestión)
+// ============================================================================
+
+/// Trabajo realizado por proveedor (para autogestión de facturas)
+model TrabajoProveedor {
+  id           String   @id @default(cuid())
+  proveedorId  String
+  consorcioId  String
+  
+  descripcion  String
+  monto        Decimal  @db.Decimal(12, 2)
+  
+  // Archivos subidos por el proveedor
+  facturaUrl   String?
+  fotosUrls    String[] // Fotos del trabajo realizado
+  
+  // Estado de aprobación
+  estado       String   @default("pendiente") // "pendiente", "aprobado", "rechazado"
+  aprobadoPor  String?  // usuarioId del admin que aprobó
+  aprobadoAt   DateTime?
+  
+  // Si se aprueba, se convierte en Gasto
+  gastoId      String?  @unique
+  
+  fechaTrabajo DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  proveedor    Proveedor @relation(fields: [proveedorId], references: [id])
+  
+  @@index([proveedorId])
+  @@index([consorcioId])
+  @@index([estado])
+  @@map("trabajos_proveedor")
+}
+
+// ============================================================================
+// 1. KYC / CLAIMING DE UNIDADES (Sistema de Invitaciones)
+// ============================================================================
+
+/// Invitación para que un usuario reclame una unidad funcional
+/// El administrador genera un código único que viene impreso en la expensa papel
+model InvitacionUnidad {
+  id                String           @id @default(cuid())
+  consorcioId       String
+  unidadFuncionalId String
+  
+  // Código único de 8 caracteres (ej: "ABC12345")
+  // Se imprime en la expensa papel para validación
+  codigoInvitacion  String           @unique
+  
+  // Tipo de rol que se asignará al reclamar
+  rolAsignado       Rol              @default(PROPIETARIO)
+  tipoVinculo       TipoVinculoUF    @default(TITULAR_VOTANTE)
+  
+  // Datos pre-cargados (opcionales, para validación adicional)
+  nombreEsperado    String?
+  dniEsperado       String?          // Últimos 4 dígitos para verificar
+  emailEsperado     String?
+  
+  // Estado y vigencia
+  estado            EstadoInvitacion @default(PENDIENTE)
+  fechaExpiracion   DateTime         // Por defecto 90 días
+  
+  // Tracking de uso
+  usadaPor          String?          // usuarioId que la usó
+  usadaAt           DateTime?
+  intentosFallidos  Int              @default(0)
+  
+  // Metadata
+  creadoPor         String           // Admin que generó
+  notas             String?
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  consorcio         Consorcio        @relation(fields: [consorcioId], references: [id])
+  unidadFuncional   UnidadFuncional  @relation(fields: [unidadFuncionalId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([codigoInvitacion])
+  @@index([estado])
+  @@map("invitaciones_unidad")
+}
+
+// ============================================================================
+// 2. REGLAS DE AMENITIES (Fair Use & Penalizaciones)
+// ============================================================================
+
+/// Reglas configurables por amenity para evitar abuso
+model ReglaReservaAmenity {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  amenityId    String
+  
+  // Nombre descriptivo de la regla
+  nombre       String   // "Límite fin de semana", "Penalización cancelación"
+  descripcion  String?
+  
+  // Tipo de regla (JSON flexible para diferentes configuraciones)
+  tipoRegla    String   // "limite_periodo", "penalizacion", "bloqueo", "horario"
+  
+  // Configuración en JSON (ejemplos):
+  // limite_periodo: { "maxReservas": 2, "periodo": "mes", "diasSemana": [6, 0] }
+  // penalizacion: { "horasAnticipacion": 24, "montoMulta": 5000, "bloquearDias": 30 }
+  // bloqueo: { "motivosBloqueo": ["no_show"], "diasBloqueo": 60 }
+  // horario: { "horaInicio": "08:00", "horaFin": "22:00", "diasPermitidos": [1,2,3,4,5] }
+  configuracion Json
+  
+  // Prioridad (reglas con mayor prioridad se evalúan primero)
+  prioridad    Int      @default(0)
+  activa       Boolean  @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  consorcio    Consorcio @relation(fields: [consorcioId], references: [id])
+  amenity      Amenity   @relation(fields: [amenityId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([amenityId])
+  @@map("reglas_reserva_amenity")
+}
+
+/// Penalizaciones aplicadas a usuarios por incumplimiento de reglas
+model PenalizacionReserva {
+  id           String   @id @default(cuid())
+  usuarioId    String
+  reservaId    String   @unique
+  
+  // Tipo de penalización
+  tipo         String   // "multa", "bloqueo_temporal", "advertencia"
+  
+  // Detalles
+  motivo       String   // "Cancelación tardía", "No show", etc.
+  montoMulta   Decimal? @db.Decimal(10, 2)
+  diasBloqueo  Int?     // Días sin poder reservar
+  fechaFinBloqueo DateTime?
+  
+  // Aplicación
+  aplicadoEnExpensa String?  // Período de expensa donde se cargó la multa
+  pagada       Boolean  @default(false)
+  
+  createdAt    DateTime @default(now())
+  
+  usuario      Usuario        @relation(fields: [usuarioId], references: [id])
+  reserva      ReservaAmenity @relation(fields: [reservaId], references: [id])
+  
+  @@index([usuarioId])
+  @@map("penalizaciones_reserva")
+}
+
+// ============================================================================
+// 3. ALERTAS DE EMERGENCIA (Comunicación Crítica Multicanal)
+// ============================================================================
+
+/// Alerta de emergencia que dispara notificaciones en todos los canales
+model AlertaEmergencia {
+  id           String          @id @default(cuid())
+  consorcioId  String
+  creadoPorId  String
+  
+  tipo         TipoEmergencia
+  titulo       String
+  descripcion  String          @db.Text
+  
+  // Instrucciones específicas
+  instrucciones String?        @db.Text
+  
+  // Estado de la emergencia
+  activa       Boolean         @default(true)
+  resueltaAt   DateTime?
+  resolucion   String?
+  
+  // Canales de notificación utilizados
+  enviadoPush     Boolean      @default(false)
+  enviadoEmail    Boolean      @default(false)
+  enviadoWhatsapp Boolean      @default(false)
+  enviadoSms      Boolean      @default(false)
+  
+  // Tracking de envíos
+  destinatariosTotal    Int    @default(0)
+  enviosExitosos        Int    @default(0)
+  enviosFallidos        Int    @default(0)
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  consorcio    Consorcio       @relation(fields: [consorcioId], references: [id])
+  creadoPor    Usuario         @relation(fields: [creadoPorId], references: [id])
+  
+  @@index([consorcioId])
+  @@index([activa])
+  @@index([createdAt])
+  @@map("alertas_emergencia")
+}
+
+// ============================================================================
+// 4. SNAPSHOTS INMUTABLES DE EXPENSAS (Backup Legal)
+// ============================================================================
+
+/// Snapshot inmutable de una expensa cerrada (para juicios y auditorías)
+/// Una vez creado, NO se puede modificar - solo crear notas de crédito/débito
+model SnapshotExpensa {
+  id           String   @id @default(cuid())
+  consorcioId  String
+  expensaId    String
+  periodo      String   // "2024-01"
+  
+  // Snapshot completo en JSON (inmutable)
+  // Incluye: gastos, prorrateos, saldos anteriores, todo
+  datosCompletos Json
+  
+  // Hash SHA-256 para verificar integridad
+  hashIntegridad String
+  
+  // Firma digital (opcional, para mayor seguridad legal)
+  firmaDigital   String?
+  
+  // Metadata de creación
+  cerradoPor     String   // usuarioId
+  motivoCierre   String?
+  
+  // Fecha de cierre legal (puede ser diferente a createdAt)
+  fechaCierreLegal DateTime
+  
+  // Este registro es INMUTABLE después de creado
+  createdAt    DateTime @default(now())
+  
+  consorcio    Consorcio @relation(fields: [consorcioId], references: [id])
+  notasCredito NotaCreditoDebito[]
+  
+  @@unique([expensaId])
+  @@index([consorcioId])
+  @@index([periodo])
+  @@map("snapshots_expensa")
+}
+
+/// Nota de crédito o débito sobre una expensa cerrada
+/// Única forma de modificar montos después del cierre
+model NotaCreditoDebito {
+  id               String   @id @default(cuid())
+  snapshotExpensaId String
+  unidadFuncionalId String
+  
+  tipo             String   // "credito" | "debito"
+  monto            Decimal  @db.Decimal(12, 2)
+  
+  // Justificación obligatoria
+  concepto         String
+  justificacion    String   @db.Text
+  
+  // Documentación de respaldo
+  documentoUrl     String?
+  
+  // Aprobación (requiere admin)
+  aprobadoPor      String   // usuarioId
+  
+  // Aplicación
+  aplicadoEnPeriodo String  // Período donde se aplicó el ajuste
+  
+  createdAt        DateTime @default(now())
+  
+  snapshotExpensa  SnapshotExpensa @relation(fields: [snapshotExpensaId], references: [id])
+  
+  @@index([snapshotExpensaId])
+  @@index([unidadFuncionalId])
+  @@map("notas_credito_debito")
+}
+
+// ============================================================================
+// 5. GAMIFICACIÓN (Badges y Logros)
+// ============================================================================
+
+/// Definición de badges/logros disponibles
+model BadgeDefinicion {
+  id           String    @id @default(cuid())
+  
+  tipo         TipoBadge
+  nombre       String    // "Vecino Puntual", "Racha de 6 Meses"
+  descripcion  String
+  
+  // Criterios para obtener (JSON flexible)
+  // Ej: { "mesesConsecutivos": 6, "pagoAntesDe": 10 }
+  criterios    Json
+  
+  // Visual
+  iconoUrl     String?
+  color        String?   // Hex color
+  
+  // Beneficios asociados (JSON)
+  // Ej: { "descuentoProximo": 5, "comerciosAsociados": ["pizzeria-x"] }
+  beneficios   Json?
+  
+  // Vigencia del beneficio (si aplica)
+  diasVigenciaBeneficio Int?
+  
+  activo       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  
+  usuariosConBadge BadgeUsuario[]
+  
+  @@unique([tipo])
+  @@map("badges_definicion")
+}
+
+/// Badges obtenidos por usuarios
+model BadgeUsuario {
+  id           String   @id @default(cuid())
+  usuarioId    String
+  badgeId      String
+  
+  // Datos al momento de obtener
+  datosObtencion Json?  // { "mesesAcumulados": 6, "montoTotalPagado": 500000 }
+  
+  // Vigencia del beneficio
+  beneficioHasta DateTime?
+  beneficioUsado Boolean  @default(false)
+  
+  // Puede mostrarse públicamente?
+  mostrarPublico Boolean  @default(true)
+  
+  obtenidoAt   DateTime  @default(now())
+  
+  usuario      Usuario         @relation(fields: [usuarioId], references: [id])
+  badge        BadgeDefinicion @relation(fields: [badgeId], references: [id])
+  
+  @@unique([usuarioId, badgeId])
+  @@index([usuarioId])
+  @@map("badges_usuario")
+}
+
+// ============================================================================
+// 6. TRACKING PARA QR EN EXPENSAS (Migración Soft)
+// ============================================================================
+
+/// Tracking de escaneos de QR en expensas papel
+model QRExpensaTracking {
+  id                String   @id @default(cuid())
+  
+  // Código único del QR (embebido en el PDF)
+  codigoQR          String   @unique
+  
+  // Referencia a la expensa
+  expensaPeriodo    String
+  unidadFuncionalId String
+  consorcioId       String
+  
+  // Acción del QR
+  accion            String   // "pagar", "ver_detalle", "descargar_pdf"
+  urlDestino        String   // URL completa a donde redirige
+  
+  // Tracking de uso
+  escaneos          Int      @default(0)
+  primerEscaneo     DateTime?
+  ultimoEscaneo     DateTime?
+  
+  // Conversión (si el usuario completó la acción)
+  convertido        Boolean  @default(false)
+  conversionAt      DateTime?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([consorcioId])
+  @@index([expensaPeriodo])
+  @@map("qr_expensa_tracking")
+}

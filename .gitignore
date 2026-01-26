@@ -1,0 +1,66 @@
+# =============================================================================
+# VecinoSimple - Git Ignore
+# =============================================================================
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Prisma
+packages/database/prisma/migrations/*_migration_lock.toml
+
+# Certificados (NUNCA commitear)
+certs/
+*.crt
+*.key
+*.pem
+
+# Uploads locales
+uploads/
+tmp/
+
+# PWA
+public/sw.js
+public/workbox-*.js
+
+# Sentry
+.sentryclirc
+.vercel
+.env*.local

@@ -1,0 +1,203 @@
+# Guía de Inicio Rápido - VecinoSimple
+
+> **Categoría:** GUIDE  
+> **Versión:** 1.0  
+> **Última actualización:** Enero 2026  
+> **Autor:** Equipo VecinoSimple
+
+---
+
+## 📋 Requisitos Previos
+
+### Software Necesario
+
+| Software | Versión Mínima | Verificar |
+|----------|----------------|-----------|
+| Node.js | 18.x LTS | `node --version` |
+| pnpm | 8.x | `pnpm --version` |
+| PostgreSQL | 15.x | `psql --version` |
+| Git | 2.x | `git --version` |
+
+### Instalación de pnpm
+
+```bash
+# Si no tienes pnpm instalado
+npm install -g pnpm
+```
+
+---
+
+## 🚀 Configuración Inicial
+
+### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/nomdedev/vecinosimple.git
+cd vecinosimple
+```
+
+### 2. Instalar Dependencias
+
+```bash
+pnpm install
+```
+
+### 3. Configurar Variables de Entorno
+
+```bash
+# Copiar archivo de ejemplo
+cp .env.example .env
+
+# Editar con tus valores
+# ⚠️ NUNCA commitear el archivo .env
+```
+
+#### Variables Requeridas
+
+```env
+# Base de datos
+DATABASE_URL="postgresql://usuario:password@localhost:5432/vecinosimple"
+
+# JWT
+JWT_SECRET="tu-secreto-minimo-32-caracteres-aqui"
+
+# Entorno
+NODE_ENV="development"
+```
+
+### 4. Configurar Base de Datos
+
+```bash
+# Ejecutar migraciones
+pnpm db:migrate
+
+# (Opcional) Cargar datos de prueba
+pnpm db:seed
+
+# (Opcional) Abrir Prisma Studio
+pnpm db:studio
+```
+
+### 5. Iniciar Desarrollo
+
+```bash
+# Todas las apps
+pnpm dev
+
+# Solo backend API
+pnpm dev --filter=api
+
+# Solo admin-web
+pnpm dev --filter=admin-web
+```
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+vecinosimple/
+├── apps/
+│   ├── api/              # NestJS Backend (Puerto 4000)
+│   ├── admin-web/        # Next.js Admin (Puerto 3000)
+│   ├── resident-app/     # Next.js PWA Vecinos (Puerto 3001)
+│   └── staff-app/        # Next.js PWA Staff (Puerto 3002)
+├── packages/
+│   ├── database/         # Prisma Schema
+│   ├── ui/               # Componentes compartidos
+│   ├── business-logic/   # Lógica de negocio
+│   └── config/           # Configuraciones compartidas
+└── docs/                 # Esta documentación
+```
+
+---
+
+## 🔧 Comandos Útiles
+
+### Desarrollo
+
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm dev` | Inicia todas las apps en modo desarrollo |
+| `pnpm dev --filter=api` | Inicia solo el backend |
+| `pnpm build` | Compila todas las apps |
+| `pnpm lint` | Ejecuta ESLint en todo el proyecto |
+| `pnpm format` | Formatea código con Prettier |
+
+### Base de Datos
+
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm db:migrate` | Ejecuta migraciones pendientes |
+| `pnpm db:generate` | Regenera cliente Prisma |
+| `pnpm db:studio` | Abre Prisma Studio |
+| `pnpm db:seed` | Carga datos de prueba |
+| `pnpm db:reset` | ⚠️ Resetea BD y re-aplica migraciones |
+
+### Testing
+
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm test` | Ejecuta tests unitarios |
+| `pnpm test:e2e` | Ejecuta tests E2E |
+| `pnpm test:cov` | Tests con cobertura |
+
+---
+
+## 🌐 URLs de Desarrollo
+
+| App | URL | Descripción |
+|-----|-----|-------------|
+| API | http://localhost:4000 | Backend NestJS |
+| Swagger | http://localhost:4000/api/docs | Documentación API |
+| Admin | http://localhost:3000 | Portal Administradores |
+| Resident | http://localhost:3001 | App Vecinos |
+| Staff | http://localhost:3002 | App Encargados |
+| Prisma Studio | http://localhost:5555 | UI de Base de Datos |
+
+---
+
+## ❓ Troubleshooting
+
+### Error: "Cannot find module"
+
+```bash
+# Reinstalar dependencias
+rm -rf node_modules
+pnpm install
+```
+
+### Error: "Database connection failed"
+
+1. Verificar que PostgreSQL esté corriendo
+2. Verificar `DATABASE_URL` en `.env`
+3. Verificar que la base de datos existe
+
+```bash
+# Crear base de datos manualmente
+createdb vecinosimple
+```
+
+### Error: "JWT_SECRET no configurado"
+
+Asegurarse de que `.env` tiene:
+```env
+JWT_SECRET="minimo-32-caracteres-aleatorios"
+```
+
+---
+
+## 📚 Próximos Pasos
+
+1. Leer [ARCH-001-system-overview](../architecture/ARCH-001-system-overview.md) para entender la arquitectura
+2. Revisar [copilot-instructions.md](../../.github/copilot-instructions.md) para convenciones de código
+3. Explorar [schema.prisma](../../packages/database/prisma/schema.prisma) para entender los modelos
+4. Revisar el [Swagger](http://localhost:4000/api/docs) para ver los endpoints disponibles
+
+---
+
+## 🆘 Soporte
+
+- **Documentación:** Este repositorio en `/docs`
+- **Issues:** [GitHub Issues](https://github.com/nomdedev/vecinosimple/issues)
+- **Contexto:** Ver [context.md](../../context.md) para estado actual del proyecto
