@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "corepack enable pnpm && cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm run build --filter=admin-web",
+  "rootDirectory": "../..",
+  "installCommand": "corepack enable pnpm && pnpm install",
+  "buildCommand": "pnpm run build --filter=admin-web",
   "outputDirectory": "apps/admin-web/.next",
   "framework": "nextjs",
   "env": {
