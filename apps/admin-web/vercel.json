@@ -1,12 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rootDirectory": "../..",
-  "installCommand": "corepack enable pnpm && pnpm install",
-  "buildCommand": "pnpm run build --filter=admin-web",
-  "outputDirectory": "apps/admin-web/.next",
+  "buildCommand": "turbo build --filter=admin-web",
+  "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
-    "NODE_ENV": "production",
-    "PNPM_FLAGS": "--no-frozen-lockfile"
+    "NODE_ENV": "production"
   }
 }
