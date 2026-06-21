@@ -19,6 +19,7 @@ import {
 import { Plus, Search, Building2, MoreVertical, Trash2, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
 import { useConsorcios, useDeleteConsorcio } from "@/features/consorcios";
 import { useDebouncedValue } from "@/lib/hooks/use-debounce";
 
@@ -64,9 +65,9 @@ export default function ConsorciosPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={isLoading} 
+            variant="secondary"
             onClick={() => refetch()}
-            disabled={isLoading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
@@ -102,7 +103,7 @@ export default function ConsorciosPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-48 animate-pulse rounded-lg bg-neutral-200" />
+            <div className="h-48 animate-pulse rounded-lg bg-neutral-200" key={i} />
           ))}
         </div>
       ) : consorcios.length === 0 ? (

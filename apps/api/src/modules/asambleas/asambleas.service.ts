@@ -9,7 +9,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { Rol, EstadoAsamblea, TipoVoto, Prisma, TipoVinculoUF } from '@prisma/client';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import {
   CreateAsambleaDto,
   UpdateAsambleaDto,
@@ -58,11 +58,11 @@ const ROLES_PUEDEN_VER: Rol[] = [
 function sanitizeText(text: string | undefined | null): string {
   if (!text) return '';
   return text
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;')
+    .replaceAll('/', '&#x2F;')
     .trim();
 }
 
@@ -126,8 +126,9 @@ export class AsambleasService {
     }
 
     if (filtros.fechaHasta) {
+      const existingFecha = where.fecha as Prisma.DateTimeFilter | undefined;
       where.fecha = {
-        ...(where.fecha as any || {}),
+        ...existingFecha,
         lte: new Date(filtros.fechaHasta + 'T23:59:59.999Z'),
       };
     }
@@ -160,7 +161,7 @@ export class AsambleasService {
         lugar: a.lugar,
         linkVirtual: a.linkVirtual,
         estado: a.estado,
-        quorumRequerido: parseFloat(a.quorumRequerido.toString()),
+        quorumRequerido: Number.parseFloat(a.quorumRequerido.toString()),
         actaUrl: a.actaUrl,
         createdAt: a.createdAt,
       })),
@@ -209,16 +210,16 @@ export class AsambleasService {
       if (p.requiereVotacion && p.votos.length > 0) {
         const aFavor = p.votos
           .filter((v) => v.voto === TipoVoto.A_FAVOR)
-          .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+          .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
         const enContra = p.votos
           .filter((v) => v.voto === TipoVoto.EN_CONTRA)
-          .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+          .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
         const abstenciones = p.votos
           .filter((v) => v.voto === TipoVoto.ABSTENCION)
-          .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+          .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
         const totalCoeficiente = aFavor + enContra + abstenciones;
         const porcentajeAFavor = totalCoeficiente > 0 ? (aFavor / totalCoeficiente) * 100 : 0;
-        const mayoriaReq = p.mayoriaRequerida ? parseFloat(p.mayoriaRequerida.toString()) : 50.01;
+        const mayoriaReq = p.mayoriaRequerida ? Number.parseFloat(p.mayoriaRequerida.toString()) : 50.01;
 
         resultadoVotacion = {
           aFavor,
@@ -238,7 +239,7 @@ export class AsambleasService {
         titulo: p.titulo,
         descripcion: p.descripcion,
         requiereVotacion: p.requiereVotacion,
-        mayoriaRequerida: p.mayoriaRequerida ? parseFloat(p.mayoriaRequerida.toString()) : null,
+        mayoriaRequerida: p.mayoriaRequerida ? Number.parseFloat(p.mayoriaRequerida.toString()) : null,
         resultadoVotacion,
       };
     });
@@ -252,7 +253,7 @@ export class AsambleasService {
       lugar: asamblea.lugar,
       linkVirtual: asamblea.linkVirtual,
       estado: asamblea.estado,
-      quorumRequerido: parseFloat(asamblea.quorumRequerido.toString()),
+      quorumRequerido: Number.parseFloat(asamblea.quorumRequerido.toString()),
       actaUrl: asamblea.actaUrl,
       createdAt: asamblea.createdAt,
       puntosOrden: puntosConResultados,
@@ -326,7 +327,7 @@ export class AsambleasService {
       lugar: asamblea.lugar,
       linkVirtual: asamblea.linkVirtual,
       estado: asamblea.estado,
-      quorumRequerido: parseFloat(asamblea.quorumRequerido.toString()),
+      quorumRequerido: Number.parseFloat(asamblea.quorumRequerido.toString()),
       actaUrl: asamblea.actaUrl,
       createdAt: asamblea.createdAt,
     };
@@ -400,7 +401,7 @@ export class AsambleasService {
       lugar: asambleaActualizada.lugar,
       linkVirtual: asambleaActualizada.linkVirtual,
       estado: asambleaActualizada.estado,
-      quorumRequerido: parseFloat(asambleaActualizada.quorumRequerido.toString()),
+      quorumRequerido: Number.parseFloat(asambleaActualizada.quorumRequerido.toString()),
       actaUrl: asambleaActualizada.actaUrl,
       createdAt: asambleaActualizada.createdAt,
     };
@@ -450,7 +451,7 @@ export class AsambleasService {
       }
     }
 
-    const asambleaActualizada = await this.prisma.asamblea.update({
+    await this.prisma.asamblea.update({
       where: { id: asambleaId },
       data: { estado: nuevoEstado },
     });
@@ -512,9 +513,9 @@ export class AsambleasService {
         titulo: sanitizeText(dto.titulo),
         descripcion: dto.descripcion ? sanitizeText(dto.descripcion) : null,
         requiereVotacion: dto.requiereVotacion ?? false,
-        mayoriaRequerida: dto.mayoriaRequerida !== undefined 
-          ? new Prisma.Decimal(dto.mayoriaRequerida) 
-          : null,
+        mayoriaRequerida: dto.mayoriaRequerida === undefined 
+          ? null
+          : new Prisma.Decimal(dto.mayoriaRequerida),
       },
     });
 
@@ -533,7 +534,7 @@ export class AsambleasService {
       descripcion: punto.descripcion,
       requiereVotacion: punto.requiereVotacion,
       mayoriaRequerida: punto.mayoriaRequerida 
-        ? parseFloat(punto.mayoriaRequerida.toString()) 
+        ? Number.parseFloat(punto.mayoriaRequerida.toString()) 
         : null,
     };
   }
@@ -571,9 +572,9 @@ export class AsambleasService {
     }
     if (dto.requiereVotacion !== undefined) datosUpdate.requiereVotacion = dto.requiereVotacion;
     if (dto.mayoriaRequerida !== undefined) {
-      datosUpdate.mayoriaRequerida = dto.mayoriaRequerida !== null 
-        ? new Prisma.Decimal(dto.mayoriaRequerida) 
-        : null;
+      datosUpdate.mayoriaRequerida = dto.mayoriaRequerida === null 
+        ? null
+        : new Prisma.Decimal(dto.mayoriaRequerida);
     }
 
     const puntoActualizado = await this.prisma.puntoOrdenDia.update({
@@ -597,7 +598,7 @@ export class AsambleasService {
       descripcion: puntoActualizado.descripcion,
       requiereVotacion: puntoActualizado.requiereVotacion,
       mayoriaRequerida: puntoActualizado.mayoriaRequerida 
-        ? parseFloat(puntoActualizado.mayoriaRequerida.toString()) 
+        ? Number.parseFloat(puntoActualizado.mayoriaRequerida.toString()) 
         : null,
     };
   }
@@ -729,7 +730,7 @@ export class AsambleasService {
       horaRegistro: asistencia.horaRegistro,
       usuario: vinculo.usuario,
       coeficiente: vinculo.unidadFuncional 
-        ? parseFloat(vinculo.unidadFuncional.coeficiente.toString()) 
+        ? Number.parseFloat(vinculo.unidadFuncional.coeficiente.toString()) 
         : 0,
     };
   }
@@ -779,7 +780,7 @@ export class AsambleasService {
         horaRegistro: asistencia?.horaRegistro ?? null,
         usuario: p.usuario,
         coeficiente: p.unidadFuncional 
-          ? parseFloat(p.unidadFuncional.coeficiente.toString()) 
+          ? Number.parseFloat(p.unidadFuncional.coeficiente.toString()) 
           : 0,
       };
     });
@@ -935,18 +936,18 @@ export class AsambleasService {
 
     const aFavor = punto.votos
       .filter((v) => v.voto === TipoVoto.A_FAVOR)
-      .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
     const enContra = punto.votos
       .filter((v) => v.voto === TipoVoto.EN_CONTRA)
-      .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
     const abstenciones = punto.votos
       .filter((v) => v.voto === TipoVoto.ABSTENCION)
-      .reduce((sum, v) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
 
     const totalCoeficiente = aFavor + enContra + abstenciones;
     const porcentajeAFavor = totalCoeficiente > 0 ? (aFavor / totalCoeficiente) * 100 : 0;
     const mayoriaRequerida = punto.mayoriaRequerida 
-      ? parseFloat(punto.mayoriaRequerida.toString()) 
+      ? Number.parseFloat(punto.mayoriaRequerida.toString()) 
       : 50.01;
 
     // Solo se determina aprobado cuando la asamblea finaliza
@@ -973,7 +974,7 @@ export class AsambleasService {
         usuarioId: v.usuarioId,
         nombre: `${v.usuario.nombre} ${v.usuario.apellido}`,
         voto: v.voto,
-        coeficiente: parseFloat(v.coeficienteVoto.toString()),
+        coeficiente: Number.parseFloat(v.coeficienteVoto.toString()),
       }));
     }
 
@@ -1051,7 +1052,7 @@ export class AsambleasService {
     });
 
     const totalCoeficientes = propietarios.reduce(
-      (sum, p) => sum + (p.unidadFuncional ? parseFloat(p.unidadFuncional.coeficiente.toString()) : 0),
+      (sum, p) => sum + (p.unidadFuncional ? Number.parseFloat(p.unidadFuncional.coeficiente.toString()) : 0),
       0,
     );
 
@@ -1065,7 +1066,7 @@ export class AsambleasService {
     const coeficientePresente = propietarios
       .filter((p) => usuariosPresentes.has(p.usuarioId))
       .reduce(
-        (sum, p) => sum + (p.unidadFuncional ? parseFloat(p.unidadFuncional.coeficiente.toString()) : 0),
+        (sum, p) => sum + (p.unidadFuncional ? Number.parseFloat(p.unidadFuncional.coeficiente.toString()) : 0),
         0,
       );
 
@@ -1073,7 +1074,7 @@ export class AsambleasService {
       ? (coeficientePresente / totalCoeficientes) * 100 
       : 0;
 
-    const requerido = parseFloat(asamblea.quorumRequerido.toString());
+    const requerido = Number.parseFloat(asamblea.quorumRequerido.toString());
 
     return {
       requerido,
@@ -1137,7 +1138,7 @@ export class AsambleasService {
     const contenidoActa = this.generarContenidoActa(asamblea, dto.observaciones);
     const hashActa = generarHashActa(contenidoActa);
 
-    // TODO: En producción, guardar en S3 y generar PDF
+    // NOTE [Fase 2]: Implementar almacenamiento en S3 y generación de PDF real
     // Por ahora, simulamos la URL
     const actaUrl = `https://cdn.vecinosimple.com/actas/${asamblea.id}/acta-${hashActa.slice(0, 8)}.pdf`;
 
@@ -1166,75 +1167,108 @@ export class AsambleasService {
    * Genera el contenido del acta (privado)
    */
   private generarContenidoActa(
-    asamblea: any,
+    asamblea: {
+      consorcio: { nombre: string; direccion: string };
+      fecha: Date;
+      lugar: string | null;
+      titulo: string;
+      descripcion: string | null;
+      asistencias: Array<{ presente: boolean }>;
+      puntosOrden: Array<{
+        orden: number;
+        titulo: string;
+        descripcion: string | null;
+        requiereVotacion: boolean;
+        mayoriaRequerida: Prisma.Decimal | null;
+        votos: Array<{ voto: TipoVoto; coeficienteVoto: Prisma.Decimal }>;
+      }>;
+    },
     observaciones?: string,
   ): string {
-    const lineas: string[] = [];
+    const lineas: string[] = [
+      'ACTA DE ASAMBLEA',
+      '================',
+      '',
+      `Consorcio: ${asamblea.consorcio.nombre}`,
+      `Dirección: ${asamblea.consorcio.direccion}`,
+      `Fecha: ${asamblea.fecha.toLocaleDateString('es-AR')}`,
+      `Hora: ${asamblea.fecha.toLocaleTimeString('es-AR')}`,
+      `Lugar: ${asamblea.lugar || 'Virtual'}`,
+      '',
+      `Título: ${asamblea.titulo}`,
+    ];
 
-    lineas.push(`ACTA DE ASAMBLEA`);
-    lineas.push(`================`);
-    lineas.push(``);
-    lineas.push(`Consorcio: ${asamblea.consorcio.nombre}`);
-    lineas.push(`Dirección: ${asamblea.consorcio.direccion}`);
-    lineas.push(`Fecha: ${asamblea.fecha.toLocaleDateString('es-AR')}`);
-    lineas.push(`Hora: ${asamblea.fecha.toLocaleTimeString('es-AR')}`);
-    lineas.push(`Lugar: ${asamblea.lugar || 'Virtual'}`);
-    lineas.push(``);
-    lineas.push(`Título: ${asamblea.titulo}`);
     if (asamblea.descripcion) {
       lineas.push(`Descripción: ${asamblea.descripcion}`);
     }
-    lineas.push(``);
-    lineas.push(`ASISTENCIA`);
-    lineas.push(`----------`);
-    lineas.push(`Total presentes: ${asamblea.asistencias.filter((a: any) => a.presente).length}`);
-    lineas.push(``);
-    lineas.push(`ORDEN DEL DÍA`);
-    lineas.push(`-------------`);
+
+    const totalPresentes = asamblea.asistencias.filter((a) => a.presente).length;
+    lineas.push(
+      '',
+      'ASISTENCIA',
+      '----------',
+      `Total presentes: ${totalPresentes}`,
+      '',
+      'ORDEN DEL DÍA',
+      '-------------',
+    );
 
     for (const punto of asamblea.puntosOrden) {
-      lineas.push(``);
-      lineas.push(`${punto.orden}. ${punto.titulo}`);
+      lineas.push('', `${punto.orden}. ${punto.titulo}`);
       if (punto.descripcion) {
         lineas.push(`   ${punto.descripcion}`);
       }
 
       if (punto.requiereVotacion && punto.votos.length > 0) {
-        const aFavor = punto.votos
-          .filter((v: any) => v.voto === TipoVoto.A_FAVOR)
-          .reduce((sum: number, v: any) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
-        const enContra = punto.votos
-          .filter((v: any) => v.voto === TipoVoto.EN_CONTRA)
-          .reduce((sum: number, v: any) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
-        const abstenciones = punto.votos
-          .filter((v: any) => v.voto === TipoVoto.ABSTENCION)
-          .reduce((sum: number, v: any) => sum + parseFloat(v.coeficienteVoto.toString()), 0);
-        const total = aFavor + enContra + abstenciones;
-        const porcentaje = total > 0 ? (aFavor / total) * 100 : 0;
-        const mayoriaReq = punto.mayoriaRequerida ? parseFloat(punto.mayoriaRequerida.toString()) : 50.01;
-
-        lineas.push(`   VOTACIÓN:`);
-        lineas.push(`   - A favor: ${aFavor.toFixed(4)}%`);
-        lineas.push(`   - En contra: ${enContra.toFixed(4)}%`);
-        lineas.push(`   - Abstenciones: ${abstenciones.toFixed(4)}%`);
-        lineas.push(`   - Porcentaje a favor: ${porcentaje.toFixed(2)}%`);
-        lineas.push(`   - RESULTADO: ${porcentaje >= mayoriaReq ? 'APROBADO' : 'RECHAZADO'}`);
+        const votacionLineas = this.generarLineasVotacion(punto.votos, punto.mayoriaRequerida);
+        lineas.push(...votacionLineas);
       }
     }
 
     if (observaciones) {
-      lineas.push(``);
-      lineas.push(`OBSERVACIONES`);
-      lineas.push(`-------------`);
-      lineas.push(observaciones);
+      lineas.push('', 'OBSERVACIONES', '-------------', observaciones);
     }
 
-    lineas.push(``);
-    lineas.push(`---`);
-    lineas.push(`Acta generada automáticamente por VecinoSimple`);
-    lineas.push(`Fecha de generación: ${new Date().toISOString()}`);
+    lineas.push(
+      '',
+      '---',
+      'Acta generada automáticamente por VecinoSimple',
+      `Fecha de generación: ${new Date().toISOString()}`,
+    );
 
     return lineas.join('\n');
+  }
+
+  /**
+   * Genera las líneas de votación para el acta (reduce complejidad)
+   */
+  private generarLineasVotacion(
+    votos: Array<{ voto: TipoVoto; coeficienteVoto: Prisma.Decimal }>,
+    mayoriaRequerida: Prisma.Decimal | null,
+  ): string[] {
+    const aFavor = votos
+      .filter((v) => v.voto === TipoVoto.A_FAVOR)
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
+    const enContra = votos
+      .filter((v) => v.voto === TipoVoto.EN_CONTRA)
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
+    const abstenciones = votos
+      .filter((v) => v.voto === TipoVoto.ABSTENCION)
+      .reduce((sum, v) => sum + Number.parseFloat(v.coeficienteVoto.toString()), 0);
+    
+    const total = aFavor + enContra + abstenciones;
+    const porcentaje = total > 0 ? (aFavor / total) * 100 : 0;
+    const mayoriaReq = mayoriaRequerida ? Number.parseFloat(mayoriaRequerida.toString()) : 50.01;
+    const resultado = porcentaje >= mayoriaReq ? 'APROBADO' : 'RECHAZADO';
+
+    return [
+      '   VOTACIÓN:',
+      `   - A favor: ${aFavor.toFixed(4)}%`,
+      `   - En contra: ${enContra.toFixed(4)}%`,
+      `   - Abstenciones: ${abstenciones.toFixed(4)}%`,
+      `   - Porcentaje a favor: ${porcentaje.toFixed(2)}%`,
+      `   - RESULTADO: ${resultado}`,
+    ];
   }
 
   // ==========================================================================

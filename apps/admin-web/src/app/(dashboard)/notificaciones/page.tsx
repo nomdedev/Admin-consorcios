@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -9,19 +7,18 @@ import {
   BellOff,
   Check,
   CheckCheck,
+  Clock,
   CreditCard,
   FileText,
   MessageCircle,
   Users,
-  Clock,
   AlertTriangle,
   Settings,
   Trash2,
-  Filter,
-  Search,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
 import {
   useNotificaciones,
   useContadorNotificaciones,
@@ -34,6 +31,7 @@ import {
   getNotificacionConfig,
   getNotificacionUrl,
 } from '@/features/notificaciones'
+import { cn } from '@/lib/utils'
 
 // Mapeo de iconos por tipo
 const iconMap: Record<TipoNotificacion, React.ElementType> = {
@@ -131,18 +129,18 @@ export default function NotificacionesPage() {
         <div className="flex items-center gap-2">
           {noLeidas > 0 && (
             <button
-              onClick={handleMarcarTodasLeidas}
-              disabled={marcarTodasLeidas.isPending}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors disabled:opacity-50"
+              disabled={marcarTodasLeidas.isPending}
+              onClick={handleMarcarTodasLeidas}
             >
               <CheckCheck className="h-4 w-4" />
               Marcar todas como leídas
             </button>
           )}
           <button
-            onClick={handleLimpiarAntiguas}
-            disabled={limpiar.isPending}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            disabled={limpiar.isPending}
+            onClick={handleLimpiarAntiguas}
           >
             <Trash2 className="h-4 w-4" />
             Limpiar antiguas
@@ -207,16 +205,16 @@ export default function NotificacionesPage() {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <p className="block text-sm font-medium text-gray-700 mb-1">
               Tipo de notificación
-            </label>
+            </p>
             <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               value={filtroTipo}
               onChange={(e) => {
                 setFiltroTipo(e.target.value as TipoNotificacion | '')
                 setPage(1)
               }}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             >
               {tiposNotificacion.map((tipo) => (
                 <option key={tipo.value} value={tipo.value}>
@@ -227,14 +225,14 @@ export default function NotificacionesPage() {
           </div>
 
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <p className="block text-sm font-medium text-gray-700 mb-1">Estado</p>
             <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               value={filtroLeida}
               onChange={(e) => {
                 setFiltroLeida(e.target.value as 'todas' | 'leidas' | 'no-leidas')
                 setPage(1)
               }}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             >
               <option value="todas">Todas</option>
               <option value="no-leidas">Sin leer</option>
@@ -284,16 +282,16 @@ export default function NotificacionesPage() {
             </p>
             <div className="flex gap-2">
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
                 className="px-3 py-1 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 Anterior
               </button>
               <button
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={page === pagination.totalPages}
                 className="px-3 py-1 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === pagination.totalPages}
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               >
                 Siguiente
               </button>
@@ -333,14 +331,16 @@ function NotificacionItem({
   })
 
   return (
-    <li
-      onClick={onClick}
-      className={cn(
-        'px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors group',
-        !notificacion.leida && 'bg-blue-50/50'
-      )}
-    >
-      <div className="flex gap-4">
+    <li>
+      <button
+        className={cn(
+          'w-full px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors group text-left',
+          !notificacion.leida && 'bg-blue-50/50'
+        )}
+        type="button"
+        onClick={onClick}
+      >
+        <div className="flex gap-4">
         {/* Icono */}
         <div
           className={cn(
@@ -388,23 +388,23 @@ function NotificacionItem({
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {!notificacion.leida && (
                 <button
+                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                  title="Marcar como leída"
                   onClick={(e) => {
                     e.stopPropagation()
                     onMarcarLeida()
                   }}
-                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                  title="Marcar como leída"
                 >
                   <Check className="h-4 w-4 text-gray-500" />
                 </button>
               )}
               <button
+                className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                title="Eliminar"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDelete()
                 }}
-                className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                title="Eliminar"
               >
                 <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" />
               </button>
@@ -412,6 +412,7 @@ function NotificacionItem({
           </div>
         </div>
       </div>
+      </button>
     </li>
   )
 }

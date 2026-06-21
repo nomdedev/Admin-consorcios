@@ -1,6 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+
+import { EmailQueueService } from './email-queue.service';
 
 export interface EmailOptions {
   to: string | string[];
@@ -26,12 +28,15 @@ export interface EmailResult {
 @Injectable()
 export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
-  private resend: Resend | null = null;
+  private readonly resend: Resend | null = null;
   private readonly fromEmail: string;
   private readonly fromName: string;
   private readonly isEnabled: boolean;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @Optional() private readonly emailQueueService?: EmailQueueService,
+  ) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.fromEmail = this.configService.get<string>('EMAIL_FROM', 'noreply@vecinosimple.com');
     this.fromName = this.configService.get<string>('EMAIL_FROM_NAME', 'VecinoSimple');
@@ -54,6 +59,24 @@ export class EmailService implements OnModuleInit {
    * Envía un email usando Resend
    */
   async send(options: EmailOptions): Promise<EmailResult> {
+    const queueEnabled =
+      this.configService.get<string>('QUEUE_EMAIL_ENABLED', 'true') === 'true';
+
+    if (queueEnabled && this.emailQueueService) {
+      await this.emailQueueService.enqueue(options);
+      return {
+        success: true,
+        messageId: `queued-${Date.now()}`,
+      };
+    }
+
+    return this.sendDirect(options);
+  }
+
+  /**
+   * Envía un email directamente (sin cola)
+   */
+  async sendDirect(options: EmailOptions): Promise<EmailResult> {
     const recipients = Array.isArray(options.to) ? options.to : [options.to];
 
     // Si el servicio no está habilitado, loguear y retornar

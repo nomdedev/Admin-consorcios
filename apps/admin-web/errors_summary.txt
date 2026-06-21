@@ -1,0 +1,9 @@
+14:3  Error: 'useCreateAmenity' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+13:3  Error: 'useDetallesExpensa' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+6:32  Error: 'vi' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+156:5  Error: Require statement not part of import statement.  @typescript-eslint/no-var-requires
+7:10  Error: 'Avatar' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+80:3  Error: Headings must have content and the content must be accessible by a screen reader.  jsx-a11y/heading-has-content
+19:3  Error: 'defaultTheme' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+114:9  Error: A form label must be associated with a control.  jsx-a11y/label-has-associated-control
+143:9  Error: A form label must be associated with a control.  jsx-a11y/label-has-associated-control

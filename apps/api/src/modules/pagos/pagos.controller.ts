@@ -11,9 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   Headers,
-  RawBodyRequest,
-  Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -61,6 +60,8 @@ export class PagosController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Rol.PROPIETARIO, Rol.INQUILINO)
+  // ✅ SEGURIDAD: Rate limit estricto para pagos (5 por minuto por usuario)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({
     summary: 'Iniciar un pago como vecino',
     description:

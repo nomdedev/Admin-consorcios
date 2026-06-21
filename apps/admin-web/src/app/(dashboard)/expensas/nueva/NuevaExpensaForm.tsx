@@ -1,8 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Input,
@@ -20,10 +18,13 @@ import {
   Textarea,
 } from "@vecinosimple/ui";
 import { ArrowLeft, FileText, Save } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useCreateExpensa } from "@/features/expensas";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { useConsorcios } from "@/features/consorcios";
+import { useCreateExpensa } from "@/features/expensas";
 
 // Schema de validación
 const expensaSchema = z.object({
@@ -111,7 +112,7 @@ export default function NuevaExpensaForm() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/expensas">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -141,11 +142,11 @@ export default function NuevaExpensaForm() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <p className="block text-sm font-medium text-neutral-700 mb-1">
                   Consorcio *
-                </label>
-                <Select 
-                  value={watch("consorcioId")} 
+                </p>
+                <Select
+                  value={watch("consorcioId")}
                   onValueChange={(v) => setValue("consorcioId", v)}
                 >
                   <SelectTrigger>
@@ -165,11 +166,11 @@ export default function NuevaExpensaForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <p className="block text-sm font-medium text-neutral-700 mb-1">
                   Período *
-                </label>
-                <Select 
-                  value={watch("periodo")} 
+                </p>
+                <Select
+                  value={watch("periodo")}
                   onValueChange={(v) => setValue("periodo", v)}
                 >
                   <SelectTrigger>
@@ -191,10 +192,11 @@ export default function NuevaExpensaForm() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fecha-vencimiento">
                   Fecha 1er Vencimiento *
                 </label>
                 <Input
+                  id="fecha-vencimiento"
                   type="date"
                   {...register("fechaVencimiento")}
                   error={errors.fechaVencimiento?.message}
@@ -202,10 +204,11 @@ export default function NuevaExpensaForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fecha-segundo-vencimiento">
                   Fecha 2do Vencimiento
                 </label>
                 <Input
+                  id="fecha-segundo-vencimiento"
                   type="date"
                   {...register("fechaSegundoVencimiento")}
                 />
@@ -213,22 +216,24 @@ export default function NuevaExpensaForm() {
             </div>
 
             <div className="w-48">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="recargo-segundo-vencimiento">
                 Recargo 2do Vencimiento (%)
               </label>
               <Input
-                type="number"
+                id="recargo-segundo-vencimiento"
                 step="0.01"
+                type="number"
                 {...register("recargoSegundoVencimiento", { valueAsNumber: true })}
                 placeholder="10"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="observaciones">
                 Observaciones
               </label>
               <Textarea
+                id="observaciones"
                 {...register("observaciones")}
                 placeholder="Notas adicionales para esta liquidación..."
                 rows={3}
@@ -252,10 +257,10 @@ export default function NuevaExpensaForm() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting || createExpensa.isPending}>
+          <Button disabled={isSubmitting || createExpensa.isPending} type="submit">
             {isSubmitting || createExpensa.isPending ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Creando...
               </>
             ) : (

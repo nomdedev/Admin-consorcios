@@ -3,9 +3,12 @@
  * Incluye wrapper de React Query y helpers
  */
 
-import React, { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, RenderOptions, RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import React from 'react';
+
+import type { RenderOptions, RenderResult } from '@testing-library/react';
+import type { ReactNode } from 'react';
 
 /**
  * Crear un QueryClient para testing

@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { apiClient } from '@/lib/api-client';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,20 +17,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/magic-link`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al enviar el enlace');
-      }
-
+      await apiClient.post('/auth/magic-link', { email });
       setEmailSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar el enlace');
@@ -53,8 +42,8 @@ export default function LoginPage() {
             El enlace expira en 15 minutos.
           </p>
           <button
-            onClick={() => setEmailSent(false)}
             className="text-green-600 hover:text-green-700 font-medium"
+            onClick={() => setEmailSent(false)}
           >
             ¿No recibiste el correo? Intentar de nuevo
           </button>
@@ -68,7 +57,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-green-700">
+          <Link className="text-3xl font-bold text-green-700" href="/">
             VecinoSimple
           </Link>
           <p className="text-gray-600 mt-2">Ingresá a tu cuenta</p>
@@ -82,30 +71,30 @@ export default function LoginPage() {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <label
-              htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="email"
             >
               Correo electrónico
             </label>
             <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com"
               required
               autoComplete="email"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
+              id="email"
+              placeholder="tu@email.com"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <button
-            type="submit"
-            disabled={isLoading}
             className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+            disabled={isLoading}
+            type="submit"
           >
             {isLoading ? 'Enviando...' : 'Continuar con email'}
           </button>
@@ -125,7 +114,7 @@ export default function LoginPage() {
         <div className="text-center text-sm text-gray-600">
           <p>
             ¿Primera vez?{' '}
-            <Link href="/registro" className="text-green-600 hover:underline font-medium">
+            <Link className="text-green-600 hover:underline font-medium" href="/registro">
               Registrate con tu código de invitación
             </Link>
           </p>

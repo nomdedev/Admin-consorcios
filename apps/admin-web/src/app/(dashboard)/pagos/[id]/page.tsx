@@ -1,8 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -16,6 +13,10 @@ import {
   Label,
   AlertBanner,
 } from '@vecinosimple/ui';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
+
 import {
   usePago,
   useActualizarEstadoPago,
@@ -53,7 +54,6 @@ const metodoPagoLabels: Record<MetodoPago, string> = {
 
 export default function PagoDetallePage() {
   const params = useParams();
-  const router = useRouter();
   const pagoId = params.id as string;
 
   const [showActualizarEstado, setShowActualizarEstado] = useState(false);
@@ -93,8 +93,9 @@ export default function PagoDetallePage() {
       setSuccess('Estado actualizado correctamente');
       setShowActualizarEstado(false);
       setMotivoEstado('');
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al actualizar estado');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al actualizar estado');
     }
   };
 
@@ -119,8 +120,9 @@ export default function PagoDetallePage() {
       setShowReembolsar(false);
       setMotivoReembolso('');
       setMontoReembolso(undefined);
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al procesar reembolso');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al procesar reembolso');
     }
   };
 
@@ -131,8 +133,9 @@ export default function PagoDetallePage() {
       if (result.url) {
         window.open(result.url, '_blank');
       }
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al generar comprobante');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al generar comprobante');
     }
   };
 
@@ -148,12 +151,12 @@ export default function PagoDetallePage() {
     return (
       <div className="max-w-2xl mx-auto">
         <AlertBanner
-          variant="error"
           title="Error al cargar pago"
+          variant="error"
         >
           {queryError?.message || 'Pago no encontrado'}
         </AlertBanner>
-        <Link href="/pagos" className="mt-4 inline-block">
+        <Link className="mt-4 inline-block" href="/pagos">
           <Button variant="secondary">← Volver a pagos</Button>
         </Link>
       </div>
@@ -170,7 +173,7 @@ export default function PagoDetallePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/pagos">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               ← Volver
             </Button>
           </Link>
@@ -186,9 +189,9 @@ export default function PagoDetallePage() {
         </div>
         <div className="flex gap-2">
           <Button
+            disabled={generarComprobanteMutation.isPending || pago.estado !== 'APROBADO'}
             variant="secondary"
             onClick={handleGenerarComprobante}
-            disabled={generarComprobanteMutation.isPending || pago.estado !== 'APROBADO'}
           >
             {generarComprobanteMutation.isPending ? (
               <Spinner size="sm" />
@@ -201,10 +204,10 @@ export default function PagoDetallePage() {
 
       {/* Alerts */}
       {error && (
-        <AlertBanner variant="error" title="Error">{error}</AlertBanner>
+        <AlertBanner title="Error" variant="error">{error}</AlertBanner>
       )}
       {success && (
-        <AlertBanner variant="success" title="Éxito">{success}</AlertBanner>
+        <AlertBanner title="Éxito" variant="success">{success}</AlertBanner>
       )}
 
       {/* Información principal */}
@@ -322,10 +325,10 @@ export default function PagoDetallePage() {
           </CardHeader>
           <CardContent>
             <a
-              href={pago.comprobanteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:underline"
+              href={pago.comprobanteUrl}
+              rel="noopener noreferrer"
+              target="_blank"
             >
               📄 Descargar comprobante
             </a>
@@ -359,11 +362,11 @@ export default function PagoDetallePage() {
                       <div className="space-y-2">
                         <Label>Nuevo estado</Label>
                         <select
+                          className="w-full h-10 px-3 rounded-md border border-input bg-background"
                           value={nuevoEstado}
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                             setNuevoEstado(e.target.value as EstadoPago)
                           }
-                          className="w-full h-10 px-3 rounded-md border border-input bg-background"
                         >
                           <option value="APROBADO">Aprobado</option>
                           <option value="RECHAZADO">Rechazado</option>
@@ -373,16 +376,16 @@ export default function PagoDetallePage() {
                       <div className="space-y-2">
                         <Label>Motivo *</Label>
                         <Input
-                          value={motivoEstado}
-                          onChange={(e) => setMotivoEstado(e.target.value)}
                           placeholder="Motivo del cambio"
+                          value={motivoEstado}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMotivoEstado(e.target.value)}
                         />
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        onClick={handleActualizarEstado}
                         disabled={actualizarEstadoMutation.isPending}
+                        onClick={handleActualizarEstado}
                       >
                         {actualizarEstadoMutation.isPending ? (
                           <Spinner size="sm" />
@@ -424,31 +427,31 @@ export default function PagoDetallePage() {
                       <div className="space-y-2">
                         <Label>Motivo *</Label>
                         <Input
-                          value={motivoReembolso}
-                          onChange={(e) => setMotivoReembolso(e.target.value)}
                           placeholder="Motivo del reembolso"
+                          value={motivoReembolso}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMotivoReembolso(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Monto (opcional, si es parcial)</Label>
                         <Input
-                          type="number"
+                          placeholder={`Total: ${formatCurrency(pago.monto)}`}
                           step="0.01"
+                          type="number"
                           value={montoReembolso || ''}
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setMontoReembolso(
                               e.target.value ? parseFloat(e.target.value) : undefined
                             )
                           }
-                          placeholder={`Total: ${formatCurrency(pago.monto)}`}
                         />
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button
+                        disabled={reembolsarMutation.isPending}
                         variant="danger"
                         onClick={handleReembolsar}
-                        disabled={reembolsarMutation.isPending}
                       >
                         {reembolsarMutation.isPending ? (
                           <Spinner size="sm" />

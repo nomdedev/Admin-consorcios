@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { ArrowLeft, Building2, Loader2, Save } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
-import { cn, formatCurrency } from '@/lib/utils'
 import { useAmenity, useUpdateAmenity } from '@/features/amenities'
+import { cn } from '@/lib/utils'
 
 // Schema de validación
 const amenitySchema = z.object({
@@ -63,7 +63,6 @@ export default function EditarAmenityPage() {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors, isDirty },
   } = useForm<AmenityFormData>({
     resolver: zodResolver(amenitySchema),
@@ -115,8 +114,6 @@ export default function EditarAmenityPage() {
     router.push(`/amenities/${amenityId}`)
   }
 
-  const watchCosto = watch('costoReserva')
-
   if (loadingAmenity) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -130,7 +127,7 @@ export default function EditarAmenityPage() {
       <div className="text-center py-12">
         <Building2 className="h-16 w-16 mx-auto text-gray-300" />
         <h3 className="mt-4 text-lg font-medium text-gray-900">Amenity no encontrado</h3>
-        <Link href="/amenities" className="mt-2 text-primary-600 hover:underline">
+        <Link className="mt-2 text-primary-600 hover:underline" href="/amenities">
           Volver a amenities
         </Link>
       </div>
@@ -142,8 +139,8 @@ export default function EditarAmenityPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href={`/amenities/${amenityId}`}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href={`/amenities/${amenityId}`}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -154,7 +151,7 @@ export default function EditarAmenityPage() {
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {/* Información Básica */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información Básica</h3>
@@ -162,17 +159,18 @@ export default function EditarAmenityPage() {
           <div className="space-y-4">
             {/* Nombre */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nombre">
                 Nombre <span className="text-red-500">*</span>
               </label>
               <input
+                id="nombre"
                 type="text"
                 {...register('nombre')}
-                placeholder="Ej: SUM, Parrilla, Pileta"
                 className={cn(
                   'w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                   errors.nombre ? 'border-red-300' : 'border-gray-300'
                 )}
+                placeholder="Ej: SUM, Parrilla, Pileta"
               />
               {errors.nombre && (
                 <p className="mt-1 text-sm text-red-600">{errors.nombre.message}</p>
@@ -181,14 +179,15 @@ export default function EditarAmenityPage() {
 
             {/* Descripción */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="descripcion">
                 Descripción
               </label>
               <textarea
                 {...register('descripcion')}
-                rows={3}
-                placeholder="Descripción del amenity y reglas de uso..."
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                id="descripcion"
+                placeholder="Descripción del amenity y reglas de uso..."
+                rows={3}
               />
               {errors.descripcion && (
                 <p className="mt-1 text-sm text-red-600">{errors.descripcion.message}</p>
@@ -197,14 +196,15 @@ export default function EditarAmenityPage() {
 
             {/* Capacidad */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="capacidad">
                 Capacidad máxima (personas)
               </label>
               <input
+                id="capacidad"
                 type="number"
                 {...register('capacidad', { valueAsNumber: true })}
-                placeholder="Ej: 50"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: 50"
               />
               {errors.capacidad && (
                 <p className="mt-1 text-sm text-red-600">{errors.capacidad.message}</p>
@@ -214,12 +214,12 @@ export default function EditarAmenityPage() {
             {/* Activo */}
             <div className="flex items-center gap-3">
               <input
-                type="checkbox"
                 id="activo"
+                type="checkbox"
                 {...register('activo')}
                 className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
-              <label htmlFor="activo" className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700" htmlFor="activo">
                 Amenity activo (visible para reservas)
               </label>
             </div>
@@ -235,10 +235,11 @@ export default function EditarAmenityPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Anticipación mínima */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="anticipacionMinima">
                 Anticipación mínima (horas)
               </label>
               <input
+                id="anticipacionMinima"
                 type="number"
                 {...register('anticipacionMinima', { valueAsNumber: true })}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -253,10 +254,11 @@ export default function EditarAmenityPage() {
 
             {/* Anticipación máxima */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="anticipacionMaxima">
                 Anticipación máxima (horas)
               </label>
               <input
+                id="anticipacionMaxima"
                 type="number"
                 {...register('anticipacionMaxima', { valueAsNumber: true })}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -271,10 +273,11 @@ export default function EditarAmenityPage() {
 
             {/* Duración máxima */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="duracionMaxima">
                 Duración máxima (horas)
               </label>
               <input
+                id="duracionMaxima"
                 type="number"
                 {...register('duracionMaxima', { valueAsNumber: true })}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -288,12 +291,12 @@ export default function EditarAmenityPage() {
             <div className="flex items-center h-full pt-6">
               <div className="flex items-center gap-3">
                 <input
-                  type="checkbox"
                   id="requiereAprobacion"
+                  type="checkbox"
                   {...register('requiereAprobacion')}
                   className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <label htmlFor="requiereAprobacion" className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700" htmlFor="requiereAprobacion">
                   Requiere aprobación del administrador
                 </label>
               </div>
@@ -306,17 +309,18 @@ export default function EditarAmenityPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Costo</h3>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="costoReserva">
               Costo por reserva (ARS)
             </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
               <input
-                type="number"
+                id="costoReserva"
                 step="0.01"
+                type="number"
                 {...register('costoReserva', { valueAsNumber: true })}
-                placeholder="0.00"
                 className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="0.00"
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">
@@ -331,15 +335,15 @@ export default function EditarAmenityPage() {
         {/* Acciones */}
         <div className="flex justify-end gap-3">
           <Link
-            href={`/amenities/${amenityId}`}
             className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href={`/amenities/${amenityId}`}
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={updateAmenity.isPending || !isDirty}
             className="px-6 py-2.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={updateAmenity.isPending || !isDirty}
+            type="submit"
           >
             {updateAmenity.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

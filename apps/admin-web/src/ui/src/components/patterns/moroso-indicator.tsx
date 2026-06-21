@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import { cn } from "../../lib/utils";
 import { Badge } from "../primitives/badge";
 
@@ -74,18 +75,18 @@ export const MorosoIndicator = React.forwardRef<HTMLDivElement, MorosoIndicatorP
 
     return (
       <div
-        ref={ref}
         className={cn("flex items-center gap-2", className)}
+        ref={ref}
         {...props}
       >
         {/* Círculo indicador */}
         <span
+          aria-hidden="true"
           className={cn(
             "rounded-full shrink-0",
             estado.color,
             sizeClasses[size]
           )}
-          aria-hidden="true"
         />
         
         {showLabel && (

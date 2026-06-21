@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { ArrowLeft, Save, Building2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 import { useCreateAmenity } from '@/features/amenities'
+import { useConsorcios } from '@/features/consorcios'
 
 // Schema de validación
 const amenitySchema = z.object({
@@ -46,11 +46,11 @@ type AmenityFormData = z.infer<typeof amenitySchema>
 export default function NuevoAmenityPage() {
   const router = useRouter()
   const createAmenity = useCreateAmenity()
+  const { data: consorciosData } = useConsorcios({ limit: 100 })
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<AmenityFormData>({
     resolver: zodResolver(amenitySchema),
@@ -61,9 +61,6 @@ export default function NuevoAmenityPage() {
       duracionMaxima: 4,
     },
   })
-
-  const requiereAprobacion = watch('requiereAprobacion')
-  const costoReserva = watch('costoReserva')
 
   const onSubmit = async (data: AmenityFormData) => {
     try {
@@ -79,8 +76,8 @@ export default function NuevoAmenityPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/amenities"
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href="/amenities"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -91,7 +88,7 @@ export default function NuevoAmenityPage() {
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {/* Información básica */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -100,17 +97,20 @@ export default function NuevoAmenityPage() {
           </h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="consorcioId">
               Consorcio *
             </label>
             <select
+              id="consorcioId"
               {...register('consorcioId')}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             >
               <option value="">Seleccionar consorcio</option>
-              {/* TODO: Cargar consorcios desde hook */}
-              <option value="consorcio-1">Edificio Torre Norte</option>
-              <option value="consorcio-2">Edificio Plaza Sur</option>
+              {consorciosData?.data?.map((consorcio) => (
+                <option key={consorcio.id} value={consorcio.id}>
+                  {consorcio.nombre}
+                </option>
+              ))}
             </select>
             {errors.consorcioId && (
               <p className="mt-1 text-sm text-red-600">{errors.consorcioId.message}</p>
@@ -118,12 +118,13 @@ export default function NuevoAmenityPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nombre">Nombre *</label>
             <input
+              id="nombre"
               type="text"
               {...register('nombre')}
-              placeholder="Ej: SUM, Pileta, Parrilla"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              placeholder="Ej: SUM, Pileta, Parrilla"
             />
             {errors.nombre && (
               <p className="mt-1 text-sm text-red-600">{errors.nombre.message}</p>
@@ -131,12 +132,13 @@ export default function NuevoAmenityPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="descripcion">Descripción</label>
             <textarea
               {...register('descripcion')}
-              rows={3}
-              placeholder="Describe el amenity, sus características y reglas de uso..."
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              id="descripcion"
+              placeholder="Describe el amenity, sus características y reglas de uso..."
+              rows={3}
             />
             {errors.descripcion && (
               <p className="mt-1 text-sm text-red-600">{errors.descripcion.message}</p>
@@ -144,14 +146,15 @@ export default function NuevoAmenityPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="capacidad">
               Capacidad máxima (personas)
             </label>
             <input
               type="number"
               {...register('capacidad')}
-              placeholder="Ej: 50"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              id="capacidad"
+              placeholder="Ej: 50"
             />
             {errors.capacidad && (
               <p className="mt-1 text-sm text-red-600">{errors.capacidad.message}</p>
@@ -165,13 +168,14 @@ export default function NuevoAmenityPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="anticipacionMinima">
                 Anticipación mínima (horas)
               </label>
               <input
                 type="number"
                 {...register('anticipacionMinima')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                id="anticipacionMinima"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Cuántas horas antes se puede reservar como mínimo
@@ -182,13 +186,14 @@ export default function NuevoAmenityPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="anticipacionMaxima">
                 Anticipación máxima (horas)
               </label>
               <input
                 type="number"
                 {...register('anticipacionMaxima')}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primera700500"
+                id="anticipacionMaxima"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Cuántas horas antes se puede reservar como máximo
@@ -200,13 +205,14 @@ export default function NuevoAmenityPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="duracionMaxima">
               Duración máxima por reserva (horas)
             </label>
             <input
               type="number"
               {...register('duracionMaxima')}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              id="duracionMaxima"
             />
             {errors.duracionMaxima && (
               <p className="mt-1 text-sm text-red-600">{errors.duracionMaxima.message}</p>
@@ -215,12 +221,12 @@ export default function NuevoAmenityPage() {
 
           <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
             <input
-              type="checkbox"
               id="requiereAprobacion"
+              type="checkbox"
               {...register('requiereAprobacion')}
               className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />
-            <label htmlFor="requiereAprobacion" className="text-sm text-gray-700">
+            <label className="text-sm text-gray-700" htmlFor="requiereAprobacion">
               <span className="font-medium">Requiere aprobación del administrador</span>
               <p className="text-gray-500">
                 Si está activo, las reservas quedarán pendientes hasta que un admin las apruebe
@@ -234,14 +240,15 @@ export default function NuevoAmenityPage() {
           <h2 className="text-lg font-semibold text-gray-900">Costo de reserva</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="costoReserva">
               Costo por reserva ($)
             </label>
             <input
               type="number"
               {...register('costoReserva')}
-              placeholder="0 = Gratis"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              id="costoReserva"
+              placeholder="0 = Gratis"
             />
             <p className="mt-1 text-xs text-gray-500">
               Dejá en 0 si el amenity es gratuito. El costo se sumará a la próxima expensa.
@@ -255,15 +262,15 @@ export default function NuevoAmenityPage() {
         {/* Acciones */}
         <div className="flex items-center justify-end gap-3">
           <Link
-            href="/amenities"
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/amenities"
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={isSubmitting || createAmenity.isPending}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50"
+            disabled={isSubmitting || createAmenity.isPending}
+            type="submit"
           >
             <Save className="h-4 w-4" />
             {isSubmitting || createAmenity.isPending ? 'Guardando...' : 'Crear Amenity'}

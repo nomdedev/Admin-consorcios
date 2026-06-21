@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   AlertTriangle,
@@ -13,9 +10,10 @@ import {
   Smartphone,
   AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/features/auth'
 import {
   useCreateAlerta,
   type CreateAlertaDto,
@@ -26,6 +24,8 @@ import {
   tipoEmergenciaColors,
   getAlertaPrioridad,
 } from '@/features/alertas'
+import { useAuth } from '@/features/auth'
+import { cn } from '@/lib/utils'
 
 export default function NuevaAlertaPage() {
   const router = useRouter()
@@ -116,9 +116,9 @@ export default function NuevaAlertaPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/alertas"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Volver a alertas"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href="/alertas"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500" />
         </Link>
@@ -144,7 +144,7 @@ export default function NuevaAlertaPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Tipo de emergencia */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -154,15 +154,15 @@ export default function NuevaAlertaPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {TIPOS_EMERGENCIA.map((t) => (
               <button
-                key={t}
-                type="button"
-                onClick={() => setTipo(t)}
                 className={cn(
                   'p-4 rounded-xl border-2 transition-all text-center',
                   tipo === t
                     ? tipoEmergenciaColors[t] + ' border-current'
                     : 'border-gray-200 hover:border-gray-300'
                 )}
+                key={t}
+                type="button"
+                onClick={() => setTipo(t)}
               >
                 <span className="text-3xl block mb-2">{tipoEmergenciaIcons[t]}</span>
                 <span className="text-sm font-medium">{tipoEmergenciaLabels[t]}</span>
@@ -198,21 +198,21 @@ export default function NuevaAlertaPage() {
             {/* Título */}
             <div>
               <label
-                htmlFor="titulo"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="titulo"
               >
                 Título de la alerta *
               </label>
               <input
-                type="text"
-                id="titulo"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ej: ⚠️ CORTE DE AGUA URGENTE"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent',
                   errors.titulo ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="titulo"
+                placeholder="Ej: ⚠️ CORTE DE AGUA URGENTE"
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
               />
               {errors.titulo && (
                 <p className="text-red-500 text-sm mt-1">{errors.titulo}</p>
@@ -222,21 +222,21 @@ export default function NuevaAlertaPage() {
             {/* Descripción */}
             <div>
               <label
-                htmlFor="descripcion"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="descripcion"
               >
                 Descripción detallada *
               </label>
               <textarea
-                id="descripcion"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                rows={4}
-                placeholder="Describí la situación con el mayor detalle posible..."
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent',
                   errors.descripcion ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="descripcion"
+                placeholder="Describí la situación con el mayor detalle posible..."
+                rows={4}
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
               />
               {errors.descripcion && (
                 <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>
@@ -246,18 +246,18 @@ export default function NuevaAlertaPage() {
             {/* Instrucciones */}
             <div>
               <label
-                htmlFor="instrucciones"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="instrucciones"
               >
                 Instrucciones para los vecinos (opcional)
               </label>
               <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 id="instrucciones"
+                placeholder="Ej: Por favor cerrar canillas y llaves de paso..."
+                rows={3}
                 value={instrucciones}
                 onChange={(e) => setInstrucciones(e.target.value)}
-                rows={3}
-                placeholder="Ej: Por favor cerrar canillas y llaves de paso..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -276,14 +276,14 @@ export default function NuevaAlertaPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Push */}
             <button
-              type="button"
-              onClick={() => setEnviarPush(!enviarPush)}
               className={cn(
                 'p-4 rounded-xl border-2 transition-all text-center',
                 enviarPush
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-gray-200 hover:border-gray-300'
               )}
+              type="button"
+              onClick={() => setEnviarPush(!enviarPush)}
             >
               <Bell className={cn('h-8 w-8 mx-auto mb-2', enviarPush ? 'text-primary-600' : 'text-gray-400')} />
               <span className="text-sm font-medium block">Push</span>
@@ -292,14 +292,14 @@ export default function NuevaAlertaPage() {
 
             {/* Email */}
             <button
-              type="button"
-              onClick={() => setEnviarEmail(!enviarEmail)}
               className={cn(
                 'p-4 rounded-xl border-2 transition-all text-center',
                 enviarEmail
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-gray-200 hover:border-gray-300'
               )}
+              type="button"
+              onClick={() => setEnviarEmail(!enviarEmail)}
             >
               <Mail className={cn('h-8 w-8 mx-auto mb-2', enviarEmail ? 'text-primary-600' : 'text-gray-400')} />
               <span className="text-sm font-medium block">Email</span>
@@ -308,14 +308,14 @@ export default function NuevaAlertaPage() {
 
             {/* WhatsApp */}
             <button
-              type="button"
-              onClick={() => setEnviarWhatsapp(!enviarWhatsapp)}
               className={cn(
                 'p-4 rounded-xl border-2 transition-all text-center',
                 enviarWhatsapp
                   ? 'border-green-500 bg-green-50'
                   : 'border-gray-200 hover:border-gray-300'
               )}
+              type="button"
+              onClick={() => setEnviarWhatsapp(!enviarWhatsapp)}
             >
               <MessageCircle className={cn('h-8 w-8 mx-auto mb-2', enviarWhatsapp ? 'text-green-600' : 'text-gray-400')} />
               <span className="text-sm font-medium block">WhatsApp</span>
@@ -324,14 +324,14 @@ export default function NuevaAlertaPage() {
 
             {/* SMS */}
             <button
-              type="button"
-              onClick={() => setEnviarSms(!enviarSms)}
               className={cn(
                 'p-4 rounded-xl border-2 transition-all text-center',
                 enviarSms
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
               )}
+              type="button"
+              onClick={() => setEnviarSms(!enviarSms)}
             >
               <Smartphone className={cn('h-8 w-8 mx-auto mb-2', enviarSms ? 'text-blue-600' : 'text-gray-400')} />
               <span className="text-sm font-medium block">SMS</span>
@@ -355,15 +355,15 @@ export default function NuevaAlertaPage() {
         {/* Buttons */}
         <div className="flex justify-end gap-3">
           <Link
-            href="/alertas"
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/alertas"
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={createAlerta.isPending}
             className="px-6 py-2 text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-lg transition-colors flex items-center gap-2"
+            disabled={createAlerta.isPending}
+            type="submit"
           >
             {createAlerta.isPending ? (
               <>

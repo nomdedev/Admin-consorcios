@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import { cn } from "../../lib/utils";
 
 // =============================================================================
@@ -60,12 +61,12 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
 
     return (
       <div
-        ref={ref}
         className={cn(
           "rounded-card border border-neutral-200 bg-white p-6",
           "shadow-sm transition-shadow hover:shadow-md",
           className
         )}
+        ref={ref}
         {...props}
       >
         <div className="flex items-start justify-between">

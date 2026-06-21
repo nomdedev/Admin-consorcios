@@ -46,6 +46,9 @@ coverage/
 playwright-report/
 test-results/
 
+# E2E auth artifacts (credentials)
+apps/admin-web/e2e/.auth/
+
 # Prisma
 packages/database/prisma/migrations/*_migration_lock.toml
 

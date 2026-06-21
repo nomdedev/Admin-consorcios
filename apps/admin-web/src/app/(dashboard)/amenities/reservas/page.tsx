@@ -1,24 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Calendar,
   Search,
-  Filter,
   Building2,
   User,
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
-  MoreHorizontal,
   ExternalLink,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatDateTime } from '@/lib/utils'
 import {
   useReservas,
   useAmenities,
@@ -28,6 +24,7 @@ import {
   type Reserva,
   type EstadoReserva,
 } from '@/features/amenities'
+import { cn } from '@/lib/utils'
 
 type FilterEstado = EstadoReserva | 'TODAS'
 
@@ -149,44 +146,60 @@ export default function ReservasPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
+            <label className="sr-only" htmlFor="buscar-reservas">
+              Buscar por usuario, amenity o motivo
+            </label>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
-              type="text"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              id="buscar-reservas"
               placeholder="Buscar por usuario, amenity o motivo..."
+              type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
           {/* Filter by estado */}
-          <select
-            value={filterEstado}
-            onChange={(e) => setFilterEstado(e.target.value as FilterEstado)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-          >
-            <option value="TODAS">Todos los estados</option>
-            <option value="PENDIENTE">Pendientes</option>
-            <option value="APROBADA">Aprobadas</option>
-            <option value="RECHAZADA">Rechazadas</option>
-            <option value="CANCELADA">Canceladas</option>
-            <option value="COMPLETADA">Completadas</option>
-            <option value="NO_SHOW">No show</option>
-          </select>
+          <div>
+            <label className="sr-only" htmlFor="filtro-estado">
+              Filtrar por estado
+            </label>
+            <select
+              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+              id="filtro-estado"
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value as FilterEstado)}
+            >
+              <option value="TODAS">Todos los estados</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="APROBADA">Aprobadas</option>
+              <option value="RECHAZADA">Rechazadas</option>
+              <option value="CANCELADA">Canceladas</option>
+              <option value="COMPLETADA">Completadas</option>
+              <option value="NO_SHOW">No show</option>
+            </select>
+          </div>
 
           {/* Filter by amenity */}
-          <select
-            value={filterAmenity}
-            onChange={(e) => setFilterAmenity(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-          >
-            <option value="">Todos los amenities</option>
-            {amenities.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nombre}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="sr-only" htmlFor="filtro-amenity">
+              Filtrar por amenity
+            </label>
+            <select
+              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+              id="filtro-amenity"
+              value={filterAmenity}
+              onChange={(e) => setFilterAmenity(e.target.value)}
+            >
+              <option value="">Todos los amenities</option>
+              {amenities.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -235,12 +248,12 @@ export default function ReservasPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredReservas.map((reserva) => (
                   <ReservaRow
+                    isPending={procesarReserva.isPending || cancelarReserva.isPending}
                     key={reserva.id}
                     reserva={reserva}
                     onAprobar={() => handleAprobar(reserva.id)}
-                    onRechazar={() => handleRechazar(reserva.id)}
                     onCancelar={() => handleCancelar(reserva.id)}
-                    isPending={procesarReserva.isPending || cancelarReserva.isPending}
+                    onRechazar={() => handleRechazar(reserva.id)}
                   />
                 ))}
               </tbody>
@@ -262,7 +275,6 @@ interface ReservaRowProps {
 }
 
 function ReservaRow({ reserva, onAprobar, onRechazar, onCancelar, isPending }: ReservaRowProps) {
-  const [showMenu, setShowMenu] = useState(false)
   const config = getEstadoReservaConfig(reserva.estado)
   const fechaInicio = new Date(reserva.fechaInicio)
   const fechaFin = new Date(reserva.fechaFin)
@@ -271,8 +283,8 @@ function ReservaRow({ reserva, onAprobar, onRechazar, onCancelar, isPending }: R
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <Link
-          href={`/amenities/${reserva.amenityId}`}
           className="flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-primary-600"
+          href={`/amenities/${reserva.amenityId}`}
         >
           <Building2 className="h-4 w-4 text-gray-400" />
           {reserva.amenity?.nombre || 'N/A'}
@@ -324,25 +336,25 @@ function ReservaRow({ reserva, onAprobar, onRechazar, onCancelar, isPending }: R
         {reserva.estado === 'PENDIENTE' ? (
           <div className="flex items-center justify-end gap-2">
             <button
-              onClick={onAprobar}
-              disabled={isPending}
               className="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors disabled:opacity-50"
+              disabled={isPending}
+              onClick={onAprobar}
             >
               Aprobar
             </button>
             <button
-              onClick={onRechazar}
-              disabled={isPending}
               className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors disabled:opacity-50"
+              disabled={isPending}
+              onClick={onRechazar}
             >
               Rechazar
             </button>
           </div>
         ) : reserva.estado === 'APROBADA' ? (
           <button
-            onClick={onCancelar}
-            disabled={isPending}
             className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            disabled={isPending}
+            onClick={onCancelar}
           >
             Cancelar
           </button>

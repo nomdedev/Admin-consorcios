@@ -12,7 +12,12 @@ const IS_DEBUG = process.env.NODE_ENV === 'development';
 
 // Logger condicional para evitar logs en producción
 const syncLogger = {
-  log: (...args: unknown[]) => IS_DEBUG && console.log('[SyncManager]', ...args),
+  log: (...args: unknown[]) => {
+    if (IS_DEBUG) {
+      // eslint-disable-next-line no-console -- Debug logging is allowed in development
+      console.log('[SyncManager]', ...args);
+    }
+  },
   error: (...args: unknown[]) => console.error('[SyncManager]', ...args),
 };
 
@@ -32,9 +37,9 @@ class SyncManager {
 
   private constructor() {
     // Escuchar cambios de conexión
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.onOnline());
-      window.addEventListener('offline', () => this.onOffline());
+    if (globalThis.window !== undefined) {
+      globalThis.window.addEventListener('online', () => this.onOnline());
+      globalThis.window.addEventListener('offline', () => this.onOffline());
       
       // Iniciar sync automático si estamos online
       if (navigator.onLine) {
@@ -81,10 +86,35 @@ class SyncManager {
 
   /**
    * Obtiene el token de autenticación
+   * ✅ Usa la variable global expuesta por AuthContext
    */
   private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
+    if (globalThis.window === undefined) return null;
+    return (globalThis as any).__STAFF_ACCESS_TOKEN__ ?? null;
+  }
+
+  private getDeviceId(): string {
+    if (globalThis.window === undefined) {
+      return 'server';
+    }
+
+    const storage = globalThis.localStorage;
+    if (!storage) return 'unknown';
+
+    const key = 'vs-device-id';
+    const existing = storage.getItem(key);
+    if (existing) return existing;
+
+    const id = globalThis.crypto?.randomUUID?.() ?? `device-${Date.now()}`;
+    storage.setItem(key, id);
+    return id;
+  }
+
+  private buildSyncMetadata() {
+    return {
+      clientTimestamp: new Date().toISOString(),
+      deviceId: this.getDeviceId(),
+    };
   }
 
   /**
@@ -164,11 +194,15 @@ class SyncManager {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Client-Id': this.getDeviceId(),
       },
-      body: JSON.stringify(entry),
+      body: JSON.stringify({ ...entry, ...this.buildSyncMetadata() }),
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        throw new Error('Conflicto de sincronización (bitácora)');
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}`);
     }
@@ -194,11 +228,15 @@ class SyncManager {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Client-Id': this.getDeviceId(),
       },
-      body: JSON.stringify(paquete),
+      body: JSON.stringify({ ...paquete, ...this.buildSyncMetadata() }),
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        throw new Error('Conflicto de sincronización (paquete)');
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}`);
     }
@@ -224,11 +262,15 @@ class SyncManager {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Client-Id': this.getDeviceId(),
       },
-      body: JSON.stringify(ronda),
+      body: JSON.stringify({ ...ronda, ...this.buildSyncMetadata() }),
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        throw new Error('Conflicto de sincronización (ronda)');
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}`);
     }

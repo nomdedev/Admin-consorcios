@@ -1,7 +1,10 @@
+import { CacheModule } from "@nestjs/cache-manager";
+import { BullModule } from "@nestjs/bull";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
+import { redisStore } from "cache-manager-redis-store";
 
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./modules/auth/auth.module";
@@ -61,23 +64,51 @@ import { ResidentPortalModule } from "./modules/resident-portal/resident-portal.
       envFilePath: [".env.local", ".env"],
     }),
 
-    // ✅ SEGURIDAD: Rate Limiting Global
-    // Protección contra DDoS y brute force
+    // Cache distribuido (Redis) con fallback a memoria
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        const ttlSeconds = Number(process.env.CACHE_TTL_SECONDS ?? 60);
+        const redisUrl = process.env.REDIS_URL;
+
+        if (!redisUrl) {
+          return { ttl: ttlSeconds };
+        }
+
+        return {
+          store: await redisStore({ url: redisUrl }),
+          ttl: ttlSeconds,
+        };
+      },
+    }),
+
+    // Cola de jobs (Bull)
+    BullModule.forRootAsync({
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
+        return {
+          redis: redisUrl,
+        };
+      },
+    }),
+
+    // ✅ SEGURIDAD: Rate Limiting Global (Múltiples ventanas de tiempo)
+    // Protección contra DDoS, brute force y abuso de API
     ThrottlerModule.forRoot([
       {
         name: "short",
         ttl: 1000, // 1 segundo
-        limit: 10, // 10 requests por segundo
+        limit: 10, // 10 requests por segundo (burst protection)
       },
       {
         name: "medium",
-        ttl: 10000, // 10 segundos
-        limit: 50, // 50 requests por 10 segundos
+        ttl: 60000, // 1 minuto
+        limit: 100, // 100 requests por minuto (sustained traffic)
       },
       {
         name: "long",
-        ttl: 60000, // 1 minuto
-        limit: 200, // 200 requests por minuto
+        ttl: 3600000, // 1 hora
+        limit: 1000, // 1000 requests por hora (abuse prevention)
       },
     ]),
 

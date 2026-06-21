@@ -1,12 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { Receipt, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "../../lib/utils";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../primitives/card";
-import { Button } from "../primitives/button";
 import { Badge } from "../primitives/badge";
+import { Button } from "../primitives/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../primitives/card";
 
 // =============================================================================
 // ExpensaCard - Tarjeta de expensa para vecinos
@@ -85,7 +85,7 @@ const ExpensaCardSimple: React.FC<ExpensaCardProps> = ({
             {expensa.periodoLabel || formatPeriodo(expensa.periodo)}
           </CardTitle>
           <Badge variant={estadoConfig.variant}>
-            <EstadoIcon className="mr-1 h-4 w-4" aria-hidden="true" />
+            <EstadoIcon aria-hidden="true" className="mr-1 h-4 w-4" />
             {estadoConfig.label}
           </Badge>
         </div>
@@ -108,12 +108,12 @@ const ExpensaCardSimple: React.FC<ExpensaCardProps> = ({
       {esPagable && (
         <CardFooter>
           <Button
-            onClick={() => onPagar?.(expensa)}
+            aria-label={`Pagar expensa de ${formatPeriodo(expensa.periodo)} por ${formatCurrency(expensa.total)}`}
             className="w-full"
             size="lg"
-            aria-label={`Pagar expensa de ${formatPeriodo(expensa.periodo)} por ${formatCurrency(expensa.total)}`}
+            onClick={() => onPagar?.(expensa)}
           >
-            <Receipt className="mr-2 h-5 w-5" aria-hidden="true" />
+            <Receipt aria-hidden="true" className="mr-2 h-5 w-5" />
             Pagar Expensa
           </Button>
         </CardFooter>
@@ -149,7 +149,7 @@ const ExpensaCardCompleta: React.FC<ExpensaCardProps> = ({
             {expensa.periodoLabel || formatPeriodo(expensa.periodo)}
           </CardTitle>
           <Badge variant={estadoConfig.variant}>
-            <EstadoIcon className="mr-1 h-4 w-4" aria-hidden="true" />
+            <EstadoIcon aria-hidden="true" className="mr-1 h-4 w-4" />
             {estadoConfig.label}
           </Badge>
         </div>
@@ -162,7 +162,7 @@ const ExpensaCardCompleta: React.FC<ExpensaCardProps> = ({
         {/* Desglose */}
         <div className="space-y-2 border-b border-neutral-200 pb-4 mb-4">
           {detalles.map((item, idx) => (
-            <div key={idx} className="flex justify-between text-base">
+            <div className="flex justify-between text-base" key={idx}>
               <span className="text-neutral-600">{item.label}</span>
               <span className={cn(
                 "font-medium",
@@ -192,21 +192,21 @@ const ExpensaCardCompleta: React.FC<ExpensaCardProps> = ({
       <CardFooter className="flex gap-2">
         {onVerDetalle && (
           <Button
+            aria-label={`Ver detalle de expensa de ${formatPeriodo(expensa.periodo)}`}
+            className="flex-1"
             variant="secondary"
             onClick={() => onVerDetalle(expensa)}
-            className="flex-1"
-            aria-label={`Ver detalle de expensa de ${formatPeriodo(expensa.periodo)}`}
           >
             Ver detalle
           </Button>
         )}
         {esPagable && (
           <Button
-            onClick={() => onPagar?.(expensa)}
-            className="flex-1"
             aria-label={`Pagar expensa de ${formatPeriodo(expensa.periodo)} por ${formatCurrency(expensa.total)}`}
+            className="flex-1"
+            onClick={() => onPagar?.(expensa)}
           >
-            <Receipt className="mr-2 h-5 w-5" aria-hidden="true" />
+            <Receipt aria-hidden="true" className="mr-2 h-5 w-5" />
             Pagar
           </Button>
         )}

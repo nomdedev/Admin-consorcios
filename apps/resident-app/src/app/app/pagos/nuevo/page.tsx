@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 import { formatCurrency, formatPeriodo } from '@/lib/utils';
 
 interface ExpensaPendiente {
@@ -12,7 +14,6 @@ interface ExpensaPendiente {
 }
 
 export default function NuevoPagoPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const periodoParam = searchParams.get('periodo');
   
@@ -27,17 +28,10 @@ export default function NuevoPagoPage() {
   useEffect(() => {
     const fetchExpensasPendientes = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-cuenta/expensas?estado=PENDIENTE`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setExpensasPendientes(data);
-        }
+        const data = await apiClient.get<ExpensaPendiente[]>('/mi-cuenta/expensas', {
+          estado: 'PENDIENTE',
+        });
+        setExpensasPendientes(data);
       } catch (error) {
         console.error('Error fetching expensas:', error);
       } finally {
@@ -64,35 +58,17 @@ export default function NuevoPagoPage() {
 
   const handlePagarConMercadoPago = async () => {
     if (periodosSeleccionados.length === 0) return;
-    
+
     setIsProcessing(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pagos/crear-preferencia`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            periodosAbonados: periodosSeleccionados,
-            monto: totalAPagar,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al crear el pago');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.post<{ init_point: string }>('/pagos/crear-preferencia', {
+        periodosAbonados: periodosSeleccionados,
+        monto: totalAPagar,
+      });
       // Redirigir a Mercado Pago
-      window.location.href = data.init_point;
+      globalThis.location.href = data.init_point;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al procesar el pago');
     } finally {
@@ -104,8 +80,8 @@ export default function NuevoPagoPage() {
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-xl p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4" />
+          <div className="h-20 bg-gray-200 rounded" />
         </div>
       </div>
     );
@@ -116,8 +92,8 @@ export default function NuevoPagoPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/pagos"
           className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/pagos"
         >
           ←
         </Link>
@@ -149,19 +125,19 @@ export default function NuevoPagoPage() {
             <div className="space-y-3">
               {expensasPendientes.map((expensa) => (
                 <label
-                  key={expensa.periodo}
                   className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-colors min-h-[60px] ${
                     periodosSeleccionados.includes(expensa.periodo)
                       ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
+                  key={expensa.periodo}
                 >
                   <div className="flex items-center gap-3">
                     <input
-                      type="checkbox"
                       checked={periodosSeleccionados.includes(expensa.periodo)}
-                      onChange={() => togglePeriodo(expensa.periodo)}
                       className="w-5 h-5 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                      type="checkbox"
+                      onChange={() => togglePeriodo(expensa.periodo)}
                     />
                     <div>
                       <p className="font-medium text-gray-800 capitalize">
@@ -187,9 +163,9 @@ export default function NuevoPagoPage() {
             </div>
             
             <button
-              onClick={handlePagarConMercadoPago}
-              disabled={periodosSeleccionados.length === 0 || isProcessing}
               className="w-full py-4 bg-[#009ee3] text-white font-medium rounded-lg hover:bg-[#007eb5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px] flex items-center justify-center gap-2"
+              disabled={periodosSeleccionados.length === 0 || isProcessing}
+              onClick={handlePagarConMercadoPago}
             >
               {isProcessing ? (
                 'Procesando...'
@@ -214,13 +190,13 @@ export default function NuevoPagoPage() {
 function MercadoPagoIcon() {
   return (
     <svg
-      width="24"
+      fill="none"
       height="24"
       viewBox="0 0 24 24"
-      fill="none"
+      width="24"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="12" cy="12" r="10" fill="white" />
+      <circle cx="12" cy="12" fill="white" r="10" />
       <path
         d="M7 12c0-2.76 2.24-5 5-5s5 2.24 5 5-2.24 5-5 5-5-2.24-5-5z"
         fill="#009ee3"

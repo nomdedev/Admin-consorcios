@@ -240,7 +240,9 @@ model Usuario {
   passwordHash    String?       // Argon2 (null si solo usa magic link)
   magicLinkToken  String?
   magicLinkExpira DateTime?
-  refreshToken    String?
+  refreshToken    String?       // DEPRECATED: Use refreshTokenHash instead
+  refreshTokenHash String?      // Hash del refresh token en cookie httpOnly
+  refreshTokenExpires DateTime? // Expiración del refresh token
   
   // 2FA
   twoFactorEnabled Boolean      @default(false)

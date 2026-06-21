@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { Prisma } from '@prisma/client';
 import {
   CreateReglaAmenityDto,
   UpdateReglaAmenityDto,
@@ -9,6 +10,7 @@ import {
   ConfigPenalizacion,
   ConfigHorario,
   ValidacionReservaResultDto,
+  PenalizacionResponseDto,
 } from './dto/amenity-rules.dto';
 
 @Injectable()
@@ -33,7 +35,7 @@ export class AmenityRulesService {
     }
 
     // Validar configuración según tipo
-    this.validarConfiguracion(dto.tipoRegla, dto.configuracion);
+    this.validarConfiguracion(dto.tipoRegla, dto.configuracion as unknown as Record<string, unknown>);
 
     return this.prisma.reglaReservaAmenity.create({
       data: {
@@ -42,7 +44,7 @@ export class AmenityRulesService {
         nombre: dto.nombre,
         descripcion: dto.descripcion,
         tipoRegla: dto.tipoRegla,
-        configuracion: dto.configuracion as any,
+        configuracion: dto.configuracion as unknown as Prisma.InputJsonValue,
         prioridad: dto.prioridad ?? 0,
         activa: true,
       },
@@ -60,7 +62,7 @@ export class AmenityRulesService {
 
     // Si se actualiza configuración, validarla
     if (dto.configuracion) {
-      this.validarConfiguracion(regla.tipoRegla, dto.configuracion);
+      this.validarConfiguracion(regla.tipoRegla, dto.configuracion as Record<string, unknown>);
     }
 
     return this.prisma.reglaReservaAmenity.update({
@@ -124,16 +126,19 @@ export class AmenityRulesService {
       return {
         valida: false,
         mensaje: `Usuario bloqueado hasta ${bloqueoActivo.fechaFinBloqueo?.toLocaleDateString()}. Motivo: ${bloqueoActivo.motivo}`,
-        penalizacionesActivas: penalizacionesActivas as any,
+        // NOTE: El modelo Prisma tiene campos adicionales (Decimal, relaciones). La serialización convierte a DTO.
+        penalizacionesActivas: penalizacionesActivas as unknown as PenalizacionResponseDto[],
       };
     }
 
     // Evaluar cada regla
     for (const regla of reglas) {
-      const config = regla.configuracion as any;
+      // Configuración puede ser cualquier tipo de config según tipoRegla
+      // El campo configuracion es JsonValue en Prisma, necesita cast via unknown
+      const config = regla.configuracion as unknown as ConfigLimitePeriodo | ConfigPenalizacion | ConfigHorario;
 
       switch (regla.tipoRegla) {
-        case TipoReglaAmenity.LIMITE_PERIODO:
+        case TipoReglaAmenity.LIMITE_PERIODO: {
           const violaLimite = await this.verificarLimitePeriodo(
             usuarioId,
             amenityId,
@@ -144,8 +149,9 @@ export class AmenityRulesService {
             reglasVioladas.push(`${regla.nombre}: ${violaLimite}`);
           }
           break;
+        }
 
-        case TipoReglaAmenity.HORARIO:
+        case TipoReglaAmenity.HORARIO: {
           const violaHorario = this.verificarHorario(
             fechaInicio,
             fechaFin,
@@ -155,6 +161,7 @@ export class AmenityRulesService {
             reglasVioladas.push(`${regla.nombre}: ${violaHorario}`);
           }
           break;
+        }
       }
     }
 
@@ -163,14 +170,14 @@ export class AmenityRulesService {
         valida: false,
         mensaje: 'La reserva viola una o más reglas del amenity',
         reglasVioladas,
-        penalizacionesActivas: penalizacionesActivas as any,
+        penalizacionesActivas: penalizacionesActivas as unknown as PenalizacionResponseDto[],
       };
     }
 
     return {
       valida: true,
       mensaje: 'Reserva válida',
-      penalizacionesActivas: penalizacionesActivas as any,
+      penalizacionesActivas: penalizacionesActivas as unknown as PenalizacionResponseDto[],
     };
   }
 
@@ -184,7 +191,7 @@ export class AmenityRulesService {
     const { inicio, fin } = this.calcularRangoPeriodo(fechaInicio, config.periodo);
 
     // Contar reservas del usuario en el período
-    const whereClause: any = {
+    const whereClause: Prisma.ReservaAmenityWhereInput = {
       usuarioId,
       amenityId,
       fechaInicio: {
@@ -435,7 +442,14 @@ export class AmenityRulesService {
   // Helpers
   // ===========================================================================
 
-  private validarConfiguracion(tipo: string, config: any) {
+  /**
+   * Valida la configuración según el tipo de regla.
+   * Usa Record<string, unknown> porque la config viene como JSON antes de tipado.
+   */
+  private validarConfiguracion(
+    tipo: string,
+    config: Record<string, unknown>,
+  ) {
     switch (tipo) {
       case TipoReglaAmenity.LIMITE_PERIODO:
         if (!config.maxReservas || !config.periodo) {
@@ -443,7 +457,7 @@ export class AmenityRulesService {
             'limite_periodo requiere maxReservas y periodo',
           );
         }
-        if (!['semana', 'mes', 'año'].includes(config.periodo)) {
+        if (!['semana', 'mes', 'año'].includes(config.periodo as string)) {
           throw new BadRequestException(
             'periodo debe ser: semana, mes o año',
           );
@@ -476,11 +490,12 @@ export class AmenityRulesService {
     const fin = new Date(fecha);
 
     switch (periodo) {
-      case 'semana':
+      case 'semana': {
         const diaSemana = inicio.getDay();
         inicio.setDate(inicio.getDate() - diaSemana); // Domingo
         fin.setDate(fin.getDate() + (6 - diaSemana)); // Sábado
         break;
+      }
       case 'mes':
         inicio.setDate(1);
         fin.setMonth(fin.getMonth() + 1, 0); // Último día del mes

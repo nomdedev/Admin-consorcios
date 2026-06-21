@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   Building2,
@@ -14,14 +11,17 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn, isValidCUIT } from '@/lib/utils'
 import {
   useCreateProveedor,
   type CreateProveedorDto,
   serviciosComunes,
   servicioLabels,
 } from '@/features/proveedores'
+import { cn, isValidCUIT } from '@/lib/utils'
 
 export default function NuevoProveedorPage() {
   const router = useRouter()
@@ -111,9 +111,9 @@ export default function NuevoProveedorPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/proveedores"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Volver a proveedores"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href="/proveedores"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500" />
         </Link>
@@ -125,7 +125,7 @@ export default function NuevoProveedorPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Datos básicos */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -137,21 +137,21 @@ export default function NuevoProveedorPage() {
             {/* Razón Social */}
             <div className="md:col-span-2">
               <label
-                htmlFor="razonSocial"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="razonSocial"
               >
                 Razón Social *
               </label>
               <input
-                type="text"
-                id="razonSocial"
-                value={razonSocial}
-                onChange={(e) => setRazonSocial(e.target.value)}
-                placeholder="Ej: Servicio de Plomería S.R.L."
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.razonSocial ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="razonSocial"
+                placeholder="Ej: Servicio de Plomería S.R.L."
+                type="text"
+                value={razonSocial}
+                onChange={(e) => setRazonSocial(e.target.value)}
               />
               {errors.razonSocial && (
                 <p className="text-red-500 text-sm mt-1">{errors.razonSocial}</p>
@@ -161,21 +161,21 @@ export default function NuevoProveedorPage() {
             {/* CUIT */}
             <div>
               <label
-                htmlFor="cuit"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="cuit"
               >
                 CUIT *
               </label>
               <input
-                type="text"
-                id="cuit"
-                value={cuit}
-                onChange={(e) => handleCuitChange(e.target.value)}
-                placeholder="XX-XXXXXXXX-X"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.cuit ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="cuit"
+                placeholder="XX-XXXXXXXX-X"
+                type="text"
+                value={cuit}
+                onChange={(e) => handleCuitChange(e.target.value)}
               />
               {errors.cuit && (
                 <p className="text-red-500 text-sm mt-1">{errors.cuit}</p>
@@ -185,22 +185,22 @@ export default function NuevoProveedorPage() {
             {/* Email */}
             <div>
               <label
-                htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="email"
               >
                 <Mail className="h-4 w-4 inline mr-1" />
                 Email
               </label>
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contacto@proveedor.com"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="email"
+                placeholder="contacto@proveedor.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -210,38 +210,38 @@ export default function NuevoProveedorPage() {
             {/* Teléfono */}
             <div>
               <label
-                htmlFor="telefono"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="telefono"
               >
                 <Phone className="h-4 w-4 inline mr-1" />
                 Teléfono
               </label>
               <input
-                type="tel"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="telefono"
+                placeholder="Ej: 11 2345 6789"
+                type="tel"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                placeholder="Ej: 11 2345 6789"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             {/* Dirección */}
             <div>
               <label
-                htmlFor="direccion"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="direccion"
               >
                 <MapPin className="h-4 w-4 inline mr-1" />
                 Dirección
               </label>
               <input
-                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="direccion"
+                placeholder="Calle y número, localidad"
+                type="text"
                 value={direccion}
                 onChange={(e) => setDireccion(e.target.value)}
-                placeholder="Calle y número, localidad"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -261,15 +261,15 @@ export default function NuevoProveedorPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {serviciosComunes.map((servicio) => (
               <button
-                key={servicio}
-                type="button"
-                onClick={() => toggleServicio(servicio)}
                 className={cn(
                   'px-4 py-2 text-sm font-medium rounded-lg border transition-colors text-left',
                   servicios.includes(servicio)
                     ? 'bg-primary-50 border-primary-500 text-primary-700'
                     : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                 )}
+                key={servicio}
+                type="button"
+                onClick={() => toggleServicio(servicio)}
               >
                 {servicioLabels[servicio] || servicio}
               </button>
@@ -284,14 +284,14 @@ export default function NuevoProveedorPage() {
               <div className="flex flex-wrap gap-2">
                 {servicios.map((servicio) => (
                   <span
-                    key={servicio}
                     className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
+                    key={servicio}
                   >
                     {servicioLabels[servicio] || servicio}
                     <button
+                      className="p-0.5 hover:bg-primary-200 rounded-full"
                       type="button"
                       onClick={() => toggleServicio(servicio)}
-                      className="p-0.5 hover:bg-primary-200 rounded-full"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -318,15 +318,15 @@ export default function NuevoProveedorPage() {
         {/* Botones */}
         <div className="flex justify-end gap-3">
           <Link
-            href="/proveedores"
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/proveedores"
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={createProveedor.isPending}
             className="px-6 py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 rounded-lg transition-colors flex items-center gap-2"
+            disabled={createProveedor.isPending}
+            type="submit"
           >
             {createProveedor.isPending ? (
               <>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -62,7 +62,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-800 flex flex-col">
       {/* Header */}
       <div className="p-6 text-center text-white">
-        <Link href="/" className="inline-block">
+        <Link className="inline-block" href="/">
           <h1 className="text-2xl font-bold">VecinoSimple</h1>
           <p className="text-blue-200 text-sm">Staff</p>
         </Link>
@@ -87,33 +87,33 @@ export default function LoginPage() {
           )}
           
           {step === 'credentials' ? (
-            <form onSubmit={handleSubmitEmail} className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmitEmail}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
                   Email
                 </label>
                 <input
-                  type="email"
-                  id="email"
                   required
                   autoComplete="email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  id="email"
                   placeholder="tu@email.com"
+                  type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 />
               </div>
               
               <button
-                type="submit"
-                disabled={isLoading}
                 className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors min-h-touch"
+                disabled={isLoading}
+                type="submit"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle className="opacity-25" cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
                     </svg>
                     Enviando...
                   </span>
@@ -123,35 +123,35 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleVerifyCode} className="space-y-4">
+            <form className="space-y-4" onSubmit={handleVerifyCode}>
               <div>
-                <label htmlFor="codigo" className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="codigo">
                   Código de verificación
                 </label>
                 <input
-                  type="text"
-                  id="codigo"
                   required
                   autoComplete="one-time-code"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl text-center tracking-widest"
+                  id="codigo"
                   inputMode="numeric"
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl text-center tracking-widest"
                   placeholder="000000"
+                  type="text"
                   value={formData.codigo}
                   onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value.replace(/\D/g, '') }))}
                 />
               </div>
               
               <button
-                type="submit"
-                disabled={isLoading || formData.codigo.length < 6}
                 className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors min-h-touch"
+                disabled={isLoading || formData.codigo.length < 6}
+                type="submit"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle className="opacity-25" cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
                     </svg>
                     Verificando...
                   </span>
@@ -161,9 +161,9 @@ export default function LoginPage() {
               </button>
               
               <button
+                className="w-full text-blue-600 py-2 font-medium"
                 type="button"
                 onClick={() => setStep('credentials')}
-                className="w-full text-blue-600 py-2 font-medium"
               >
                 ← Cambiar email
               </button>

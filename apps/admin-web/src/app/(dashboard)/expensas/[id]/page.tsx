@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import {
   Button,
   Card,
@@ -18,10 +17,12 @@ import {
   DialogFooter,
 } from "@vecinosimple/ui";
 import { ArrowLeft, FileText, DollarSign, Calendar, CheckCircle, Lock, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { use } from "react";
 import { useState } from "react";
+
 import { useExpensa, useDetallesExpensa, useLiquidarExpensa, usePublicarExpensa, useCerrarExpensa } from "@/features/expensas";
+
 import type { EstadoExpensa } from "@/lib/types";
 
 const estadoColors: Record<EstadoExpensa, "default" | "warning" | "success" | "info"> = {
@@ -40,7 +41,6 @@ const estadoLabels: Record<EstadoExpensa, string> = {
 
 export default function ExpensaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const [confirmAction, setConfirmAction] = useState<"liquidar" | "publicar" | "cerrar" | null>(null);
   
   const { data: expensa, isLoading, isError } = useExpensa(id);
@@ -110,7 +110,7 @@ export default function ExpensaDetailPage({ params }: { params: Promise<{ id: st
     return (
       <div className="space-y-6">
         <Link href="/expensas">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -128,7 +128,7 @@ export default function ExpensaDetailPage({ params }: { params: Promise<{ id: st
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/expensas">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
@@ -292,7 +292,7 @@ export default function ExpensaDetailPage({ params }: { params: Promise<{ id: st
                 </thead>
                 <tbody>
                   {detalles.map((detalle) => (
-                    <tr key={detalle.id} className="border-b border-neutral-100">
+                    <tr className="border-b border-neutral-100" key={detalle.id}>
                       <td className="px-4 py-3 font-medium">
                         {detalle.unidadFuncional?.codigo ?? detalle.unidadFuncionalId}
                       </td>

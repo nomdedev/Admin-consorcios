@@ -125,9 +125,10 @@ export class AuditService {
         return data.toISOString();
       }
 
-      // Convertir Decimals a números
-      if (typeof (data as any).toNumber === 'function') {
-        return (data as any).toNumber();
+      // Convertir Decimals a números (Prisma Decimal tiene método toNumber)
+      const dataWithMethod = data as { toNumber?: () => number };
+      if (typeof dataWithMethod.toNumber === 'function') {
+        return dataWithMethod.toNumber();
       }
 
       // Si es un array, procesar cada elemento
@@ -137,18 +138,18 @@ export class AuditService {
 
       // Procesar objeto
       const sanitized: Record<string, unknown> = {};
-      const camposSensibles = [
+      const camposSensibles = new Set([
         'passwordHash',
         'magicLinkToken',
         'refreshToken',
         'twoFactorSecret',
         'cbu',
         'dni',
-      ];
+      ]);
 
       for (const [key, value] of Object.entries(data)) {
         // Omitir campos sensibles
-        if (camposSensibles.includes(key)) {
+        if (camposSensibles.has(key)) {
           sanitized[key] = '[REDACTED]';
         } else {
           sanitized[key] = this.sanitizeForJson(value);

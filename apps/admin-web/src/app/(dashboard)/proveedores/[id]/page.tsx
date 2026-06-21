@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   Building2,
@@ -15,7 +12,6 @@ import {
   Edit2,
   Trash2,
   Plus,
-  Clock,
   CheckCircle,
   XCircle,
   FileText,
@@ -25,8 +21,10 @@ import {
   Calendar,
   DollarSign,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn, formatCurrency, formatDate } from '@/lib/utils'
 import {
   useProveedor,
   useEstadisticasProveedor,
@@ -39,6 +37,7 @@ import {
   estadoTrabajoLabels,
   estadoTrabajoColors,
 } from '@/features/proveedores'
+import { cn, formatCurrency, formatDate } from '@/lib/utils'
 
 export default function ProveedorDetailPage() {
   const params = useParams()
@@ -123,8 +122,8 @@ export default function ProveedorDetailPage() {
           El proveedor que buscás no existe o fue eliminado
         </p>
         <Link
-          href="/proveedores"
           className="mt-4 inline-flex items-center gap-2 text-primary-600 hover:text-primary-700"
+          href="/proveedores"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al listado
@@ -139,9 +138,9 @@ export default function ProveedorDetailPage() {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/proveedores"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Volver a proveedores"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            href="/proveedores"
           >
             <ArrowLeft className="h-5 w-5 text-gray-500" />
           </Link>
@@ -163,15 +162,15 @@ export default function ProveedorDetailPage() {
 
         <div className="flex gap-2">
           <Link
-            href={`/proveedores/${proveedorId}/editar`}
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
+            href={`/proveedores/${proveedorId}/editar`}
           >
             <Edit2 className="h-4 w-4" />
             Editar
           </Link>
           <button
-            onClick={() => setShowDeleteModal(true)}
             className="px-4 py-2 text-red-700 bg-white border border-red-300 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+            onClick={() => setShowDeleteModal(true)}
           >
             <Trash2 className="h-4 w-4" />
             Desactivar
@@ -193,8 +192,8 @@ export default function ProveedorDetailPage() {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-gray-400" />
                 <a
-                  href={`mailto:${proveedor.email}`}
                   className="text-primary-600 hover:underline"
+                  href={`mailto:${proveedor.email}`}
                 >
                   {proveedor.email}
                 </a>
@@ -205,8 +204,8 @@ export default function ProveedorDetailPage() {
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-gray-400" />
                 <a
-                  href={`tel:${proveedor.telefono}`}
                   className="text-gray-700"
+                  href={`tel:${proveedor.telefono}`}
                 >
                   {proveedor.telefono}
                 </a>
@@ -238,8 +237,8 @@ export default function ProveedorDetailPage() {
           <div className="flex flex-wrap gap-2">
             {proveedor.servicios.map((servicio: string) => (
               <span
-                key={servicio}
                 className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm"
+                key={servicio}
               >
                 {servicioLabels[servicio] || servicio}
               </span>
@@ -306,8 +305,8 @@ export default function ProveedorDetailPage() {
             Trabajos realizados
           </h2>
           <button
-            onClick={() => setShowTrabajoModal(true)}
             className="px-4 py-2 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
+            onClick={() => setShowTrabajoModal(true)}
           >
             <Plus className="h-4 w-4" />
             Registrar trabajo
@@ -326,8 +325,8 @@ export default function ProveedorDetailPage() {
           <div className="space-y-4">
             {trabajos.map((trabajo: TrabajoProveedor) => (
               <div
-                key={trabajo.id}
                 className="border border-gray-200 rounded-lg p-4"
+                key={trabajo.id}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -357,18 +356,18 @@ export default function ProveedorDetailPage() {
                   {trabajo.estado === 'pendiente' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleProcesarTrabajo(trabajo, true)}
-                        disabled={procesarTrabajo.isPending}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        disabled={procesarTrabajo.isPending}
                         title="Aprobar"
+                        onClick={() => handleProcesarTrabajo(trabajo, true)}
                       >
                         <CheckCircle className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleProcesarTrabajo(trabajo, false)}
-                        disabled={procesarTrabajo.isPending}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        disabled={procesarTrabajo.isPending}
                         title="Rechazar"
+                        onClick={() => handleProcesarTrabajo(trabajo, false)}
                       >
                         <XCircle className="h-5 w-5" />
                       </button>
@@ -379,10 +378,10 @@ export default function ProveedorDetailPage() {
                 {trabajo.facturaUrl && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <a
-                      href={trabajo.facturaUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-sm text-primary-600 hover:underline flex items-center gap-1"
+                      href={trabajo.facturaUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                       Ver factura
@@ -408,15 +407,15 @@ export default function ProveedorDetailPage() {
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setShowDeleteModal(false)}
               >
                 Cancelar
               </button>
               <button
-                onClick={handleDesactivar}
-                disabled={desactivar.isPending}
                 className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                disabled={desactivar.isPending}
+                onClick={handleDesactivar}
               >
                 {desactivar.isPending ? 'Desactivando...' : 'Desactivar'}
               </button>
@@ -432,66 +431,69 @@ export default function ProveedorDetailPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Registrar Trabajo
             </h3>
-            <form onSubmit={handleCreateTrabajo} className="space-y-4">
+            <form className="space-y-4" onSubmit={handleCreateTrabajo}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="trabajo-descripcion">
                   Descripción *
                 </label>
                 <textarea
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  id="trabajo-descripcion"
+                  placeholder="Descripción del trabajo realizado"
+                  rows={3}
                   value={trabajoForm.descripcion}
                   onChange={(e) =>
                     setTrabajoForm({ ...trabajoForm, descripcion: e.target.value })
                   }
-                  required
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Descripción del trabajo realizado"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="trabajo-monto">
                   Monto *
                 </label>
                 <input
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  id="trabajo-monto"
+                  min="0"
+                  placeholder="0.00"
+                  step="0.01"
                   type="number"
                   value={trabajoForm.monto}
                   onChange={(e) =>
                     setTrabajoForm({ ...trabajoForm, monto: e.target.value })
                   }
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="trabajo-fecha">
                   Fecha del trabajo *
                 </label>
                 <input
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  id="trabajo-fecha"
+                  max={new Date().toISOString().split('T')[0]}
                   type="date"
                   value={trabajoForm.fechaTrabajo}
                   onChange={(e) =>
                     setTrabajoForm({ ...trabajoForm, fechaTrabajo: e.target.value })
                   }
-                  required
-                  max={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
                   type="button"
                   onClick={() => setShowTrabajoModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
-                  disabled={createTrabajo.isPending}
                   className="px-4 py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 rounded-lg transition-colors"
+                  disabled={createTrabajo.isPending}
+                  type="submit"
                 >
                   {createTrabajo.isPending ? 'Guardando...' : 'Guardar'}
                 </button>

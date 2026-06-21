@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useUIStore, useEffectiveTheme, getTextSizePixels } from "../../stores/ui.store";
+
 import { cn } from "../../lib/utils";
+import { useUIStore, useEffectiveTheme, getTextSizePixels } from "../../stores/ui.store";
 
 // =============================================================================
 // ThemeProvider - Aplica tema y configuraciones de accesibilidad
@@ -15,7 +16,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = "auto",
+  defaultTheme: _defaultTheme = "auto",
 }) => {
   const tema = useEffectiveTheme();
   const { tamanoTexto } = useUIStore();
@@ -64,7 +65,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ className }) => {
   return (
     <div className={cn("flex rounded-lg border border-neutral-200 p-1", className)}>
       <button
-        onClick={() => setModo("simplificado")}
+        aria-pressed={modo === "simplificado"}
         className={cn(
           "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
           "min-h-touch",
@@ -72,12 +73,12 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ className }) => {
             ? "bg-brand-600 text-white"
             : "text-neutral-600 hover:bg-neutral-100"
         )}
-        aria-pressed={modo === "simplificado"}
+        onClick={() => setModo("simplificado")}
       >
         Modo Simple
       </button>
       <button
-        onClick={() => setModo("completo")}
+        aria-pressed={modo === "completo"}
         className={cn(
           "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
           "min-h-touch",
@@ -85,7 +86,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ className }) => {
             ? "bg-brand-600 text-white"
             : "text-neutral-600 hover:bg-neutral-100"
         )}
-        aria-pressed={modo === "completo"}
+        onClick={() => setModo("completo")}
       >
         Modo Completo
       </button>
@@ -110,18 +111,17 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
     <div className={cn("space-y-6", className)}>
       {/* Tema */}
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-2">
+        <h3 className="block text-sm font-medium text-neutral-700 mb-2">
           Tema visual
-        </label>
-        <div className="flex rounded-lg border border-neutral-200 p-1">
+        </h3>
+        <fieldset className="flex rounded-lg border border-neutral-200 p-1">
           {[
             { value: "claro", label: "Claro" },
             { value: "oscuro", label: "Oscuro" },
             { value: "auto", label: "Automático" },
           ].map((option) => (
             <button
-              key={option.value}
-              onClick={() => setTema(option.value as typeof tema)}
+              aria-pressed={tema === option.value}
               className={cn(
                 "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 "min-h-touch",
@@ -129,28 +129,28 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
                   ? "bg-brand-600 text-white"
                   : "text-neutral-600 hover:bg-neutral-100"
               )}
-              aria-pressed={tema === option.value}
+              key={option.value}
+              onClick={() => setTema(option.value as typeof tema)}
             >
               {option.label}
             </button>
           ))}
-        </div>
+        </fieldset>
       </div>
 
       {/* Tamaño de texto */}
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-2">
+        <h3 className="block text-sm font-medium text-neutral-700 mb-2">
           Tamaño del texto
-        </label>
-        <div className="flex rounded-lg border border-neutral-200 p-1">
+        </h3>
+        <fieldset className="flex rounded-lg border border-neutral-200 p-1">
           {[
             { value: "normal", label: "Normal" },
             { value: "grande", label: "Grande" },
             { value: "extra-grande", label: "Extra grande" },
           ].map((option) => (
             <button
-              key={option.value}
-              onClick={() => setTamanoTexto(option.value as typeof tamanoTexto)}
+              aria-pressed={tamanoTexto === option.value}
               className={cn(
                 "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 "min-h-touch",
@@ -158,12 +158,13 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
                   ? "bg-brand-600 text-white"
                   : "text-neutral-600 hover:bg-neutral-100"
               )}
-              aria-pressed={tamanoTexto === option.value}
+              key={option.value}
+              onClick={() => setTamanoTexto(option.value as typeof tamanoTexto)}
             >
               {option.label}
             </button>
           ))}
-        </div>
+        </fieldset>
         <p className="mt-2 text-sm text-neutral-500">
           {tamanoTexto === "normal" && "Tamaño estándar de 18px"}
           {tamanoTexto === "grande" && "Tamaño aumentado de 20px"}

@@ -1,6 +1,8 @@
-import { QueryProvider } from '@/lib/providers';
-import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+
+import { QueryProvider } from '@/lib/providers';
+
+import type { Metadata, Viewport } from 'next';
 
 import './globals.css';
 
@@ -27,14 +29,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="es">
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link href="/icons/icon-192x192.png" rel="apple-touch-icon" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
       </head>
       <body className={inter.className}>
         <QueryProvider>{children}</QueryProvider>

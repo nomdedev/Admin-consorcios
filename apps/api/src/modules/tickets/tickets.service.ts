@@ -22,6 +22,13 @@ import {
 } from './dto';
 import { EstadoTicket, PrioridadTicket, Rol, Prisma } from '@prisma/client';
 
+type TicketWithRelations = Prisma.TicketMantenimientoGetPayload<{
+  include: {
+    creador: { select: { id: true; nombre: true; apellido: true } };
+    asignado: { select: { id: true; nombre: true; apellido: true } };
+  };
+}>;
+
 // Dominios permitidos para archivos
 const DOMINIOS_PERMITIDOS = [
   'storage.vecinosimple.com',
@@ -59,11 +66,11 @@ export class TicketsService {
   private sanitizarTexto(texto: string | undefined | null): string {
     if (!texto) return '';
     return texto
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#x27;')
+      .replaceAll('/', '&#x2F;');
   }
 
   /**
@@ -129,7 +136,7 @@ export class TicketsService {
     usuarioId: string,
     ticketId: string,
     requiereAdmin: boolean = false,
-  ): Promise<{ ticket: any; rol: Rol }> {
+  ): Promise<{ ticket: TicketWithRelations; rol: Rol }> {
     const ticket = await this.prisma.ticketMantenimiento.findUnique({
       where: { id: ticketId },
       include: {
@@ -161,6 +168,62 @@ export class TicketsService {
     }
 
     return { ticket, rol };
+  }
+
+  private isAdminRole(rol: Rol): boolean {
+    const rolesAdmin: Rol[] = [
+      Rol.SUPER_ADMIN,
+      Rol.ADMINISTRADOR,
+      Rol.ADMIN_STAFF,
+    ];
+
+    return rolesAdmin.includes(rol);
+  }
+
+  private validateUpdatePermissions(
+    ticket: TicketWithRelations,
+    dto: UpdateTicketDto,
+    usuarioId: string,
+    esAdmin: boolean,
+  ): void {
+    if (!esAdmin && ticket.creadorId !== usuarioId) {
+      throw new ForbiddenException('No tenés permiso para editar este ticket');
+    }
+
+    if (!esAdmin && (dto.estado || dto.asignadoId)) {
+      throw new ForbiddenException(
+        'Solo administradores pueden cambiar estado o asignar tickets',
+      );
+    }
+
+    if (ticket.estado === EstadoTicket.CERRADO) {
+      throw new BadRequestException('No se puede editar un ticket cerrado');
+    }
+  }
+
+  private buildUpdateData(
+    dto: UpdateTicketDto,
+  ): Prisma.TicketMantenimientoUpdateInput {
+    const datosActualizacion: Prisma.TicketMantenimientoUpdateInput = {};
+
+    if (dto.titulo) datosActualizacion.titulo = this.sanitizarTexto(dto.titulo);
+    if (dto.descripcion) datosActualizacion.descripcion = this.sanitizarTexto(dto.descripcion);
+    if (dto.ubicacion !== undefined) {
+      datosActualizacion.ubicacion = dto.ubicacion ? this.sanitizarTexto(dto.ubicacion) : null;
+    }
+    if (dto.prioridad) datosActualizacion.prioridad = dto.prioridad;
+    if (dto.estado) datosActualizacion.estado = dto.estado;
+    if (dto.asignadoId !== undefined) {
+      datosActualizacion.asignado = dto.asignadoId
+        ? { connect: { id: dto.asignadoId } }
+        : { disconnect: true };
+    }
+
+    return datosActualizacion;
+  }
+
+  private shouldSetFechaResolucion(estado?: EstadoTicket): boolean {
+    return estado === EstadoTicket.RESUELTO || estado === EstadoTicket.CERRADO;
   }
 
   /**
@@ -326,7 +389,7 @@ export class TicketsService {
     ticketId: string,
     usuarioId: string,
   ): Promise<TicketDetalleResponseDto> {
-    const { ticket, rol } = await this.verificarAccesoTicket(usuarioId, ticketId);
+    const { rol } = await this.verificarAccesoTicket(usuarioId, ticketId);
 
     const rolesAdmin: Rol[] = [
       Rol.SUPER_ADMIN,
@@ -375,47 +438,12 @@ export class TicketsService {
   ): Promise<TicketResponseDto> {
     const { ticket, rol } = await this.verificarAccesoTicket(usuarioId, ticketId);
 
-    const rolesAdmin: Rol[] = [
-      Rol.SUPER_ADMIN,
-      Rol.ADMINISTRADOR,
-      Rol.ADMIN_STAFF,
-    ];
-    const esAdmin = rolesAdmin.includes(rol);
+    const esAdmin = this.isAdminRole(rol);
+    this.validateUpdatePermissions(ticket, dto, usuarioId, esAdmin);
 
-    // Solo el creador o admins pueden editar
-    if (!esAdmin && ticket.creadorId !== usuarioId) {
-      throw new ForbiddenException('No tenés permiso para editar este ticket');
-    }
+    const datosActualizacion = this.buildUpdateData(dto);
 
-    // Vecinos no pueden cambiar estado ni asignar
-    if (!esAdmin && (dto.estado || dto.asignadoId)) {
-      throw new ForbiddenException(
-        'Solo administradores pueden cambiar estado o asignar tickets',
-      );
-    }
-
-    // No se puede editar si está cerrado
-    if (ticket.estado === EstadoTicket.CERRADO) {
-      throw new BadRequestException('No se puede editar un ticket cerrado');
-    }
-
-    const datosActualizacion: Prisma.TicketMantenimientoUpdateInput = {};
-
-    if (dto.titulo) datosActualizacion.titulo = this.sanitizarTexto(dto.titulo);
-    if (dto.descripcion) datosActualizacion.descripcion = this.sanitizarTexto(dto.descripcion);
-    if (dto.ubicacion !== undefined) {
-      datosActualizacion.ubicacion = dto.ubicacion ? this.sanitizarTexto(dto.ubicacion) : null;
-    }
-    if (dto.prioridad) datosActualizacion.prioridad = dto.prioridad;
-    if (dto.estado) datosActualizacion.estado = dto.estado;
-    if (dto.asignadoId !== undefined) {
-      datosActualizacion.asignado = dto.asignadoId
-        ? { connect: { id: dto.asignadoId } }
-        : { disconnect: true };
-    }
-
-    // Si se resuelve o cierra, registrar fecha
-    if (dto.estado === EstadoTicket.RESUELTO || dto.estado === EstadoTicket.CERRADO) {
+    if (this.shouldSetFechaResolucion(dto.estado)) {
       datosActualizacion.fechaResolucion = new Date();
     }
 
@@ -472,7 +500,7 @@ export class TicketsService {
       [EstadoTicket.CERRADO]: [EstadoTicket.ABIERTO], // Reabrir
     };
 
-    if (!transicionesValidas[ticket.estado as EstadoTicket]?.includes(dto.estado)) {
+    if (!transicionesValidas[ticket.estado]?.includes(dto.estado)) {
       throw new BadRequestException(
         `No se puede cambiar de ${ticket.estado} a ${dto.estado}`,
       );
@@ -748,7 +776,7 @@ export class TicketsService {
       where: { id: archivoId },
     });
 
-    if (!archivo || archivo.ticketId !== ticketId) {
+    if (archivo?.ticketId !== ticketId) {
       throw new NotFoundException('Archivo no encontrado');
     }
 

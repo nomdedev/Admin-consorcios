@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+
 import { db } from '@/offline/db'
 
 interface UserSession {
@@ -133,8 +134,8 @@ export default function PerfilPage() {
         <h3 className="font-semibold text-gray-900 mb-3">Opciones</h3>
         <div className="bg-white rounded-xl shadow-sm divide-y">
           <button
-            onClick={() => window.location.reload()}
             className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+            onClick={() => window.location.reload()}
           >
             <span className="text-xl">🔄</span>
             <div>
@@ -144,8 +145,8 @@ export default function PerfilPage() {
           </button>
           
           <button
-            onClick={handleClearLocalData}
             className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+            onClick={handleClearLocalData}
           >
             <span className="text-xl">🗑️</span>
             <div>
@@ -155,8 +156,8 @@ export default function PerfilPage() {
           </button>
           
           <Link
-            href="/app"
             className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+            href="/app"
           >
             <span className="text-xl">📋</span>
             <div>
@@ -170,8 +171,8 @@ export default function PerfilPage() {
       {/* Logout */}
       <div className="p-4">
         <button
-          onClick={() => setShowLogoutConfirm(true)}
           className="w-full bg-red-50 text-red-600 py-4 rounded-xl font-semibold hover:bg-red-100 transition-colors"
+          onClick={() => setShowLogoutConfirm(true)}
         >
           Cerrar sesión
         </button>
@@ -195,14 +196,14 @@ export default function PerfilPage() {
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 py-3 rounded-xl border border-gray-300 font-medium hover:bg-gray-50"
+                onClick={() => setShowLogoutConfirm(false)}
               >
                 Cancelar
               </button>
               <button
-                onClick={handleLogout}
                 className="flex-1 py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700"
+                onClick={handleLogout}
               >
                 Cerrar sesión
               </button>

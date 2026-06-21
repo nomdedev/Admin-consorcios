@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface ResumenData {
@@ -54,11 +55,11 @@ export default function AppHomePage() {
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <div
-            key={i}
             className="bg-white rounded-xl p-6 animate-pulse"
+            key={i}
           >
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+            <div className="h-8 bg-gray-200 rounded w-1/2" />
           </div>
         ))}
       </div>
@@ -75,8 +76,8 @@ export default function AppHomePage() {
         </p>
         {resumen?.saldoActual && resumen.saldoActual > 0 && (
           <Link
-            href="/app/pagos/nuevo"
             className="inline-flex items-center px-4 py-2 bg-white text-green-600 font-medium rounded-lg hover:bg-green-50 transition-colors min-h-[44px]"
+            href="/app/pagos/nuevo"
           >
             Pagar ahora
           </Link>
@@ -101,8 +102,8 @@ export default function AppHomePage() {
             </span>
           </div>
           <Link
-            href={`/app/expensas/${resumen.proximaExpensa.periodo}`}
             className="text-green-600 text-sm font-medium hover:underline"
+            href={`/app/expensas/${resumen.proximaExpensa.periodo}`}
           >
             Ver detalle →
           </Link>
@@ -112,28 +113,28 @@ export default function AppHomePage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <QuickAction
+          count={null}
           href="/app/expensas"
           icon="📋"
           label="Ver expensas"
-          count={null}
         />
         <QuickAction
+          count={null}
           href="/app/pagos"
           icon="💳"
           label="Mis pagos"
-          count={null}
         />
         <QuickAction
+          count={resumen?.ticketsPendientes || null}
           href="/app/tickets"
           icon="🔧"
           label="Reclamos"
-          count={resumen?.ticketsPendientes || null}
         />
         <QuickAction
+          count={resumen?.comunicadosNuevos || null}
           href="/app/comunicados"
           icon="📢"
           label="Novedades"
-          count={resumen?.comunicadosNuevos || null}
         />
       </div>
 
@@ -168,8 +169,8 @@ function QuickAction({
 }) {
   return (
     <Link
-      href={href}
       className="bg-white rounded-xl p-4 shadow flex items-center gap-3 hover:bg-gray-50 transition-colors min-h-[60px] relative"
+      href={href}
     >
       <span className="text-2xl">{icon}</span>
       <span className="font-medium text-gray-700">{label}</span>

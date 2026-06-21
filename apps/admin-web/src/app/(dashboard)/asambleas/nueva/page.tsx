@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   Vote,
@@ -10,22 +7,23 @@ import {
   MapPin,
   Video,
   Users,
-  Plus,
-  Trash2,
-  GripVertical,
   AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
 import {
   useCreateAsamblea,
   type CreateAsambleaDto,
-  type CreatePuntoOrdenDto,
 } from '@/features/asambleas'
+import { useConsorcios } from '@/features/consorcios'
+import { cn } from '@/lib/utils'
 
 export default function NuevaAsambleaPage() {
   const router = useRouter()
   const createAsamblea = useCreateAsamblea()
+  const { data: consorciosData } = useConsorcios({ limit: 100 })
 
   const [consorcioId, setConsorcioId] = useState('')
   const [titulo, setTitulo] = useState('')
@@ -106,18 +104,18 @@ export default function NuevaAsambleaPage() {
     }
   }
 
-  const agregarPunto = () => {
+  const _agregarPunto = () => {
     setPuntos([
       ...puntos,
       { titulo: '', descripcion: '', requiereVotacion: false, mayoriaRequerida: '50.01' },
     ])
   }
 
-  const eliminarPunto = (index: number) => {
+  const _eliminarPunto = (index: number) => {
     setPuntos(puntos.filter((_, i) => i !== index))
   }
 
-  const actualizarPunto = (
+  const _actualizarPunto = (
     index: number,
     campo: keyof (typeof puntos)[0],
     valor: string | boolean
@@ -140,9 +138,9 @@ export default function NuevaAsambleaPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/asambleas"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Volver a asambleas"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href="/asambleas"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500" />
         </Link>
@@ -154,7 +152,7 @@ export default function NuevaAsambleaPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Datos básicos */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -166,24 +164,26 @@ export default function NuevaAsambleaPage() {
             {/* Consorcio */}
             <div className="md:col-span-2">
               <label
-                htmlFor="consorcio"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="consorcio"
               >
                 Consorcio *
               </label>
               <select
-                id="consorcio"
-                value={consorcioId}
-                onChange={(e) => setConsorcioId(e.target.value)}
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.consorcioId ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="consorcio"
+                value={consorcioId}
+                onChange={(e) => setConsorcioId(e.target.value)}
               >
                 <option value="">Seleccionar consorcio...</option>
-                {/* TODO: Cargar consorcios reales */}
-                <option value="demo-1">Edificio Demo 1</option>
-                <option value="demo-2">Edificio Demo 2</option>
+                {consorciosData?.data?.map((consorcio) => (
+                  <option key={consorcio.id} value={consorcio.id}>
+                    {consorcio.nombre}
+                  </option>
+                ))}
               </select>
               {errors.consorcioId && (
                 <p className="text-red-500 text-sm mt-1">{errors.consorcioId}</p>
@@ -193,22 +193,22 @@ export default function NuevaAsambleaPage() {
             {/* Título */}
             <div className="md:col-span-2">
               <label
-                htmlFor="titulo"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="titulo"
               >
                 Título *
               </label>
               <input
-                type="text"
-                id="titulo"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ej: Asamblea Ordinaria Anual 2026"
-                maxLength={200}
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.titulo ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="titulo"
+                maxLength={200}
+                placeholder="Ej: Asamblea Ordinaria Anual 2026"
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
               />
               {errors.titulo && (
                 <p className="text-red-500 text-sm mt-1">{errors.titulo}</p>
@@ -221,19 +221,19 @@ export default function NuevaAsambleaPage() {
             {/* Descripción */}
             <div className="md:col-span-2">
               <label
-                htmlFor="descripcion"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="descripcion"
               >
                 Descripción
               </label>
               <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                 id="descripcion"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                maxLength={2000}
                 placeholder="Descripción o temas a tratar..."
                 rows={3}
-                maxLength={2000}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
               />
               <p className="text-gray-400 text-xs mt-1">
                 {descripcion.length}/2000 caracteres
@@ -243,22 +243,22 @@ export default function NuevaAsambleaPage() {
             {/* Fecha */}
             <div>
               <label
-                htmlFor="fecha"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="fecha"
               >
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Fecha *
               </label>
               <input
-                type="date"
-                id="fecha"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                min={minDateStr}
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.fecha ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="fecha"
+                min={minDateStr}
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
               />
               {errors.fecha && (
                 <p className="text-red-500 text-sm mt-1">{errors.fecha}</p>
@@ -268,20 +268,20 @@ export default function NuevaAsambleaPage() {
             {/* Hora */}
             <div>
               <label
-                htmlFor="hora"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="hora"
               >
                 Hora *
               </label>
               <input
-                type="time"
-                id="hora"
-                value={hora}
-                onChange={(e) => setHora(e.target.value)}
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.hora ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="hora"
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
               />
               {errors.hora && (
                 <p className="text-red-500 text-sm mt-1">{errors.hora}</p>
@@ -291,44 +291,44 @@ export default function NuevaAsambleaPage() {
             {/* Lugar */}
             <div>
               <label
-                htmlFor="lugar"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="lugar"
               >
                 <MapPin className="h-4 w-4 inline mr-1" />
                 Lugar
               </label>
               <input
-                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="lugar"
+                maxLength={200}
+                placeholder="Ej: SUM del edificio"
+                type="text"
                 value={lugar}
                 onChange={(e) => setLugar(e.target.value)}
-                placeholder="Ej: SUM del edificio"
-                maxLength={200}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             {/* Quórum requerido */}
             <div>
               <label
-                htmlFor="quorum"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="quorum"
               >
                 <Users className="h-4 w-4 inline mr-1" />
                 Quórum Requerido (%)
               </label>
               <input
-                type="number"
-                id="quorum"
-                value={quorumRequerido}
-                onChange={(e) => setQuorumRequerido(e.target.value)}
-                min="0"
-                max="100"
-                step="0.01"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.quorumRequerido ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="quorum"
+                max="100"
+                min="0"
+                step="0.01"
+                type="number"
+                value={quorumRequerido}
+                onChange={(e) => setQuorumRequerido(e.target.value)}
               />
               {errors.quorumRequerido && (
                 <p className="text-red-500 text-sm mt-1">{errors.quorumRequerido}</p>
@@ -341,22 +341,22 @@ export default function NuevaAsambleaPage() {
             {/* Link virtual */}
             <div className="md:col-span-2">
               <label
-                htmlFor="linkVirtual"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="linkVirtual"
               >
                 <Video className="h-4 w-4 inline mr-1" />
                 Link para Asamblea Virtual
               </label>
               <input
-                type="url"
-                id="linkVirtual"
-                value={linkVirtual}
-                onChange={(e) => setLinkVirtual(e.target.value)}
-                placeholder="https://zoom.us/j/... o https://meet.google.com/..."
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.linkVirtual ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="linkVirtual"
+                placeholder="https://zoom.us/j/... o https://meet.google.com/..."
+                type="url"
+                value={linkVirtual}
+                onChange={(e) => setLinkVirtual(e.target.value)}
               />
               {errors.linkVirtual && (
                 <p className="text-red-500 text-sm mt-1">{errors.linkVirtual}</p>
@@ -383,15 +383,15 @@ export default function NuevaAsambleaPage() {
         {/* Botones */}
         <div className="flex justify-end gap-3">
           <Link
-            href="/asambleas"
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/asambleas"
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={createAsamblea.isPending}
             className="px-6 py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 rounded-lg transition-colors flex items-center gap-2"
+            disabled={createAsamblea.isPending}
+            type="submit"
           >
             {createAsamblea.isPending ? (
               <>

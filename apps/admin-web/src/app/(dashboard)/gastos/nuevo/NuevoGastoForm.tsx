@@ -1,8 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Input,
@@ -20,10 +18,13 @@ import {
   Textarea,
 } from "@vecinosimple/ui";
 import { ArrowLeft, Receipt, Save } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useCreateGasto, useCategoriasGasto } from "@/features/gastos";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { useConsorcios } from "@/features/consorcios";
+import { useCreateGasto, useCategoriasGasto } from "@/features/gastos";
 
 // Schema de validación
 const gastoSchema = z.object({
@@ -104,7 +105,7 @@ export default function NuevoGastoForm() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/gastos">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -135,11 +136,11 @@ export default function NuevoGastoForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <p className="block text-sm font-medium text-neutral-700 mb-1">
                   Consorcio *
-                </label>
-                <Select 
-                  value={watch("consorcioId")} 
+                </p>
+                <Select
+                  value={watch("consorcioId")}
                   onValueChange={(v) => setValue("consorcioId", v)}
                 >
                   <SelectTrigger>
@@ -159,21 +160,23 @@ export default function NuevoGastoForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="concepto">
                   Concepto *
                 </label>
                 <Input
+                  id="concepto"
                   {...register("concepto")}
-                  placeholder="Ej: Servicio de limpieza mensual"
                   error={errors.concepto?.message}
+                  placeholder="Ej: Servicio de limpieza mensual"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="descripcion">
                   Descripción
                 </label>
                 <Textarea
+                  id="descripcion"
                   {...register("descripcion")}
                   placeholder="Detalles adicionales del gasto..."
                   rows={3}
@@ -182,22 +185,24 @@ export default function NuevoGastoForm() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="monto">
                     Monto *
                   </label>
                   <Input
-                    type="number"
+                    id="monto"
                     step="0.01"
+                    type="number"
                     {...register("monto", { valueAsNumber: true })}
-                    placeholder="0.00"
                     error={errors.monto?.message}
+                    placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fecha-gasto">
                     Fecha del gasto *
                   </label>
                   <Input
+                    id="fecha-gasto"
                     type="date"
                     {...register("fechaGasto")}
                     error={errors.fechaGasto?.message}
@@ -207,11 +212,11 @@ export default function NuevoGastoForm() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <p className="block text-sm font-medium text-neutral-700 mb-1">
                     Categoría
-                  </label>
-                  <Select 
-                    value={watch("categoriaId") ?? ""} 
+                  </p>
+                  <Select
+                    value={watch("categoriaId") ?? ""}
                     onValueChange={(v) => setValue("categoriaId", v)}
                   >
                     <SelectTrigger>
@@ -256,11 +261,11 @@ export default function NuevoGastoForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <p className="block text-sm font-medium text-neutral-700 mb-1">
                   Tipo de comprobante
-                </label>
-                <Select 
-                  value={watch("tipoComprobante") ?? ""} 
+                </p>
+                <Select
+                  value={watch("tipoComprobante") ?? ""}
                   onValueChange={(v) => setValue("tipoComprobante", v)}
                 >
                   <SelectTrigger>
@@ -279,19 +284,21 @@ export default function NuevoGastoForm() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="numero-comprobante">
                     Número de comprobante
                   </label>
                   <Input
+                    id="numero-comprobante"
                     {...register("numeroComprobante")}
                     placeholder="Ej: 0001-00001234"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="cae-afip">
                     CAE AFIP
                   </label>
                   <Input
+                    id="cae-afip"
                     {...register("caeAfip")}
                     placeholder="Código de autorización"
                   />
@@ -299,23 +306,25 @@ export default function NuevoGastoForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fecha-comprobante">
                   Fecha del comprobante
                 </label>
                 <Input
+                  id="fecha-comprobante"
                   type="date"
                   {...register("fechaComprobante")}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="archivo-url">
                   URL del archivo adjunto
                 </label>
                 <Input
+                  id="archivo-url"
                   {...register("archivoUrl")}
-                  placeholder="https://..."
                   error={errors.archivoUrl?.message}
+                  placeholder="https://..."
                 />
                 <p className="text-xs text-neutral-500 mt-1">
                   Pega la URL del comprobante escaneado o foto
@@ -339,10 +348,10 @@ export default function NuevoGastoForm() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting || createGasto.isPending}>
+          <Button disabled={isSubmitting || createGasto.isPending} type="submit">
             {isSubmitting || createGasto.isPending ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Guardando...
               </>
             ) : (

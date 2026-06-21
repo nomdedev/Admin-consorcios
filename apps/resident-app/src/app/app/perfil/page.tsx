@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -31,17 +33,8 @@ export default function PerfilPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        }
+        const data = await apiClient.get<User>('/auth/me');
+        setUser(data);
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -60,15 +53,7 @@ export default function PerfilPage() {
 
   const handleCambiarModo = async (modo: 'completo' | 'simplificado') => {
     try {
-      const token = localStorage.getItem('accessToken');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/preferencias`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ preferenciasModo: modo }),
-      });
+      await apiClient.patch('/usuarios/preferencias', { preferenciasModo: modo });
       setUser((prev) => prev ? { ...prev, preferenciasModo: modo } : null);
     } catch (error) {
       console.error('Error updating preferences:', error);
@@ -79,8 +64,8 @@ export default function PerfilPage() {
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-xl p-6 animate-pulse">
-          <div className="h-16 w-16 bg-gray-200 rounded-full mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-16 w-16 bg-gray-200 rounded-full mb-4" />
+          <div className="h-6 bg-gray-200 rounded w-1/2" />
         </div>
       </div>
     );
@@ -132,12 +117,12 @@ export default function PerfilPage() {
         </p>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => handleCambiarModo('simplificado')}
             className={`p-4 rounded-lg text-left transition-colors border-2 ${
               user.preferenciasModo === 'simplificado'
                 ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
+            onClick={() => handleCambiarModo('simplificado')}
           >
             <span className="text-2xl mb-2 block">👀</span>
             <span className="font-medium text-gray-800 block">Simplificado</span>
@@ -146,12 +131,12 @@ export default function PerfilPage() {
             </span>
           </button>
           <button
-            onClick={() => handleCambiarModo('completo')}
             className={`p-4 rounded-lg text-left transition-colors border-2 ${
               user.preferenciasModo === 'completo'
                 ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
+            onClick={() => handleCambiarModo('completo')}
           >
             <span className="text-2xl mb-2 block">📊</span>
             <span className="font-medium text-gray-800 block">Completo</span>
@@ -165,8 +150,8 @@ export default function PerfilPage() {
       {/* Opciones */}
       <div className="bg-white rounded-xl shadow divide-y">
         <Link
-          href="/app/perfil/datos"
           className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors min-h-[56px]"
+          href="/app/perfil/datos"
         >
           <div className="flex items-center gap-3">
             <span className="text-xl">👤</span>
@@ -175,8 +160,8 @@ export default function PerfilPage() {
           <span className="text-gray-400">→</span>
         </Link>
         <Link
-          href="/app/perfil/notificaciones"
           className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors min-h-[56px]"
+          href="/app/perfil/notificaciones"
         >
           <div className="flex items-center gap-3">
             <span className="text-xl">🔔</span>
@@ -185,8 +170,8 @@ export default function PerfilPage() {
           <span className="text-gray-400">→</span>
         </Link>
         <Link
-          href="/app/perfil/seguridad"
           className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors min-h-[56px]"
+          href="/app/perfil/seguridad"
         >
           <div className="flex items-center gap-3">
             <span className="text-xl">🔒</span>
@@ -195,8 +180,8 @@ export default function PerfilPage() {
           <span className="text-gray-400">→</span>
         </Link>
         <a
-          href="mailto:soporte@vecinosimple.com"
           className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors min-h-[56px]"
+          href="mailto:soporte@vecinosimple.com"
         >
           <div className="flex items-center gap-3">
             <span className="text-xl">❓</span>
@@ -208,8 +193,8 @@ export default function PerfilPage() {
 
       {/* Cerrar sesión */}
       <button
-        onClick={handleLogout}
         className="w-full py-4 bg-white text-red-600 font-medium rounded-xl shadow hover:bg-red-50 transition-colors min-h-[56px]"
+        onClick={handleLogout}
       >
         Cerrar sesión
       </button>

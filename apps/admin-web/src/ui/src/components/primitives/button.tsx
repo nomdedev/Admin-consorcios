@@ -101,20 +101,20 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <Comp
-        ref={ref}
+        aria-busy={loading}
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         disabled={disabled || loading}
-        aria-busy={loading}
+        ref={ref}
         {...props}
       >
         {loading ? (
           <>
             <svg
+              aria-hidden="true"
               className="mr-2 h-5 w-5 animate-spin"
-              xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
             >
               <circle
                 className="opacity-25"
@@ -126,8 +126,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               />
               <path
                 className="opacity-75"
-                fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                fill="currentColor"
               />
             </svg>
             <span>Cargando...</span>

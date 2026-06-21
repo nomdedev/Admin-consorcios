@@ -43,15 +43,15 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {/* Label - solo se muestra si se proporciona */}
         {label && (
           <label
-            htmlFor={textareaId}
             className={cn(
               "block text-sm font-medium text-neutral-700 mb-1.5",
               hideLabel && "sr-only"
             )}
+            htmlFor={textareaId}
           >
             {label}
             {props.required && (
-              <span className="text-red-500 ml-0.5" aria-hidden="true">
+              <span aria-hidden="true" className="text-red-500 ml-0.5">
                 *
               </span>
             )}
@@ -60,8 +60,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
         {/* Textarea */}
         <textarea
-          id={textareaId}
-          ref={ref}
+          aria-describedby={
+            [hintId, errorId].filter(Boolean).join(" ") || undefined
+          }
+          aria-invalid={error ? "true" : undefined}
           className={cn(
             // Base styles
             "flex min-h-[80px] w-full rounded-md border bg-white px-3 py-2",
@@ -80,16 +82,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             "resize-y",
             className
           )}
-          aria-describedby={
-            [hintId, errorId].filter(Boolean).join(" ") || undefined
-          }
-          aria-invalid={error ? "true" : undefined}
+          id={textareaId}
+          ref={ref}
           {...props}
         />
 
         {/* Hint text */}
         {hint && !error && (
-          <p id={hintId} className="mt-1.5 text-sm text-neutral-500">
+          <p className="mt-1.5 text-sm text-neutral-500" id={hintId}>
             {hint}
           </p>
         )}
@@ -97,20 +97,20 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {/* Error message */}
         {error && (
           <p
-            id={errorId}
             className="mt-1.5 text-sm text-red-600 flex items-center gap-1"
+            id={errorId}
             role="alert"
           >
             <svg
+              aria-hidden="true"
               className="h-4 w-4 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
-              aria-hidden="true"
             >
               <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                 clipRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                fillRule="evenodd"
               />
             </svg>
             {error}

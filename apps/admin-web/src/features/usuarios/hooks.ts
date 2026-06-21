@@ -2,9 +2,10 @@
  * Hooks de React Query para Usuarios
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import apiClient from '../../lib/api-client';
+
 import type {
-  Usuario,
   PaginatedResponse,
   MessageResponse,
   Rol,

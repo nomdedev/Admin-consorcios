@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
 import { db, generateLocalId, type RondaLocal } from '@/offline/db';
 
 const CHECKPOINTS = [
@@ -103,7 +104,7 @@ export default function NuevaRondaPage() {
             });
           }
         } catch {
-          console.log('Sync failed, will retry later');
+          // Si falla, queda pendiente - se reintentará con el sync manager
         }
       }
 
@@ -121,8 +122,8 @@ export default function NuevaRondaPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/app/rondas"
             className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+            href="/app/rondas"
           >
             ←
           </Link>
@@ -145,11 +146,11 @@ export default function NuevaRondaPage() {
             Notas para el checkpoint (opcional)
           </span>
           <input
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+            placeholder="Ej: Todo en orden, luz fundida, etc."
             type="text"
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
-            placeholder="Ej: Todo en orden, luz fundida, etc."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
           />
         </label>
       </div>
@@ -162,14 +163,14 @@ export default function NuevaRondaPage() {
             const isCompleted = checkpointsCompletados.includes(checkpoint.label);
             return (
               <button
-                key={checkpoint.id}
-                onClick={() => handleCheckpoint(checkpoint.id)}
-                disabled={isCompleted}
                 className={`p-4 rounded-xl text-left transition-all border-2 min-h-[80px] ${
                   isCompleted
                     ? 'border-green-500 bg-green-50 opacity-70'
                     : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 active:scale-95'
                 }`}
+                disabled={isCompleted}
+                key={checkpoint.id}
+                onClick={() => handleCheckpoint(checkpoint.id)}
               >
                 <span className="text-2xl block mb-1">{checkpoint.icon}</span>
                 <span className="text-sm font-medium text-gray-700">
@@ -193,8 +194,8 @@ export default function NuevaRondaPage() {
           <div className="space-y-3">
             {ronda.checkpoints.map((checkpoint, index) => (
               <div
-                key={index}
                 className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0"
+                key={index}
               >
                 <span className="text-green-500 mt-0.5">✓</span>
                 <div className="flex-1">
@@ -219,9 +220,9 @@ export default function NuevaRondaPage() {
 
       {/* Finalizar */}
       <button
-        onClick={handleFinalizarRonda}
-        disabled={isLoading || !ronda || ronda.checkpoints.length === 0}
         className="w-full py-4 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
+        disabled={isLoading || !ronda || ronda.checkpoints.length === 0}
+        onClick={handleFinalizarRonda}
       >
         {isLoading ? 'Finalizando...' : 'Finalizar ronda'}
       </button>

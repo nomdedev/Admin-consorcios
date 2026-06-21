@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   Upload,
@@ -11,8 +8,10 @@ import {
   Lock,
   AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth'
 import {
   useCreateDocumento,
@@ -22,6 +21,7 @@ import {
   categoriaLabels,
   categoriaIcons,
 } from '@/features/documentos'
+import { cn } from '@/lib/utils'
 
 export default function NuevoDocumentoPage() {
   const router = useRouter()
@@ -124,9 +124,9 @@ export default function NuevoDocumentoPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/documentos"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Volver a documentos"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href="/documentos"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500" />
         </Link>
@@ -138,7 +138,7 @@ export default function NuevoDocumentoPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Upload Area */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -162,12 +162,12 @@ export default function NuevoDocumentoPage() {
                   {(archivo.size / 1024 / 1024).toFixed(2)} MB
                 </p>
                 <button
+                  className="text-sm text-red-600 hover:underline"
                   type="button"
                   onClick={() => {
                     setArchivo(null)
                     setArchivoUrl('')
                   }}
-                  className="text-sm text-red-600 hover:underline"
                 >
                   Cambiar archivo
                 </button>
@@ -182,10 +182,10 @@ export default function NuevoDocumentoPage() {
                   PDF, Word, Excel, imágenes (máx. 50MB)
                 </p>
                 <input
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                  className="hidden"
                   type="file"
                   onChange={handleFileChange}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
                 />
               </label>
             )}
@@ -207,21 +207,21 @@ export default function NuevoDocumentoPage() {
             {/* Nombre */}
             <div>
               <label
-                htmlFor="nombre"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="nombre"
               >
                 Nombre del documento *
               </label>
               <input
-                type="text"
-                id="nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Ej: Reglamento de Copropiedad 2024"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.nombre ? 'border-red-500' : 'border-gray-300'
                 )}
+                id="nombre"
+                placeholder="Ej: Reglamento de Copropiedad 2024"
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
               />
               {errors.nombre && (
                 <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
@@ -231,34 +231,34 @@ export default function NuevoDocumentoPage() {
             {/* Descripción */}
             <div>
               <label
-                htmlFor="descripcion"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="descripcion"
               >
                 Descripción
               </label>
               <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="descripcion"
+                placeholder="Descripción opcional del documento..."
+                rows={3}
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
-                rows={3}
-                placeholder="Descripción opcional del documento..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             {/* Categoría */}
             <div>
               <label
-                htmlFor="categoria"
                 className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="categoria"
               >
                 Categoría *
               </label>
               <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="categoria"
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value as CategoriaDocumento)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {CATEGORIAS_DOCUMENTO.map((cat) => (
                   <option key={cat} value={cat}>
@@ -270,19 +270,19 @@ export default function NuevoDocumentoPage() {
 
             {/* Visibilidad */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <p className="block text-sm font-medium text-gray-700 mb-2">
                 Visibilidad
-              </label>
+              </p>
               <div className="flex gap-4">
                 <button
-                  type="button"
-                  onClick={() => setEsPublico(true)}
                   className={cn(
                     'flex-1 flex items-center justify-center gap-2 px-4 py-3 border rounded-lg transition-colors',
                     esPublico
                       ? 'border-green-500 bg-green-50 text-green-700'
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   )}
+                  type="button"
+                  onClick={() => setEsPublico(true)}
                 >
                   <Globe className="h-5 w-5" />
                   <div className="text-left">
@@ -291,14 +291,14 @@ export default function NuevoDocumentoPage() {
                   </div>
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setEsPublico(false)}
                   className={cn(
                     'flex-1 flex items-center justify-center gap-2 px-4 py-3 border rounded-lg transition-colors',
                     !esPublico
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   )}
+                  type="button"
+                  onClick={() => setEsPublico(false)}
                 >
                   <Lock className="h-5 w-5" />
                   <div className="text-left">
@@ -326,15 +326,15 @@ export default function NuevoDocumentoPage() {
         {/* Buttons */}
         <div className="flex justify-end gap-3">
           <Link
-            href="/documentos"
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/documentos"
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={createDocumento.isPending}
             className="px-6 py-2 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 rounded-lg transition-colors flex items-center gap-2"
+            disabled={createDocumento.isPending}
+            type="submit"
           >
             {createDocumento.isPending ? (
               <>

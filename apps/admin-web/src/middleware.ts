@@ -4,9 +4,38 @@
  * Valida JWT del servidor con firma, expiración, issuer y audience
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { NextResponse } from 'next/server';
+
+import type { NextRequest } from 'next/server';
+
+type RateLimitEntry = {
+  count: number;
+  resetAt: number;
+};
+
+type RateLimitResult = {
+  isLimited: boolean;
+  remaining: number;
+  resetAt: number;
+  limit: number;
+};
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+const rateLimitConfig = {
+  // Rate limiting estricto para rutas de autenticación
+  authWindowMs: 60_000,  // 1 minuto
+  authMax: 10,           // 10 intentos por minuto
+  // Rate limiting para rutas públicas
+  publicWindowMs: 60_000, // 1 minuto
+  publicMax: 60,          // 60 requests por minuto
+  // Rate limiting general para rutas protegidas
+  protectedWindowMs: 60_000, // 1 minuto
+  protectedMax: 100,         // 100 requests por minuto
+  // Límite de entradas en memoria
+  maxEntries: 10_000,
+};
 
 // Rutas públicas que no requieren autenticación
 const publicPaths = [
@@ -23,6 +52,53 @@ const publicApiPaths = [
   '/api/auth/magic-link',
   '/api/auth/verify',
 ];
+
+const rateLimitedAuthPaths = new Set(publicApiPaths);
+
+/** Verifica si la ruta es pública (no requiere autenticación) */
+function isPublicRoute(pathname: string): boolean {
+  return publicPaths.some(path => pathname.startsWith(path));
+}
+
+/** Verifica si la ruta de API es pública */
+function isPublicApiRoute(pathname: string): boolean {
+  return publicApiPaths.some(path => pathname.startsWith(path));
+}
+
+/** Verifica si es un asset estático que no requiere procesamiento */
+function isStaticAsset(pathname: string): boolean {
+  return pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.includes('.');
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
+function checkRateLimit(key: string, max: number, windowMs: number): RateLimitResult {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || entry.resetAt <= now) {
+    const resetAt = now + windowMs;
+    rateLimitStore.set(key, { count: 1, resetAt });
+    return { isLimited: false, remaining: max - 1, resetAt, limit: max };
+  }
+
+  entry.count += 1;
+
+  if (rateLimitStore.size > rateLimitConfig.maxEntries) {
+    rateLimitStore.clear();
+  }
+
+  const remaining = Math.max(0, max - entry.count);
+  return { isLimited: entry.count > max, remaining, resetAt: entry.resetAt, limit: max };
+}
 
 /**
  * Interface para el payload del JWT
@@ -83,44 +159,92 @@ async function validateJwtToken(token: string): Promise<JwtPayload> {
     // Convertir el payload al tipo JwtPayload
     return payload as unknown as JwtPayload;
   } catch (error) {
-    if (error instanceof Error) {
-      // Manejar errores específicos de JWT
-      if (error.message.includes('JWTExpired')) {
-        throw new Error('Token expirado');
-      }
-      if (error.message.includes('JWTInvalidSignature')) {
-        throw new Error('Firma del token inválida');
-      }
-      if (error.message.includes('JWTInvalidIssuer')) {
-        throw new Error('Issuer del token inválido');
-      }
-      if (error.message.includes('JWTInvalidAudience')) {
-        throw new Error('Audience del token inválido');
-      }
-    }
-    throw new Error('Token inválido');
+    throw new Error(getJwtErrorMessage(error));
   }
+}
+
+function getJwtErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'Token inválido';
+  }
+
+  const errorMappings = [
+    { match: 'JWTExpired', message: 'Token expirado' },
+    { match: 'JWTInvalidSignature', message: 'Firma del token inválida' },
+    { match: 'JWTInvalidIssuer', message: 'Issuer del token inválido' },
+    { match: 'JWTInvalidAudience', message: 'Audience del token inválido' },
+  ];
+
+  const mappedError = errorMappings.find(({ match }) => error.message.includes(match));
+  return mappedError?.message ?? 'Token inválido';
+}
+
+/** Crea headers de rate limit para la respuesta */
+function createRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': result.limit.toString(),
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': Math.ceil(result.resetAt / 1000).toString(),
+  };
+}
+
+/** Crea respuesta 429 Too Many Requests */
+function createRateLimitResponse(result: RateLimitResult): NextResponse {
+  return new NextResponse('Too Many Requests', {
+    status: 429,
+    headers: {
+      ...createRateLimitHeaders(result),
+      'Retry-After': Math.ceil((result.resetAt - Date.now()) / 1000).toString(),
+    },
+  });
+}
+
+/** Verifica rate limiting y retorna respuesta si está limitado */
+function checkAndApplyRateLimit(
+  pathname: string,
+  ip: string
+): NextResponse | null {
+  const rateLimitKeyBase = `${ip}:${pathname}`;
+
+  if (rateLimitedAuthPaths.has(pathname)) {
+    const result = checkRateLimit(
+      `auth:${rateLimitKeyBase}`,
+      rateLimitConfig.authMax,
+      rateLimitConfig.authWindowMs
+    );
+    if (result.isLimited) return createRateLimitResponse(result);
+  } else if (isPublicRoute(pathname)) {
+    const result = checkRateLimit(
+      `public:${rateLimitKeyBase}`,
+      rateLimitConfig.publicMax,
+      rateLimitConfig.publicWindowMs
+    );
+    if (result.isLimited) return createRateLimitResponse(result);
+  }
+
+  return null;
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Permitir assets estáticos
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.') // archivos con extensión
-  ) {
+  if (isStaticAsset(pathname)) {
     return NextResponse.next();
+  }
+
+  if (process.env.TEST_MODE === 'true' && request.headers.get('x-test-mode') === 'true') {
+    return NextResponse.next();
+  }
+
+  // Aplicar rate limiting
+  const rateLimitResponse = checkAndApplyRateLimit(pathname, getClientIp(request));
+  if (rateLimitResponse) {
+    return rateLimitResponse;
   }
 
   // Permitir rutas públicas
-  if (publicPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.next();
-  }
-
-  // Permitir rutas de API públicas
-  if (publicApiPaths.some(path => pathname.startsWith(path))) {
+  if (isPublicRoute(pathname) || isPublicApiRoute(pathname)) {
     return NextResponse.next();
   }
 

@@ -1,5 +1,6 @@
-import { Suspense } from "react";
 import { Spinner } from "@vecinosimple/ui";
+import { Suspense } from "react";
+
 import NuevaExpensaForm from "./NuevaExpensaForm";
 
 export default function NuevaExpensaPage() {

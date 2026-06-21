@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { Menu, X, ChevronDown, LogOut, Bell } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "../../lib/utils";
 import { Avatar } from "../primitives/avatar";
@@ -50,15 +50,15 @@ const MobileNav: React.FC<{
 
   return (
     <nav
+      aria-label="Navegación principal"
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white md:hidden"
       role="navigation"
-      aria-label="Navegación principal"
     >
       <ul className="flex justify-around">
         {visibleItems.map((item) => (
           <li key={item.href}>
             <button
-              onClick={() => onNavigate?.(item.href)}
+              aria-current={item.active ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-3 text-xs",
                 "min-h-touch min-w-touch transition-colors",
@@ -66,7 +66,7 @@ const MobileNav: React.FC<{
                   ? "text-brand-600"
                   : "text-neutral-600 hover:text-brand-600"
               )}
-              aria-current={item.active ? "page" : undefined}
+              onClick={() => onNavigate?.(item.href)}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -97,14 +97,15 @@ const Sidebar: React.FC<{
       {/* Overlay para móvil */}
       {isOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={onClose}
-          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <aside
+        aria-label="Menú lateral"
         className={cn(
           "fixed left-0 top-0 z-50 flex h-full w-64 flex-col",
           "border-r border-neutral-200 bg-white",
@@ -112,7 +113,6 @@ const Sidebar: React.FC<{
           "md:translate-x-0 md:static",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        aria-label="Menú lateral"
       >
         {/* Logo y título */}
         <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4">
@@ -125,9 +125,9 @@ const Sidebar: React.FC<{
             {title && <span className="font-semibold text-lg">{title}</span>}
           </div>
           <button
-            onClick={onClose}
-            className="md:hidden min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
             aria-label="Cerrar menú"
+            className="md:hidden min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
+            onClick={onClose}
           >
             <X className="h-5 w-5" />
           </button>
@@ -139,10 +139,7 @@ const Sidebar: React.FC<{
             {items.map((item) => (
               <li key={item.href}>
                 <button
-                  onClick={() => {
-                    onNavigate?.(item.href);
-                    onClose();
-                  }}
+                  aria-current={item.active ? "page" : undefined}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-base",
                     "min-h-touch transition-colors",
@@ -150,7 +147,10 @@ const Sidebar: React.FC<{
                       ? "bg-brand-100 text-brand-700 font-medium"
                       : "text-neutral-700 hover:bg-neutral-100"
                   )}
-                  aria-current={item.active ? "page" : undefined}
+                  onClick={() => {
+                    onNavigate?.(item.href);
+                    onClose();
+                  }}
                 >
                   {item.icon}
                   <span className="flex-1">{item.label}</span>
@@ -183,9 +183,9 @@ const Header: React.FC<{
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-4">
       {/* Botón menú móvil */}
       <button
-        onClick={onMenuClick}
-        className="md:hidden min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
         aria-label="Abrir menú"
+        className="md:hidden min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
+        onClick={onMenuClick}
       >
         <Menu className="h-6 w-6" />
       </button>
@@ -198,9 +198,9 @@ const Header: React.FC<{
         {/* Notificaciones */}
         {onNotificationsClick && (
           <button
-            onClick={onNotificationsClick}
-            className="relative min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
             aria-label={`Notificaciones${notifications ? `, ${notifications} sin leer` : ""}`}
+            className="relative min-h-touch min-w-touch flex items-center justify-center rounded-md hover:bg-neutral-100"
+            onClick={onNotificationsClick}
           >
             <Bell className="h-5 w-5 text-neutral-600" />
             {notifications && notifications > 0 && (
@@ -215,16 +215,16 @@ const Header: React.FC<{
         {user && (
           <div className="relative">
             <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-100 min-h-touch"
               aria-expanded={userMenuOpen}
               aria-haspopup="true"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-100 min-h-touch"
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
             >
               <Avatar
-                nombre={user.nombre}
                 apellido={user.apellido}
-                src={user.avatarUrl}
+                nombre={user.nombre}
                 size="sm"
+                src={user.avatarUrl}
               />
               <span className="hidden sm:block text-sm font-medium">
                 {user.nombre}
@@ -236,9 +236,9 @@ const Header: React.FC<{
             {userMenuOpen && (
               <>
                 <div
+                  aria-hidden="true"
                   className="fixed inset-0 z-40"
                   onClick={() => setUserMenuOpen(false)}
-                  aria-hidden="true"
                 />
                 <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-card border border-neutral-200 bg-white py-1 shadow-lg">
                   <div className="border-b border-neutral-200 px-4 py-3">
@@ -251,11 +251,11 @@ const Header: React.FC<{
                     )}
                   </div>
                   <button
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 min-h-touch"
                     onClick={() => {
                       setUserMenuOpen(false);
                       onLogout?.();
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 min-h-touch"
                   >
                     <LogOut className="h-4 w-4" />
                     Cerrar sesión
@@ -288,21 +288,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     <div className="flex min-h-screen bg-neutral-50">
       {/* Sidebar */}
       <Sidebar
+        isOpen={sidebarOpen}
         items={navItems}
         logo={logo}
         title={title}
-        onNavigate={onNavigate}
-        isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onNavigate={onNavigate}
       />
 
       {/* Main content */}
       <div className="flex flex-1 flex-col md:ml-0">
         <Header
-          user={user}
-          onMenuClick={() => setSidebarOpen(true)}
-          onLogout={onLogout}
           notifications={notifications}
+          user={user}
+          onLogout={onLogout}
+          onMenuClick={() => setSidebarOpen(true)}
           onNotificationsClick={onNotificationsClick}
         />
 

@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Bell,
   BellOff,
-  Check,
   CheckCheck,
   CreditCard,
   FileText,
@@ -19,8 +16,9 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
 import {
   useNotificaciones,
   useContadorNotificaciones,
@@ -32,6 +30,7 @@ import {
   getNotificacionConfig,
   getNotificacionUrl,
 } from '@/features/notificaciones'
+import { cn } from '@/lib/utils'
 
 // Mapeo de iconos por tipo
 const iconMap: Record<TipoNotificacion, React.ElementType> = {
@@ -107,9 +106,9 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     <div className={cn('relative', className)}>
       {/* Botón de notificaciones */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
         aria-label={`Notificaciones${noLeidas > 0 ? ` (${noLeidas} sin leer)` : ''}`}
+        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
       >
         <Bell className="h-5 w-5 text-gray-600" />
         {noLeidas > 0 && (
@@ -123,9 +122,17 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       {isOpen && (
         <>
           {/* Overlay para cerrar al hacer clic fuera */}
-          <div
-            className="fixed inset-0 z-40"
+          <button
+            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-transparent cursor-default"
+            tabIndex={-1}
+            type="button"
             onClick={() => setIsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false)
+              }
+            }}
           />
 
           {/* Panel */}
@@ -136,17 +143,17 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
               <div className="flex items-center gap-2">
                 {noLeidas > 0 && (
                   <button
-                    onClick={handleMarcarTodasLeidas}
                     className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
                     disabled={marcarTodasLeidas.isPending}
+                    onClick={handleMarcarTodasLeidas}
                   >
                     <CheckCheck className="h-4 w-4" />
                     Marcar todas
                   </button>
                 )}
                 <button
-                  onClick={() => setIsOpen(false)}
                   className="p-1 hover:bg-gray-200 rounded"
+                  onClick={() => setIsOpen(false)}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -183,11 +190,11 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
             {notificaciones.length > 0 && (
               <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
                 <button
+                  className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-medium"
                   onClick={() => {
                     router.push('/notificaciones')
                     setIsOpen(false)
                   }}
-                  className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
                   Ver todas las notificaciones
                 </button>
@@ -210,7 +217,7 @@ interface NotificationItemProps {
 function NotificationItem({ notificacion, onClick, onDelete }: NotificationItemProps) {
   const Icon = iconMap[notificacion.tipo] || Bell
   const bgColor = bgColorMap[notificacion.tipo] || 'bg-gray-100 text-gray-700'
-  const config = getNotificacionConfig(notificacion.tipo)
+  const _config = getNotificacionConfig(notificacion.tipo)
 
   const timeAgo = formatDistanceToNow(new Date(notificacion.createdAt), {
     addSuffix: true,
@@ -218,14 +225,16 @@ function NotificationItem({ notificacion, onClick, onDelete }: NotificationItemP
   })
 
   return (
-    <li
-      onClick={onClick}
-      className={cn(
-        'px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors group',
-        !notificacion.leida && 'bg-blue-50/50'
-      )}
-    >
-      <div className="flex gap-3">
+    <li>
+      <button
+        className={cn(
+          'w-full px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors group text-left',
+          !notificacion.leida && 'bg-blue-50/50'
+        )}
+        type="button"
+        onClick={onClick}
+      >
+        <div className="flex gap-3">
         {/* Icono */}
         <div className={cn('flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center', bgColor)}>
           <Icon className="h-5 w-5" />
@@ -253,15 +262,16 @@ function NotificationItem({ notificacion, onClick, onDelete }: NotificationItemP
           <div className="flex items-center justify-between mt-1">
             <span className="text-xs text-gray-400">{timeAgo}</span>
             <button
-              onClick={onDelete}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
               title="Eliminar notificación"
+              onClick={onDelete}
             >
               <Trash2 className="h-3 w-3 text-gray-400" />
             </button>
           </div>
         </div>
       </div>
+      </button>
     </li>
   )
 }

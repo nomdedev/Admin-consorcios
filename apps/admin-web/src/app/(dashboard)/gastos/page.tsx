@@ -24,9 +24,9 @@ import {
 import { Plus, Search, Receipt, Trash2, RefreshCw, Filter, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useGastos, useDeleteGasto, useCategoriasGasto } from "@/features/gastos";
+
 import { useConsorcios } from "@/features/consorcios";
-import { useDebouncedValue } from "@/lib/hooks/use-debounce";
+import { useGastos, useDeleteGasto, useCategoriasGasto } from "@/features/gastos";
 
 export default function GastosPage() {
   const router = useRouter();
@@ -35,9 +35,7 @@ export default function GastosPage() {
   const [consorcioId, setConsorcioId] = useState<string>("");
   const [categoriaId, setCategoriaId] = useState<string>("");
   const [soloExtraordinarios, setSoloExtraordinarios] = useState(false);
-  
-  const debouncedSearch = useDebouncedValue(search, 300);
-  
+
   // Fetch consorcios para el selector
   const { data: consorciosData } = useConsorcios({ limit: 100 });
   const consorcios = consorciosData?.data ?? [];
@@ -94,9 +92,9 @@ export default function GastosPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={isLoading} 
+            variant="secondary"
             onClick={() => refetch()}
-            disabled={isLoading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
@@ -120,9 +118,9 @@ export default function GastosPage() {
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Consorcio
-              </label>
+              </p>
               <Select value={consorcioId} onValueChange={setConsorcioId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar consorcio..." />
@@ -139,9 +137,9 @@ export default function GastosPage() {
             </div>
             
             <div className="flex-1">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Categoría
-              </label>
+              </p>
               <Select value={categoriaId} onValueChange={setCategoriaId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todas las categorías..." />
@@ -187,7 +185,7 @@ export default function GastosPage() {
       ) : isLoading ? (
         <div className="grid gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-neutral-200" />
+            <div className="h-20 animate-pulse rounded-lg bg-neutral-200" key={i} />
           ))}
         </div>
       ) : gastos.length === 0 ? (
@@ -264,11 +262,11 @@ export default function GastosPage() {
                       <td className="px-4 py-3 text-center">
                         {gasto.archivoUrl ? (
                           <a
-                            href={gasto.archivoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="text-brand-600 hover:text-brand-700"
+                            href={gasto.archivoUrl}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <FileText className="h-5 w-5 inline" />
                           </a>
@@ -278,8 +276,8 @@ export default function GastosPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Button
-                          variant="ghost"
                           size="sm"
+                          variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
                             setDeleteId(gasto.id);

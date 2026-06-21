@@ -12,7 +12,6 @@ import { AuditService } from '../audit/audit.service';
 import { EmailService } from '../email/email.service';
 import { EmailTemplateService } from '../email/email-template.service';
 import {
-  CreateUsuarioDto,
   CreateUsuarioConRolDto,
   UpdateUsuarioDto,
   AsignarRolConsorcioDto,
@@ -24,7 +23,8 @@ import {
   UsuarioResponseDto,
   UsuarioListResponseDto,
 } from './dto';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 
 // Tipo flexible para el mapper que acepta la estructura de las queries
 interface UsuarioConRoles {
@@ -74,10 +74,10 @@ export class UsuariosService {
    */
   private sanitizeText(text: string): string {
     return text
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#x27;')
       .trim();
   }
 
@@ -94,7 +94,7 @@ export class UsuariosService {
     const skip = (page - 1) * limit;
 
     // Construir where clause
-    const where: any = {};
+    const where: Prisma.UsuarioWhereInput = {};
 
     // SUPER_ADMIN ve todos, otros solo su organización
     if (requestingUserRol !== Rol.SUPER_ADMIN && organizacionId) {
@@ -252,7 +252,7 @@ export class UsuariosService {
         where: { id: dto.rolConsorcio.unidadFuncionalId },
       });
 
-      if (!uf || uf.consorcioId !== dto.rolConsorcio.consorcioId) {
+      if (uf?.consorcioId !== dto.rolConsorcio.consorcioId) {
         throw new BadRequestException('Unidad funcional no válida para este consorcio');
       }
 

@@ -65,11 +65,11 @@ const DOMINIOS_PERMITIDOS = [
 function sanitizeText(text: string | undefined | null): string {
   if (!text) return '';
   return text
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;')
+    .replaceAll('/', '&#x2F;')
     .trim();
 }
 
@@ -89,6 +89,38 @@ function validarDominioUrl(url: string | undefined | null): boolean {
 }
 
 /**
+ * Calcula dígito verificador de CUIT
+ */
+function calcularDigitoVerificadorCuit(resto: number): number {
+  if (resto === 0) return 0;
+  if (resto === 1) return 9;
+  return 11 - resto;
+}
+
+/**
+ * Valida y verifica unicidad del CUIT al actualizar un proveedor
+ */
+async function validarCambioCuit(
+  prisma: PrismaService,
+  cuit: string,
+  cuitActual: string,
+): Promise<void> {
+  if (cuit === cuitActual) return;
+
+  if (!validarCuit(cuit)) {
+    throw new BadRequestException('El CUIT ingresado no es válido');
+  }
+
+  const existente = await prisma.proveedor.findUnique({
+    where: { cuit },
+  });
+
+  if (existente) {
+    throw new ConflictException('Ya existe un proveedor con ese CUIT');
+  }
+}
+
+/**
  * Valida CUIT argentino
  */
 function validarCuit(cuit: string): boolean {
@@ -103,7 +135,7 @@ function validarCuit(cuit: string): boolean {
   }
   
   const resto = suma % 11;
-  const digitoVerificador = resto === 0 ? 0 : resto === 1 ? 9 : 11 - resto;
+  const digitoVerificador = calcularDigitoVerificadorCuit(resto);
   
   return digitos[10] === digitoVerificador;
 }
@@ -153,11 +185,7 @@ export class ProveedoresService {
       where.verificado = filtros.verificado;
     }
 
-    if (filtros.activo !== undefined) {
-      where.activo = filtros.activo;
-    } else {
-      where.activo = true; // Por defecto solo activos
-    }
+    where.activo = filtros.activo ?? true; // Por defecto solo activos
 
     const [proveedores, total] = await Promise.all([
       this.prisma.proveedor.findMany({
@@ -347,18 +375,8 @@ export class ProveedoresService {
     }
 
     // Si se cambia el CUIT, validar
-    if (dto.cuit && dto.cuit !== proveedorActual.cuit) {
-      if (!validarCuit(dto.cuit)) {
-        throw new BadRequestException('El CUIT ingresado no es válido');
-      }
-
-      const existente = await this.prisma.proveedor.findUnique({
-        where: { cuit: dto.cuit },
-      });
-
-      if (existente) {
-        throw new ConflictException('Ya existe un proveedor con ese CUIT');
-      }
+    if (dto.cuit) {
+      await validarCambioCuit(this.prisma, dto.cuit, proveedorActual.cuit);
     }
 
     const datosUpdate: Prisma.ProveedorUpdateInput = {};
@@ -490,7 +508,7 @@ export class ProveedoresService {
       where: { id: dto.proveedorId },
     });
 
-    if (!proveedor || !proveedor.activo) {
+    if (!proveedor?.activo) {
       throw new NotFoundException('Proveedor no encontrado o inactivo');
     }
 
@@ -547,13 +565,18 @@ export class ProveedoresService {
       throw new NotFoundException('Asociación no encontrada');
     }
 
+    let nuevaNota: string | null = asociacion.nota;
+    if (dto.nota !== undefined) {
+      nuevaNota = dto.nota ? sanitizeText(dto.nota) : null;
+    }
+
     await this.prisma.proveedorConsorcio.update({
       where: {
         proveedorId_consorcioId: { proveedorId, consorcioId },
       },
       data: {
         esFavorito: dto.esFavorito ?? asociacion.esFavorito,
-        nota: dto.nota !== undefined ? (dto.nota ? sanitizeText(dto.nota) : null) : asociacion.nota,
+        nota: nuevaNota,
       },
     });
 
@@ -646,8 +669,9 @@ export class ProveedoresService {
     }
 
     if (filtros.fechaHasta) {
+      const existingFechaTrabajo = where.fechaTrabajo as Prisma.DateTimeFilter | undefined;
       where.fechaTrabajo = {
-        ...(where.fechaTrabajo as any || {}),
+        ...existingFechaTrabajo,
         lte: new Date(filtros.fechaHasta + 'T23:59:59.999Z'),
       };
     }
@@ -986,7 +1010,7 @@ export class ProveedoresService {
 
     for (const grupo of trabajos) {
       const count = grupo._count.id;
-      const monto = grupo._sum.monto ? parseFloat(grupo._sum.monto.toString()) : 0;
+      const monto = grupo._sum.monto ? Number.parseFloat(grupo._sum.monto.toString()) : 0;
 
       if (grupo.estado === 'pendiente') {
         stats.trabajosPendientes = count;
@@ -1018,7 +1042,7 @@ export class ProveedoresService {
       }
     }
 
-    return Array.from(serviciosSet).sort();
+    return Array.from(serviciosSet).sort((a, b) => a.localeCompare(b));
   }
 
   // ==========================================================================
@@ -1035,7 +1059,7 @@ export class ProveedoresService {
       direccion: proveedor.direccion || undefined,
       servicios: proveedor.servicios,
       puntuacionPromedio: proveedor.puntuacionPromedio
-        ? parseFloat(proveedor.puntuacionPromedio.toString())
+        ? Number.parseFloat(proveedor.puntuacionPromedio.toString())
         : undefined,
       cantidadResenas: proveedor.cantidadResenas,
       verificado: proveedor.verificado,
@@ -1052,7 +1076,7 @@ export class ProveedoresService {
       proveedorId: trabajo.proveedorId,
       consorcioId: trabajo.consorcioId,
       descripcion: trabajo.descripcion,
-      monto: parseFloat(trabajo.monto.toString()),
+      monto: Number.parseFloat(trabajo.monto.toString()),
       facturaUrl: trabajo.facturaUrl || undefined,
       fotosUrls: trabajo.fotosUrls,
       estado: trabajo.estado,

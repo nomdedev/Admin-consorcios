@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { useLogin, useRequestMagicLink } from '@/features/auth';
 import { 
   Card, 
   CardContent, 
@@ -15,8 +18,7 @@ import {
   Label,
   AlertBanner,
 } from 'ui';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { useLogin, useRequestMagicLink } from '@/features/auth';
+
 
 // Schema de validación
 const loginSchema = z.object({

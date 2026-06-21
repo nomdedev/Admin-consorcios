@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   VecinoSimple - Admin Web Global Styles
+   ============================================================================= */
+
+@layer base {
+  /* Focus visible para accesibilidad */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+  }
+
+  /* Respetar preferencia de movimiento reducido */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Tipografía base más legible */
+  html {
+    @apply text-base antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900;
+  }
+
+  /* Dark mode */
+  .dark body {
+    @apply bg-neutral-900 text-neutral-50;
+  }
+}
+
+@layer components {
+  /* Sidebar del dashboard */
+  .sidebar {
+    @apply fixed left-0 top-0 z-40 h-screen w-64 bg-white shadow-card;
+    @apply transition-transform duration-300 ease-in-out;
+  }
+
+  .sidebar.collapsed {
+    @apply -translate-x-full md:translate-x-0 md:w-20;
+  }
+
+  /* Cards del dashboard */
+  .dashboard-card {
+    @apply rounded-card bg-white p-6 shadow-card;
+    @apply transition-shadow duration-200 hover:shadow-card-hover;
+  }
+
+  /* Tabla de datos */
+  .data-table {
+    @apply w-full text-left;
+  }
+
+  .data-table th {
+    @apply border-b border-neutral-200 bg-neutral-50 px-4 py-3 font-semibold;
+  }
+
+  .data-table td {
+    @apply border-b border-neutral-100 px-4 py-3;
+  }
+
+  .data-table tr:hover td {
+    @apply bg-neutral-50;
+  }
+}
+
+@layer utilities {
+  /* Semáforo de morosos */
+  .status-al-dia {
+    @apply bg-status-alDia text-white;
+  }
+
+  .status-leve {
+    @apply bg-status-leve text-neutral-900;
+  }
+
+  .status-moderado {
+    @apply bg-status-moderado text-white;
+  }
+
+  .status-grave {
+    @apply bg-status-grave text-white;
+  }
+}

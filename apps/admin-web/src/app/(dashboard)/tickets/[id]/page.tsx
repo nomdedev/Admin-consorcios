@@ -1,9 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Card,
@@ -21,16 +18,20 @@ import {
   Textarea,
   Avatar,
 } from "@vecinosimple/ui";
-import { ArrowLeft, Send, Clock, User, MapPin, MessageSquare, Check, XCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, Send, Clock, User, MapPin, MessageSquare, Check } from "lucide-react";
 import Link from "next/link";
-import { 
-  useTicket, 
-  useComentariosTicket, 
-  useAddComentarioTicket, 
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import {
+  useTicket,
+  useComentariosTicket,
+  useAddComentarioTicket,
   useCambiarEstadoTicket,
-  useAsignarTicket,
 } from "@/features/tickets";
+
 import type { EstadoTicket, PrioridadTicket } from "@/lib/types";
 
 const estadoColors: Record<EstadoTicket, "default" | "warning" | "success" | "info" | "error"> = {
@@ -66,7 +67,7 @@ type ComentarioFormData = z.infer<typeof comentarioSchema>;
 
 export default function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
+  const _router = useRouter();
   const [nuevoEstado, setNuevoEstado] = useState<EstadoTicket | "">("");
   
   const { data: ticket, isLoading, isError } = useTicket(id);
@@ -79,8 +80,6 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     register,
     handleSubmit,
     reset,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<ComentarioFormData>({
     resolver: zodResolver(comentarioSchema),
@@ -135,7 +134,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="space-y-6">
         <Link href="/tickets">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -153,7 +152,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <Link href="/tickets">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
@@ -197,9 +196,9 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               </SelectContent>
             </Select>
             <Button 
-              onClick={handleCambiarEstado} 
-              disabled={!nuevoEstado || cambiarEstado.isPending}
+              disabled={!nuevoEstado || cambiarEstado.isPending} 
               size="sm"
+              onClick={handleCambiarEstado}
             >
               {cambiarEstado.isPending ? <Spinner size="sm" /> : <Check className="h-4 w-4" />}
             </Button>
@@ -241,12 +240,12 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-4">
                   {comentarios.map((comentario) => (
                     <div 
-                      key={comentario.id} 
                       className={`p-4 rounded-lg ${
                         comentario.esInterno 
                           ? "bg-amber-50 border border-amber-200" 
                           : "bg-neutral-50"
-                      }`}
+                      }`} 
+                      key={comentario.id}
                     >
                       <div className="flex items-start gap-3">
                         <Avatar className="h-8 w-8">
@@ -278,7 +277,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
               {/* Formulario nuevo comentario */}
               {ticket.estado !== "CERRADO" && (
-                <form onSubmit={handleSubmit(onSubmitComentario)} className="pt-4 border-t border-neutral-200">
+                <form className="pt-4 border-t border-neutral-200" onSubmit={handleSubmit(onSubmitComentario)}>
                   <Textarea
                     {...register("contenido")}
                     placeholder="Escribe un comentario..."
@@ -296,9 +295,9 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                       />
                       <span className="text-amber-700">Comentario interno (solo admins)</span>
                     </label>
-                    <Button type="submit" disabled={addComentario.isPending}>
+                    <Button disabled={addComentario.isPending} type="submit">
                       {addComentario.isPending ? (
-                        <Spinner size="sm" className="mr-2" />
+                        <Spinner className="mr-2" size="sm" />
                       ) : (
                         <Send className="h-4 w-4 mr-2" />
                       )}
@@ -381,11 +380,11 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-2">
                   {ticket.archivos.map((archivo) => (
                     <a
-                      key={archivo.id}
-                      href={archivo.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-50 text-sm text-brand-600"
+                      href={archivo.url}
+                      key={archivo.id}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       📎 {archivo.nombre}
                     </a>

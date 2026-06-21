@@ -1,8 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Input,
@@ -20,10 +18,14 @@ import {
   Textarea,
 } from "@vecinosimple/ui";
 import { ArrowLeft, AlertCircle, Save } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useCreateTicket } from "@/features/tickets";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { useConsorcios } from "@/features/consorcios";
+import { useCreateTicket } from "@/features/tickets";
+
 import type { PrioridadTicket } from "@/lib/types";
 
 // Schema de validación
@@ -85,7 +87,7 @@ export default function NuevoTicketForm() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/tickets">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -115,9 +117,9 @@ export default function NuevoTicketForm() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <span className="block text-sm font-medium text-neutral-700 mb-1">
                   Consorcio *
-                </label>
+                </span>
                 <Select 
                   value={watch("consorcioId")} 
                   onValueChange={(v) => setValue("consorcioId", v)}
@@ -139,9 +141,9 @@ export default function NuevoTicketForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <span className="block text-sm font-medium text-neutral-700 mb-1">
                   Prioridad *
-                </label>
+                </span>
                 <Select 
                   value={watch("prioridad")} 
                   onValueChange={(v) => setValue("prioridad", v as PrioridadTicket)}
@@ -160,21 +162,23 @@ export default function NuevoTicketForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="titulo">
                 Título *
               </label>
               <Input
+                id="titulo"
                 {...register("titulo")}
-                placeholder="Ej: Pérdida de agua en el hall"
                 error={errors.titulo?.message}
+                placeholder="Ej: Pérdida de agua en el hall"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="descripcionTicket">
                 Descripción *
               </label>
               <Textarea
+                id="descripcionTicket"
                 {...register("descripcion")}
                 placeholder="Describe el problema con el mayor detalle posible..."
                 rows={5}
@@ -185,10 +189,11 @@ export default function NuevoTicketForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="ubicacion">
                 Ubicación
               </label>
               <Input
+                id="ubicacion"
                 {...register("ubicacion")}
                 placeholder="Ej: Piso 3, hall principal"
               />
@@ -218,10 +223,10 @@ export default function NuevoTicketForm() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting || createTicket.isPending}>
+          <Button disabled={isSubmitting || createTicket.isPending} type="submit">
             {isSubmitting || createTicket.isPending ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Creando...
               </>
             ) : (

@@ -20,8 +20,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@vecinosimple/eslint-config": "workspace:*",
-    "@vecinosimple/typescript-config": "workspace:*",
+    "@vecinosimple/eslint-config": "file:../relative-path",
+    "@vecinosimple/typescript-config": "file:../relative-path",
     "typescript": "^5.3.0",
     "vitest": "^1.2.0"
   }

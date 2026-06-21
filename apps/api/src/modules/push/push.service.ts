@@ -185,8 +185,9 @@ export class PushService implements OnModuleInit {
 
     try {
       // Importación dinámica para evitar errores si firebase-admin no está instalado
+      // NOTE: firebase-admin es dependencia opcional. El tipo real es complejo (namespace + default export).
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const admin = await import('firebase-admin').catch(() => null) as any;
+      const admin = await import('firebase-admin').catch(() => null) as typeof import('firebase-admin') | null;
       
       if (!admin) {
         this.logger.warn(
@@ -202,7 +203,7 @@ export class PushService implements OnModuleInit {
         this.firebaseApp = admin.initializeApp({
           credential: admin.credential.cert({
             projectId,
-            privateKey: privateKey.replace(/\\n/g, '\n'),
+            privateKey: privateKey.replaceAll(String.raw`\n`, '\n'),
             clientEmail,
           }),
         }) as unknown as FirebaseApp;
@@ -289,7 +290,7 @@ export class PushService implements OnModuleInit {
             ];
             if (invalidCodes.includes(resp.error.code)) {
               this.logger.debug(`Invalid token detected: ${tokenBatch[idx]?.substring(0, 20)}...`);
-              // TODO: Emitir evento para limpiar token de la BD
+              // NOTE: Emitir evento para limpiar token de la BD
             }
           }
         });
@@ -454,16 +455,13 @@ export class PushService implements OnModuleInit {
     monto: string,
     data?: Record<string, string>,
   ): Promise<PushResult> {
-    const titulo = diasRestantes === 0
-      ? '⚠️ Vencimiento Hoy'
-      : diasRestantes < 0
-        ? '🔴 Expensa Vencida'
-        : `📅 Vence en ${diasRestantes} días`;
+    const titulo = this.getTituloVencimiento(diasRestantes);
+    const estadoVencimiento = this.getEstadoVencimiento(diasRestantes);
 
     return this.sendToDevice({
       token,
       title: titulo,
-      body: `Tu expensa de ${monto} ${diasRestantes <= 0 ? 'ya venció' : `vence pronto`}. Evitá intereses pagando a tiempo.`,
+      body: `Tu expensa de ${monto} ${estadoVencimiento}. Evitá intereses pagando a tiempo.`,
       data: {
         type: 'due_reminder',
         daysRemaining: String(diasRestantes),
@@ -603,6 +601,22 @@ export class PushService implements OnModuleInit {
     }
 
     return 'Error desconocido al enviar push';
+  }
+
+  /**
+   * Obtiene el título de la notificación según los días restantes
+   */
+  private getTituloVencimiento(diasRestantes: number): string {
+    if (diasRestantes === 0) return '⚠️ Vencimiento Hoy';
+    if (diasRestantes < 0) return '🔴 Expensa Vencida';
+    return `📅 Vence en ${diasRestantes} días`;
+  }
+
+  /**
+   * Obtiene el texto del estado de vencimiento
+   */
+  private getEstadoVencimiento(diasRestantes: number): string {
+    return diasRestantes <= 0 ? 'ya venció' : 'vence pronto';
   }
 
   /**

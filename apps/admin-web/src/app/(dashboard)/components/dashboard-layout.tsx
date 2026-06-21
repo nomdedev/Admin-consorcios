@@ -17,13 +17,11 @@ import {
   Ticket,
   Bell,
   CalendarDays,
-  Vote,
-  Briefcase,
-  FolderOpen,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useContadorNotificaciones } from "@/features/notificaciones";
+
 import { useAuth, useLogout } from "@/features/auth";
+import { useContadorNotificaciones } from "@/features/notificaciones";
 
 const navItems: NavItem[] = [
   {

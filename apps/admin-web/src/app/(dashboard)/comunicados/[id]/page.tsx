@@ -1,6 +1,5 @@
 "use client";
 
-import { use, useState } from "react";
 import {
   Button,
   Card,
@@ -17,9 +16,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@vecinosimple/ui";
-import { ArrowLeft, Megaphone, Trash2, Send, Edit, Mail, MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, Megaphone, Trash2, Send, Mail, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
+
 import { useComunicado, useDeleteComunicado, useEnviarNotificacionesComunicado } from "@/features/comunicados";
 
 export default function ComunicadoDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -85,7 +86,7 @@ export default function ComunicadoDetailPage({ params }: { params: Promise<{ id:
     return (
       <div className="space-y-6">
         <Link href="/comunicados">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -105,7 +106,7 @@ export default function ComunicadoDetailPage({ params }: { params: Promise<{ id:
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <Link href="/comunicados">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
@@ -130,9 +131,9 @@ export default function ComunicadoDetailPage({ params }: { params: Promise<{ id:
 
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={!activo} 
+            variant="secondary"
             onClick={() => setShowSendDialog(true)}
-            disabled={!activo}
           >
             <Send className="h-4 w-4 mr-2" />
             Enviar notificaciones
@@ -232,7 +233,7 @@ export default function ComunicadoDetailPage({ params }: { params: Promise<{ id:
           <DialogHeader>
             <DialogTitle>¿Eliminar comunicado?</DialogTitle>
             <DialogDescription>
-              Esta acción no se puede deshacer. El comunicado "{comunicado.titulo}" será eliminado permanentemente.
+              Esta acción no se puede deshacer. El comunicado &quot;{comunicado.titulo}&quot; será eliminado permanentemente.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

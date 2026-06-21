@@ -8,6 +8,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Prisma } from '@prisma/client';
 
 // =============================================================================
 // DTOs para Snapshots de Expensas
@@ -101,7 +102,7 @@ export class SnapshotExpensaResponseDto {
 
 export class SnapshotConDetalleDto extends SnapshotExpensaResponseDto {
   @ApiProperty({ description: 'Datos completos de la expensa (JSON)' })
-  datosCompletos: any;
+  datosCompletos: Prisma.JsonValue;
 
   @ApiPropertyOptional({ description: 'Notas de crédito/débito asociadas' })
   notasCredito?: NotaCreditoDebitoResponseDto[];
@@ -121,7 +122,7 @@ export class NotaCreditoDebitoResponseDto {
   tipo: string;
 
   @ApiProperty()
-  monto: any; // Decimal de Prisma
+  monto: Prisma.Decimal; // Decimal de Prisma
 
   @ApiProperty()
   concepto: string;

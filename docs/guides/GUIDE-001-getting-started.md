@@ -13,16 +13,17 @@
 
 | Software | Versión Mínima | Verificar |
 |----------|----------------|-----------|
-| Node.js | 18.x LTS | `node --version` |
-| pnpm | 8.x | `pnpm --version` |
-| PostgreSQL | 15.x | `psql --version` |
+| Node.js | 20.x LTS | `node --version` |
+| npm | 10.x | `npm --version` |
+| PostgreSQL | 15.x | `psql --version` (opcional, puede usar Neon) |
 | Git | 2.x | `git --version` |
 
-### Instalación de pnpm
+### Verificar npm
 
 ```bash
-# Si no tienes pnpm instalado
-npm install -g pnpm
+# npm viene incluido con Node.js
+# Verificar versión
+npm --version
 ```
 
 ---
@@ -39,7 +40,7 @@ cd vecinosimple
 ### 2. Instalar Dependencias
 
 ```bash
-pnpm install
+npm install
 ```
 
 ### 3. Configurar Variables de Entorno
@@ -69,26 +70,26 @@ NODE_ENV="development"
 
 ```bash
 # Ejecutar migraciones
-pnpm db:migrate
+npm run db:migrate
 
 # (Opcional) Cargar datos de prueba
-pnpm db:seed
+npm run db:seed
 
 # (Opcional) Abrir Prisma Studio
-pnpm db:studio
+npm run db:studio
 ```
 
 ### 5. Iniciar Desarrollo
 
 ```bash
 # Todas las apps
-pnpm dev
+npm run dev
 
 # Solo backend API
-pnpm dev --filter=api
+npm run dev -- --filter=api
 
 # Solo admin-web
-pnpm dev --filter=admin-web
+npm run dev -- --filter=admin-web
 ```
 
 ---
@@ -118,29 +119,28 @@ vecinosimple/
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm dev` | Inicia todas las apps en modo desarrollo |
-| `pnpm dev --filter=api` | Inicia solo el backend |
-| `pnpm build` | Compila todas las apps |
-| `pnpm lint` | Ejecuta ESLint en todo el proyecto |
-| `pnpm format` | Formatea código con Prettier |
+| `npm run dev` | Inicia todas las apps en modo desarrollo |
+| `npm run dev -- --filter=api` | Inicia solo el backend |
+| `npm run build` | Compila todas las apps |
+| `npm run lint` | Ejecuta ESLint en todo el proyecto |
+| `npm run format` | Formatea código con Prettier |
 
 ### Base de Datos
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm db:migrate` | Ejecuta migraciones pendientes |
-| `pnpm db:generate` | Regenera cliente Prisma |
-| `pnpm db:studio` | Abre Prisma Studio |
-| `pnpm db:seed` | Carga datos de prueba |
-| `pnpm db:reset` | ⚠️ Resetea BD y re-aplica migraciones |
+| `npm run db:migrate` | Ejecuta migraciones pendientes |
+| `npm run db:generate` | Regenera cliente Prisma |
+| `npm run db:studio` | Abre Prisma Studio |
+| `npm run db:seed` | Carga datos de prueba |
+| `npm run db:push` | Sincroniza schema a BD (sin migración) |
 
 ### Testing
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm test` | Ejecuta tests unitarios |
-| `pnpm test:e2e` | Ejecuta tests E2E |
-| `pnpm test:cov` | Tests con cobertura |
+| `npm run test` | Ejecuta tests unitarios |
+| `npm run test:e2e` | Ejecuta tests E2E |
 
 ---
 
@@ -164,7 +164,7 @@ vecinosimple/
 ```bash
 # Reinstalar dependencias
 rm -rf node_modules
-pnpm install
+npm install
 ```
 
 ### Error: "Database connection failed"

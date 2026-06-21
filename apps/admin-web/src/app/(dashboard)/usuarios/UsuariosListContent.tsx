@@ -1,8 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
+
+import { useConsorcios } from '@/features/consorcios';
+import {
+  useUsuarios,
+  useDeactivateUsuario,
+  useReinvitarUsuario,
+  type UsuarioResponse,
+  type ListUsuariosParams,
+} from '@/features/usuarios';
+import { useDebouncedValue } from '@/lib/hooks/use-debounce';
 import {
   Card,
   CardContent,
@@ -16,15 +26,7 @@ import {
   AlertBanner,
   EmptyState,
 } from 'ui';
-import {
-  useUsuarios,
-  useDeactivateUsuario,
-  useReinvitarUsuario,
-  type UsuarioResponse,
-  type ListUsuariosParams,
-} from '@/features/usuarios';
-import { useConsorcios } from '@/features/consorcios';
-import { useDebouncedValue } from '@/lib/hooks/use-debounce';
+
 import type { Rol, EstadoUsuario } from '@/lib/types';
 
 // Helper para badge de estado
@@ -58,11 +60,11 @@ function UsuarioRow({
   usuario,
   onDeactivate,
   onReinvitar,
-}: {
+}: Readonly<{
   usuario: UsuarioResponse;
   onDeactivate: (id: string) => void;
   onReinvitar: (id: string) => void;
-}) {
+}>) {
   const estadoBadge = getEstadoBadge(usuario.estado);
   const rolPrincipal = usuario.rolesConsorcio[0];
 
@@ -109,12 +111,12 @@ function UsuarioRow({
       <td className="p-4">
         <div className="flex items-center gap-2">
           <Link href={`/usuarios/${usuario.id}`}>
-            <Button variant="secondary" size="sm">Ver</Button>
+            <Button size="sm" variant="secondary">Ver</Button>
           </Link>
           {usuario.estado === 'PENDIENTE_VERIFICACION' && (
             <Button
-              variant="ghost"
               size="sm"
+              variant="ghost"
               onClick={() => onReinvitar(usuario.id)}
             >
               Reinvitar
@@ -122,9 +124,9 @@ function UsuarioRow({
           )}
           {usuario.estado === 'ACTIVO' && (
             <Button
-              variant="ghost"
-              size="sm"
               className="text-destructive"
+              size="sm"
+              variant="ghost"
               onClick={() => onDeactivate(usuario.id)}
             >
               Desactivar
@@ -250,8 +252,9 @@ export default function UsuariosListContent() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Buscar</label>
+              <label className="text-sm font-medium mb-1 block" htmlFor="buscarUsuario">Buscar</label>
               <Input
+                id="buscarUsuario"
                 placeholder="Nombre, apellido o email..."
                 value={search}
                 onChange={(e) => {
@@ -261,9 +264,10 @@ export default function UsuariosListContent() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Consorcio</label>
+              <label className="text-sm font-medium mb-1 block" htmlFor="filtroConsorcio">Consorcio</label>
               <select
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="filtroConsorcio"
                 value={selectedConsorcio}
                 onChange={(e) => {
                   setSelectedConsorcio(e.target.value);
@@ -279,9 +283,10 @@ export default function UsuariosListContent() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Rol</label>
+              <label className="text-sm font-medium mb-1 block" htmlFor="filtroRol">Rol</label>
               <select
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="filtroRol"
                 value={selectedRol}
                 onChange={(e) => {
                   setSelectedRol(e.target.value as Rol | '');
@@ -298,9 +303,10 @@ export default function UsuariosListContent() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Estado</label>
+              <label className="text-sm font-medium mb-1 block" htmlFor="filtroEstado">Estado</label>
               <select
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="filtroEstado"
                 value={selectedEstado}
                 onChange={(e) => {
                   setSelectedEstado(e.target.value as EstadoUsuario | '');
@@ -322,8 +328,8 @@ export default function UsuariosListContent() {
       {error && (
         <div className="space-y-2">
           <AlertBanner
-            variant="error"
             title="Error al cargar usuarios"
+            variant="error"
           >
             {error.message}
           </AlertBanner>
@@ -343,16 +349,16 @@ export default function UsuariosListContent() {
         <>
           {usuarios.data.length === 0 ? (
             <EmptyState
-              title="No se encontraron usuarios"
+              action={{
+                label: 'Crear Usuario',
+                onClick: () => router.push('/usuarios/nuevo'),
+              }}
               description={
                 search || selectedConsorcio || selectedRol || selectedEstado
                   ? 'Probá ajustando los filtros de búsqueda'
                   : 'Creá el primer usuario para comenzar'
               }
-              action={{
-                label: 'Crear Usuario',
-                onClick: () => router.push('/usuarios/nuevo'),
-              }}
+              title="No se encontraron usuarios"
             />
           ) : (
             <Card>
@@ -392,10 +398,10 @@ export default function UsuariosListContent() {
               </p>
               <div className="flex gap-2">
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   Anterior
                 </Button>
@@ -403,10 +409,10 @@ export default function UsuariosListContent() {
                   Página {page} de {usuarios.totalPages}
                 </span>
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(usuarios.totalPages, p + 1))}
                   disabled={page === usuarios.totalPages}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setPage((p) => Math.min(usuarios.totalPages, p + 1))}
                 >
                   Siguiente
                 </Button>

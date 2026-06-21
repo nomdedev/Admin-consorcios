@@ -2,12 +2,26 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe, VersioningType, Logger } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
+import * as Sentry from "@sentry/node";
 
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  // ✅ Observabilidad: Sentry (v8+ - NestJS maneja errores internamente)
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV,
+      release: process.env.SENTRY_RELEASE,
+      tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0),
+    });
+    // Nota: Sentry.Handlers fue removido en v8+.
+    // NestJS captura errores automáticamente a través de interceptores/filtros.
+  }
 
   // ✅ SEGURIDAD: Headers HTTP de seguridad con Helmet
   app.use(
@@ -126,4 +140,5 @@ async function bootstrap() {
   logger.log(`Security: Helmet enabled, CORS configured for ${nodeEnv}`);
 }
 
-bootstrap();
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void bootstrap();

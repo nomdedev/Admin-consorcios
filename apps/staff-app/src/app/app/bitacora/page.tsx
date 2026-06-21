@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
 import { db, type BitacoraLocal } from '@/offline/db';
 
 type FilterType = 'todos' | 'ingreso_visita' | 'ronda' | 'incidente' | 'novedad';
@@ -14,7 +15,7 @@ export default function BitacoraPage() {
   useEffect(() => {
     const loadEntries = async () => {
       try {
-        let query = db.bitacora.orderBy('timestamp').reverse();
+        const query = db.bitacora.orderBy('timestamp').reverse();
         
         if (filter !== 'todos') {
           const all = await query.toArray();
@@ -65,9 +66,9 @@ export default function BitacoraPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-2/3"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-6 bg-gray-200 rounded w-2/3" />
           </div>
         ))}
       </div>
@@ -79,8 +80,8 @@ export default function BitacoraPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Bitácora</h1>
         <Link
-          href="/app/bitacora/nuevo"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors min-h-[44px] flex items-center"
+          href="/app/bitacora/nuevo"
         >
           + Nueva
         </Link>
@@ -90,13 +91,13 @@ export default function BitacoraPage() {
       <div className="flex gap-2 overflow-x-auto pb-2">
         {filters.map((f) => (
           <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap min-h-[44px] ${
               filter === f.value
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700'
             }`}
+            key={f.value}
+            onClick={() => setFilter(f.value)}
           >
             {f.label}
           </button>
@@ -109,8 +110,8 @@ export default function BitacoraPage() {
           <div className="text-5xl mb-4">📋</div>
           <p className="text-gray-500 mb-4">No hay entradas en la bitácora</p>
           <Link
-            href="/app/bitacora/nuevo"
             className="text-blue-600 font-medium hover:underline"
+            href="/app/bitacora/nuevo"
           >
             Crear primera entrada
           </Link>
@@ -121,9 +122,9 @@ export default function BitacoraPage() {
             const tipoInfo = getTipoLabel(entry.tipo);
             return (
               <Link
-                key={entry.localId}
-                href={`/app/bitacora/${entry.localId}`}
                 className="block bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow"
+                href={`/app/bitacora/${entry.localId}`}
+                key={entry.localId}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{tipoInfo.icon}</span>

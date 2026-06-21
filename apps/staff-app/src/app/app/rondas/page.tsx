@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
 import { db, type RondaLocal } from '@/offline/db';
 
 export default function RondasPage() {
@@ -50,9 +51,9 @@ export default function RondasPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-2/3"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-6 bg-gray-200 rounded w-2/3" />
           </div>
         ))}
       </div>
@@ -65,8 +66,8 @@ export default function RondasPage() {
         <h1 className="text-2xl font-bold text-gray-800">Rondas</h1>
         {!rondaActiva && (
           <Link
-            href="/app/rondas/nueva"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors min-h-[44px] flex items-center"
+            href="/app/rondas/nueva"
           >
             + Iniciar
           </Link>
@@ -76,8 +77,8 @@ export default function RondasPage() {
       {/* Ronda activa */}
       {rondaActiva && (
         <Link
-          href={`/app/rondas/${rondaActiva.localId}`}
           className="block bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg"
+          href={`/app/rondas/${rondaActiva.localId}`}
         >
           <div className="flex items-center gap-3 mb-4">
             <span className="text-3xl">🔒</span>
@@ -107,8 +108,8 @@ export default function RondasPage() {
             <p className="text-gray-500 mb-4">No hay rondas registradas</p>
             {!rondaActiva && (
               <Link
-                href="/app/rondas/nueva"
                 className="text-blue-600 font-medium hover:underline"
+                href="/app/rondas/nueva"
               >
                 Iniciar primera ronda
               </Link>
@@ -118,9 +119,9 @@ export default function RondasPage() {
           <div className="space-y-3">
             {rondas.map((ronda) => (
               <Link
-                key={ronda.localId}
-                href={`/app/rondas/${ronda.localId}`}
                 className="block bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow"
+                href={`/app/rondas/${ronda.localId}`}
+                key={ronda.localId}
               >
                 <div className="flex items-start justify-between">
                   <div>

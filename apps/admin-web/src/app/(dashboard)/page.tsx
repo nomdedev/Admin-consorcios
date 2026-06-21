@@ -2,8 +2,9 @@
 
 import { StatCard, AlertBanner, Card, CardHeader, CardTitle, CardContent, Button } from "@vecinosimple/ui";
 import { Building2, Users, CreditCard, AlertTriangle, RefreshCw } from "lucide-react";
-import { useConsorcios, useDashboardStats } from "@/features/consorcios";
 import Link from "next/link";
+
+import { useConsorcios, useDashboardStats } from "@/features/consorcios";
 
 export default function DashboardPage() {
   // Fetch consorcios desde la API
@@ -44,10 +45,10 @@ export default function DashboardPage() {
           <p className="text-neutral-600">Resumen de tu administración</p>
         </div>
         <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleRefresh}
           disabled={isLoading}
+          size="sm"
+          variant="secondary"
+          onClick={handleRefresh}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
           Actualizar
@@ -120,7 +121,7 @@ export default function DashboardPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Consorcios</CardTitle>
           <Link href="/consorcios">
-            <Button variant="secondary" size="sm">
+            <Button size="sm" variant="secondary">
               Ver todos
             </Button>
           </Link>

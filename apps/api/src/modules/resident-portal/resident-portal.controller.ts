@@ -12,7 +12,9 @@ import {
   UseGuards,
   Request,
   StreamableFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -196,6 +198,8 @@ export class ResidentPortalController {
 
   @Get('gastos-edificio/categorias')
   @Roles(Rol.PROPIETARIO, Rol.INQUILINO)
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(300)
   @ApiOperation({
     summary: 'Listar categorías de gastos',
     description: 'Obtiene las categorías disponibles para filtrar gastos.',

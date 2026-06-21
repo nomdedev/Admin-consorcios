@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "../../lib/utils";
 
@@ -66,18 +66,18 @@ export const AlertBanner = React.forwardRef<HTMLDivElement, AlertBannerProps>(
 
     return (
       <div
-        ref={ref}
-        role="alert"
         className={cn(
           "relative flex gap-3 rounded-card border p-4",
           config.bg,
           className
         )}
+        ref={ref}
+        role="alert"
         {...props}
       >
         <Icon
-          className={cn("h-5 w-5 shrink-0 mt-0.5", config.iconColor)}
           aria-hidden="true"
+          className={cn("h-5 w-5 shrink-0 mt-0.5", config.iconColor)}
         />
 
         <div className="flex-1">
@@ -91,15 +91,15 @@ export const AlertBanner = React.forwardRef<HTMLDivElement, AlertBannerProps>(
 
         {dismissible && (
           <button
-            type="button"
-            onClick={onDismiss}
+            aria-label="Cerrar alerta"
             className={cn(
               "absolute right-2 top-2 rounded-md p-1 transition-opacity",
               "hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2",
               "min-h-touch min-w-touch flex items-center justify-center",
               config.iconColor
             )}
-            aria-label="Cerrar alerta"
+            type="button"
+            onClick={onDismiss}
           >
             <X className="h-4 w-4" />
           </button>

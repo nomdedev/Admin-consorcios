@@ -45,6 +45,38 @@ const ROLES_PUEDEN_RESERVAR: Rol[] = [
 ];
 
 // ============================================================================
+// INTERFACES AUXILIARES
+// ============================================================================
+
+/**
+ * Interface para reservas que pueden ser usadas por calcularEstadoReserva
+ */
+interface ReservaParaCalculo {
+  aprobada: boolean | null;
+  fechaInicio: Date;
+  fechaFin: Date;
+  penalizacion?: { tipo: string } | null;
+}
+
+/**
+ * Interface para configuración de penalización de amenity
+ */
+interface ConfigPenalizacionAmenity {
+  horasAnticipacion?: number;
+  montoMulta?: number;
+  bloquearDias?: number;
+}
+
+/**
+ * Interface para configuración de límite por período
+ */
+interface ConfigLimitePeriodoAmenity {
+  maxReservas: number;
+  periodo: 'semana' | 'mes' | 'año';
+  diasSemana?: number[];
+}
+
+// ============================================================================
 // HELPERS
 // ============================================================================
 
@@ -54,11 +86,11 @@ const ROLES_PUEDEN_RESERVAR: Rol[] = [
 function sanitizeText(text: string | undefined | null): string {
   if (!text) return '';
   return text
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;')
+    .replaceAll('/', '&#x2F;')
     .trim();
 }
 
@@ -66,12 +98,7 @@ function sanitizeText(text: string | undefined | null): string {
  * Calcula el estado de la reserva basado en fechas y aprobación
  */
 function calcularEstadoReserva(
-  reserva: {
-    aprobada: boolean | null;
-    fechaInicio: Date;
-    fechaFin: Date;
-    penalizacion?: { tipo: string } | null;
-  }
+  reserva: ReservaParaCalculo
 ): EstadoReserva {
   const ahora = new Date();
   
@@ -118,6 +145,58 @@ function puedeCancelarReserva(
   limiteCancel.setHours(limiteCancel.getHours() - horasAnticipacion);
   
   return ahora < limiteCancel;
+}
+
+/**
+ * Construye el mensaje de notificación para cambio de estado de reserva
+ */
+function construirMensajeNotificacionReserva(
+  amenityNombre: string,
+  aprobada: boolean,
+  motivoRechazo?: string | null,
+): string {
+  if (aprobada) {
+    return `Tu reserva de ${amenityNombre} fue aprobada.`;
+  }
+  
+  const mensajeBase = `Tu reserva de ${amenityNombre} fue rechazada.`;
+  if (motivoRechazo) {
+    return `${mensajeBase} Motivo: ${motivoRechazo}`;
+  }
+  return mensajeBase;
+}
+
+/**
+ * Prepara los datos básicos de actualización de amenity (sin nombre)
+ */
+function prepararDatosBasicosAmenity(
+  dto: UpdateAmenityDto,
+): Prisma.AmenityUpdateInput {
+  const datos: Prisma.AmenityUpdateInput = {};
+
+  if (dto.descripcion !== undefined) {
+    datos.descripcion = dto.descripcion ? sanitizeText(dto.descripcion) : null;
+  }
+  if (dto.capacidad !== undefined) datos.capacidad = dto.capacidad;
+  if (dto.requiereAprobacion !== undefined) datos.requiereAprobacion = dto.requiereAprobacion;
+  if (dto.anticipacionMinima !== undefined) datos.anticipacionMinima = dto.anticipacionMinima;
+  if (dto.anticipacionMaxima !== undefined) datos.anticipacionMaxima = dto.anticipacionMaxima;
+  if (dto.duracionMaxima !== undefined) datos.duracionMaxima = dto.duracionMaxima;
+  if (dto.activo !== undefined) datos.activo = dto.activo;
+  if (dto.costoReserva !== undefined) {
+    datos.costoReserva = dto.costoReserva === null 
+      ? null 
+      : new Prisma.Decimal(dto.costoReserva);
+  }
+
+  return datos;
+}
+
+/**
+ * Calcula horas hasta la reserva desde ahora
+ */
+function calcularHorasHastaReserva(fechaInicio: Date): number {
+  return (fechaInicio.getTime() - Date.now()) / (1000 * 60 * 60);
 }
 
 // ============================================================================
@@ -176,7 +255,7 @@ export class AmenitiesService {
       anticipacionMinima: a.anticipacionMinima,
       anticipacionMaxima: a.anticipacionMaxima,
       duracionMaxima: a.duracionMaxima,
-      costoReserva: a.costoReserva ? parseFloat(a.costoReserva.toString()) : null,
+      costoReserva: a.costoReserva ? Number.parseFloat(a.costoReserva.toString()) : null,
       activo: a.activo,
       createdAt: a.createdAt,
       proximasReservas: a._count.reservas,
@@ -223,7 +302,7 @@ export class AmenitiesService {
       anticipacionMinima: amenity.anticipacionMinima,
       anticipacionMaxima: amenity.anticipacionMaxima,
       duracionMaxima: amenity.duracionMaxima,
-      costoReserva: amenity.costoReserva ? parseFloat(amenity.costoReserva.toString()) : null,
+      costoReserva: amenity.costoReserva ? Number.parseFloat(amenity.costoReserva.toString()) : null,
       activo: amenity.activo,
       createdAt: amenity.createdAt,
       proximasReservas: amenity._count.reservas,
@@ -278,9 +357,9 @@ export class AmenitiesService {
         anticipacionMinima,
         anticipacionMaxima,
         duracionMaxima: dto.duracionMaxima ?? 4,
-        costoReserva: dto.costoReserva !== undefined 
-          ? new Prisma.Decimal(dto.costoReserva) 
-          : null,
+        costoReserva: dto.costoReserva === undefined 
+          ? null 
+          : new Prisma.Decimal(dto.costoReserva),
       },
     });
 
@@ -306,7 +385,7 @@ export class AmenitiesService {
       anticipacionMinima: amenity.anticipacionMinima,
       anticipacionMaxima: amenity.anticipacionMaxima,
       duracionMaxima: amenity.duracionMaxima,
-      costoReserva: amenity.costoReserva ? parseFloat(amenity.costoReserva.toString()) : null,
+      costoReserva: amenity.costoReserva ? Number.parseFloat(amenity.costoReserva.toString()) : null,
       activo: amenity.activo,
       createdAt: amenity.createdAt,
     };
@@ -333,9 +412,10 @@ export class AmenitiesService {
       throw new NotFoundException('Amenity no encontrado');
     }
 
-    // Preparar datos de actualización
-    const datosUpdate: Prisma.AmenityUpdateInput = {};
+    // Preparar datos de actualización usando helper
+    const datosUpdate: Prisma.AmenityUpdateInput = prepararDatosBasicosAmenity(dto);
 
+    // Manejo especial de nombre (requiere validación async)
     if (dto.nombre !== undefined) {
       const nombreSanitizado = sanitizeText(dto.nombre);
       
@@ -353,23 +433,6 @@ export class AmenitiesService {
       }
 
       datosUpdate.nombre = nombreSanitizado;
-    }
-
-    if (dto.descripcion !== undefined) {
-      datosUpdate.descripcion = dto.descripcion ? sanitizeText(dto.descripcion) : null;
-    }
-
-    if (dto.capacidad !== undefined) datosUpdate.capacidad = dto.capacidad;
-    if (dto.requiereAprobacion !== undefined) datosUpdate.requiereAprobacion = dto.requiereAprobacion;
-    if (dto.anticipacionMinima !== undefined) datosUpdate.anticipacionMinima = dto.anticipacionMinima;
-    if (dto.anticipacionMaxima !== undefined) datosUpdate.anticipacionMaxima = dto.anticipacionMaxima;
-    if (dto.duracionMaxima !== undefined) datosUpdate.duracionMaxima = dto.duracionMaxima;
-    if (dto.activo !== undefined) datosUpdate.activo = dto.activo;
-
-    if (dto.costoReserva !== undefined) {
-      datosUpdate.costoReserva = dto.costoReserva !== null 
-        ? new Prisma.Decimal(dto.costoReserva) 
-        : null;
     }
 
     const amenityActualizado = await this.prisma.amenity.update({
@@ -397,7 +460,7 @@ export class AmenitiesService {
       anticipacionMaxima: amenityActualizado.anticipacionMaxima,
       duracionMaxima: amenityActualizado.duracionMaxima,
       costoReserva: amenityActualizado.costoReserva 
-        ? parseFloat(amenityActualizado.costoReserva.toString()) 
+        ? Number.parseFloat(amenityActualizado.costoReserva.toString()) 
         : null,
       activo: amenityActualizado.activo,
       createdAt: amenityActualizado.createdAt,
@@ -564,7 +627,11 @@ export class AmenitiesService {
       createdAt: reserva.createdAt,
       amenity: reserva.amenity,
       usuario: reserva.usuario,
-      estadoCalculado: calcularEstadoReserva(reserva as any),
+      estadoCalculado: calcularEstadoReserva({
+        aprobada: reserva.aprobada,
+        fechaInicio: reserva.fechaInicio,
+        fechaFin: reserva.fechaFin,
+      }),
       puedeCancelarse: puedeCancelarReserva(reserva),
     };
   }
@@ -601,8 +668,9 @@ export class AmenitiesService {
       where.fechaInicio = { gte: new Date(filtros.fechaDesde) };
     }
     if (filtros.fechaHasta) {
+      const existingFechaFin = where.fechaFin as Prisma.DateTimeFilter | undefined;
       where.fechaFin = { 
-        ...(where.fechaFin as any || {}),
+        ...existingFechaFin,
         lte: new Date(filtros.fechaHasta + 'T23:59:59.999Z'),
       };
     }
@@ -754,9 +822,11 @@ export class AmenitiesService {
     await this.notificacionesService.crearNotificacion({
       usuarioId: reservaActualizada.usuarioId,
       titulo: `Reserva ${estadoTexto}`,
-      mensaje: dto.aprobada
-        ? `Tu reserva de ${reservaActualizada.amenity.nombre} fue aprobada.`
-        : `Tu reserva de ${reservaActualizada.amenity.nombre} fue rechazada. ${dto.motivoRechazo ? `Motivo: ${dto.motivoRechazo}` : ''}`,
+      mensaje: construirMensajeNotificacionReserva(
+        reservaActualizada.amenity.nombre,
+        dto.aprobada ?? false,
+        dto.motivoRechazo,
+      ),
       tipo: TipoNotificacion.SISTEMA,
       referenciaId: reservaId,
       referenciaTipo: 'ReservaAmenity',
@@ -773,7 +843,11 @@ export class AmenitiesService {
       createdAt: reservaActualizada.createdAt,
       amenity: reservaActualizada.amenity,
       usuario: reservaActualizada.usuario,
-      estadoCalculado: calcularEstadoReserva(reservaActualizada as any),
+      estadoCalculado: calcularEstadoReserva({
+        aprobada: reservaActualizada.aprobada,
+        fechaInicio: reservaActualizada.fechaInicio,
+        fechaFin: reservaActualizada.fechaFin,
+      }),
       puedeCancelarse: puedeCancelarReserva(reservaActualizada),
     };
   }
@@ -814,29 +888,29 @@ export class AmenitiesService {
     // Verificar si aplica penalización por cancelación tardía
     let penalizacion = null;
     if (!esAdmin) {
-      const horasHastaReserva = 
-        (reserva.fechaInicio.getTime() - Date.now()) / (1000 * 60 * 60);
+      const horasHastaReserva = calcularHorasHastaReserva(reserva.fechaInicio);
       
       // Buscar regla de penalización aplicable
-      for (const regla of reserva.amenity.reglas) {
-        const config = regla.configuracion as any;
-        if (config.horasAnticipacion && horasHastaReserva < config.horasAnticipacion) {
-          // Crear penalización
-          penalizacion = await this.prisma.penalizacionReserva.create({
-            data: {
-              usuarioId,
-              reservaId,
-              tipo: 'multa',
-              motivo: dto.motivo || 'Cancelación tardía',
-              montoMulta: config.montoMulta ? new Prisma.Decimal(config.montoMulta) : null,
-              diasBloqueo: config.bloquearDias || null,
-              fechaFinBloqueo: config.bloquearDias 
-                ? new Date(Date.now() + config.bloquearDias * 24 * 60 * 60 * 1000)
-                : null,
-            },
-          });
-          break;
-        }
+      const reglaAplicable = reserva.amenity.reglas.find((regla) => {
+        const config = regla.configuracion as ConfigPenalizacionAmenity;
+        return config.horasAnticipacion && horasHastaReserva < config.horasAnticipacion;
+      });
+
+      if (reglaAplicable) {
+        const config = reglaAplicable.configuracion as ConfigPenalizacionAmenity;
+        penalizacion = await this.prisma.penalizacionReserva.create({
+          data: {
+            usuarioId,
+            reservaId,
+            tipo: 'multa',
+            motivo: dto.motivo || 'Cancelación tardía',
+            montoMulta: config.montoMulta ? new Prisma.Decimal(config.montoMulta) : null,
+            diasBloqueo: config.bloquearDias || null,
+            fechaFinBloqueo: config.bloquearDias 
+              ? new Date(Date.now() + config.bloquearDias * 24 * 60 * 60 * 1000)
+              : null,
+          },
+        });
       }
     }
 
@@ -914,8 +988,8 @@ export class AmenitiesService {
         const slot = `${hora.toString().padStart(2, '0')}:00`;
         const slotOcupado = reservasDelDia.some((r) => {
           const horaSlot = hora;
-          const horaInicio = parseInt(r.inicio.split(':')[0] || '0', 10);
-          const horaFin = parseInt(r.fin.split(':')[0] || '0', 10);
+          const horaInicio = Number.parseInt(r.inicio.split(':')[0] || '0', 10);
+          const horaFin = Number.parseInt(r.fin.split(':')[0] || '0', 10);
           return horaSlot >= horaInicio && horaSlot < horaFin;
         });
         
@@ -1080,7 +1154,8 @@ export class AmenitiesService {
     });
 
     for (const regla of reglas) {
-      const config = regla.configuracion as any;
+      // El campo configuracion es JsonValue en Prisma, necesita cast via unknown
+      const config = regla.configuracion as unknown as ConfigLimitePeriodoAmenity;
       
       // Verificar si aplica a este día de la semana
       if (config.diasSemana && config.diasSemana.length > 0) {
@@ -1195,7 +1270,7 @@ export class AmenitiesService {
       orderBy: { fecha: 'desc' },
     });
 
-    if (ultimoMovimiento && parseFloat(ultimoMovimiento.saldoResultante.toString()) > 0) {
+    if (ultimoMovimiento && Number.parseFloat(ultimoMovimiento.saldoResultante.toString()) > 0) {
       // Verificar si la deuda es mayor a 2 expensas (aproximado)
       const ultimaExpensa = await this.prisma.expensa.findFirst({
         where: { consorcioId, estado: 'PUBLICADA' },
@@ -1203,8 +1278,8 @@ export class AmenitiesService {
       });
 
       if (ultimaExpensa) {
-        const promedioExpensa = parseFloat(ultimaExpensa.totalGastosOrdinarios.toString()) / 10; // Aprox por UF
-        const deuda = parseFloat(ultimoMovimiento.saldoResultante.toString());
+        const promedioExpensa = Number.parseFloat(ultimaExpensa.totalGastosOrdinarios.toString()) / 10; // Aprox por UF
+        const deuda = Number.parseFloat(ultimoMovimiento.saldoResultante.toString());
         
         if (deuda > promedioExpensa * 2) {
           throw new ForbiddenException(

@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import {
   FileText,
   Plus,
@@ -15,8 +13,9 @@ import {
   Lock,
   Globe,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
 import { useAuth } from '@/features/auth'
 import {
   useDocumentos,
@@ -31,6 +30,7 @@ import {
   formatFileSize,
   getFileIcon,
 } from '@/features/documentos'
+import { cn, formatDate } from '@/lib/utils'
 
 export default function DocumentosPage() {
   const { consorcioId } = useAuth()
@@ -70,8 +70,8 @@ export default function DocumentosPage() {
           </p>
         </div>
         <Link
-          href="/documentos/nuevo"
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          href="/documentos/nuevo"
         >
           <Plus className="h-4 w-4" />
           Subir documento
@@ -152,11 +152,11 @@ export default function DocumentosPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
-              type="text"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Buscar documentos..."
+              type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -164,9 +164,9 @@ export default function DocumentosPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
             <select
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               value={categoriaFiltro}
               onChange={(e) => setCategoriaFiltro(e.target.value as CategoriaDocumento | '')}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Todas las categorías</option>
               {CATEGORIAS_DOCUMENTO.map((cat) => (
@@ -179,9 +179,9 @@ export default function DocumentosPage() {
 
           {/* Visibilidad Filter */}
           <select
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             value={visibilidadFiltro}
             onChange={(e) => setVisibilidadFiltro(e.target.value as 'todos' | 'publicos' | 'privados')}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="todos">Todos</option>
             <option value="publicos">Solo públicos</option>
@@ -204,8 +204,8 @@ export default function DocumentosPage() {
               Subí el primer documento del consorcio
             </p>
             <Link
-              href="/documentos/nuevo"
               className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              href="/documentos/nuevo"
             >
               <Plus className="h-4 w-4" />
               Subir documento
@@ -215,8 +215,8 @@ export default function DocumentosPage() {
           <div className="divide-y divide-gray-100">
             {documentos.map((doc: Documento) => (
               <DocumentoRow
-                key={doc.id}
                 documento={doc}
+                key={doc.id}
                 onDelete={() => handleDelete(doc.id, doc.nombre)}
               />
             ))}
@@ -250,19 +250,19 @@ function DocumentoRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <Link
-            href={`/documentos/${documento.id}`}
             className="font-medium text-gray-900 hover:text-primary-600 truncate"
+            href={`/documentos/${documento.id}`}
           >
             {documento.nombre}
           </Link>
           {documento.esPublico ? (
             <span title="Público">
-              <Globe className="h-4 w-4 text-green-500 flex-shrink-0" aria-hidden="true" />
+              <Globe aria-hidden="true" className="h-4 w-4 text-green-500 flex-shrink-0" />
               <span className="sr-only">Público</span>
             </span>
           ) : (
             <span title="Privado">
-              <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" aria-hidden="true" />
+              <Lock aria-hidden="true" className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <span className="sr-only">Privado</span>
             </span>
           )}
@@ -292,25 +292,25 @@ function DocumentoRow({
       {/* Actions */}
       <div className="flex items-center gap-2">
         <Link
-          href={`/documentos/${documento.id}`}
           className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          href={`/documentos/${documento.id}`}
           title="Ver detalle"
         >
           <Eye className="h-5 w-5" />
         </Link>
         <a
-          href={documento.archivoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+          href={documento.archivoUrl}
+          rel="noopener noreferrer"
+          target="_blank"
           title="Descargar"
         >
           <Download className="h-5 w-5" />
         </a>
         <button
-          onClick={onDelete}
           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           title="Eliminar"
+          onClick={onDelete}
         >
           <Trash2 className="h-5 w-5" />
         </button>

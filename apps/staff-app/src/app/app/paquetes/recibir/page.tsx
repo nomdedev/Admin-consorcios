@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { db, generateLocalId, type PaqueteLocal } from '@/offline/db';
 
 const REMITENTES_COMUNES = [
@@ -69,7 +70,7 @@ export default function RecibirPaquetePage() {
             });
           }
         } catch {
-          console.log('Sync failed, will retry later');
+          // Si falla, queda pendiente - se reintentará con el sync manager
         }
       }
 
@@ -86,15 +87,15 @@ export default function RecibirPaquetePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/paquetes"
           className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/paquetes"
         >
           ←
         </Link>
         <h1 className="text-2xl font-bold text-gray-800">Recibir paquete</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Destinatario */}
         <div className="bg-white rounded-xl p-6 shadow">
           <label className="block">
@@ -102,14 +103,14 @@ export default function RecibirPaquetePage() {
               Unidad funcional destinataria
             </span>
             <input
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px] text-lg font-mono uppercase"
+              placeholder="Ej: 4A, PB-B, Cochera 15"
               type="text"
               value={formData.destinatarioUF}
               onChange={(e) =>
                 setFormData({ ...formData, destinatarioUF: e.target.value })
               }
-              placeholder="Ej: 4A, PB-B, Cochera 15"
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px] text-lg font-mono uppercase"
             />
           </label>
         </div>
@@ -122,14 +123,14 @@ export default function RecibirPaquetePage() {
           <div className="flex flex-wrap gap-2 mb-4">
             {REMITENTES_COMUNES.map((remitente) => (
               <button
-                key={remitente}
-                type="button"
-                onClick={() => setFormData({ ...formData, remitente })}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-[40px] ${
                   formData.remitente === remitente
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
+                key={remitente}
+                type="button"
+                onClick={() => setFormData({ ...formData, remitente })}
               >
                 {remitente}
               </button>
@@ -137,13 +138,13 @@ export default function RecibirPaquetePage() {
           </div>
           {formData.remitente === 'Otro' && (
             <input
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+              placeholder="Ingresá el nombre del remitente"
               type="text"
               value={formData.remitente === 'Otro' ? '' : formData.remitente}
               onChange={(e) =>
                 setFormData({ ...formData, remitente: e.target.value })
               }
-              placeholder="Ingresá el nombre del remitente"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             />
           )}
         </div>
@@ -155,22 +156,22 @@ export default function RecibirPaquetePage() {
               Descripción (opcional)
             </span>
             <input
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+              placeholder="Ej: Caja grande, sobre, etc."
               type="text"
               value={formData.descripcion}
               onChange={(e) =>
                 setFormData({ ...formData, descripcion: e.target.value })
               }
-              placeholder="Ej: Caja grande, sobre, etc."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             />
           </label>
         </div>
 
         {/* Submit */}
         <button
-          type="submit"
-          disabled={isLoading || !formData.destinatarioUF || !formData.remitente}
           className="w-full py-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
+          disabled={isLoading || !formData.destinatarioUF || !formData.remitente}
+          type="submit"
         >
           {isLoading ? 'Registrando...' : 'Registrar paquete'}
         </button>

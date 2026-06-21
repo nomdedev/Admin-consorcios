@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 
 export default function InformarPagoPage() {
   const router = useRouter();
@@ -20,53 +22,37 @@ export default function InformarPagoPage() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      
-      // Subir comprobante si existe
+      // Subir comprobante si existe (se mantiene fetch directo por FormData)
       let comprobanteUrl = '';
       if (comprobante) {
         const uploadFormData = new FormData();
         uploadFormData.append('file', comprobante);
         uploadFormData.append('folder', 'comprobantes');
-        
+
         const uploadResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/storage/upload`,
           {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
             body: uploadFormData,
           }
         );
-        
+
         if (uploadResponse.ok) {
           const uploadData = await uploadResponse.json();
           comprobanteUrl = uploadData.url;
         }
       }
 
-      // Informar pago
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pagos/informar-transferencia`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            monto: parseFloat(formData.monto),
-            fechaTransferencia: formData.fechaTransferencia,
-            comprobanteUrl,
-            comentario: formData.comentario,
-          }),
-        }
-      );
+      // Informar pago usando apiClient
+      await apiClient.post('/pagos/informar-transferencia', {
+        monto: Number.parseFloat(formData.monto),
+        fechaTransferencia: formData.fechaTransferencia,
+        comprobanteUrl,
+        comentario: formData.comentario,
+      });
 
-      if (response.ok) {
-        router.push('/app/pagos?informado=true');
-      } else {
-        alert('Error al informar el pago. Intenta nuevamente.');
-      }
+      router.push('/app/pagos?informado=true');
     } catch (error) {
       console.error('Error:', error);
       alert('Error al procesar la solicitud');
@@ -91,9 +77,9 @@ export default function InformarPagoPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/datos-bancarios"
-          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
           aria-label="Volver"
+          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/datos-bancarios"
         >
           ←
         </Link>
@@ -112,12 +98,12 @@ export default function InformarPagoPage() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Monto */}
         <div>
           <label
-            htmlFor="monto"
             className="block text-sm font-medium text-gray-700 mb-2"
+            htmlFor="monto"
           >
             Monto transferido *
           </label>
@@ -126,17 +112,17 @@ export default function InformarPagoPage() {
               $
             </span>
             <input
+              required
+              className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[44px]"
               id="monto"
-              type="number"
-              step="0.01"
               min="0"
+              placeholder="0.00"
+              step="0.01"
+              type="number"
               value={formData.monto}
               onChange={(e) =>
                 setFormData((f) => ({ ...f, monto: e.target.value }))
               }
-              required
-              className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[44px]"
-              placeholder="0.00"
             />
           </div>
         </div>
@@ -144,43 +130,43 @@ export default function InformarPagoPage() {
         {/* Fecha */}
         <div>
           <label
-            htmlFor="fecha"
             className="block text-sm font-medium text-gray-700 mb-2"
+            htmlFor="fecha"
           >
             Fecha de transferencia *
           </label>
           <input
+            required
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[44px]"
             id="fecha"
+            max={new Date().toISOString().split('T')[0]}
             type="date"
             value={formData.fechaTransferencia}
             onChange={(e) =>
               setFormData((f) => ({ ...f, fechaTransferencia: e.target.value }))
             }
-            required
-            max={new Date().toISOString().split('T')[0]}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[44px]"
           />
         </div>
 
         {/* Comprobante */}
         <div>
           <label
-            htmlFor="comprobante"
             className="block text-sm font-medium text-gray-700 mb-2"
+            htmlFor="comprobante"
           >
             Comprobante (opcional)
           </label>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
             <input
+              accept="image/*,.pdf"
+              className="hidden"
               id="comprobante"
               type="file"
-              accept="image/*,.pdf"
               onChange={handleFileChange}
-              className="hidden"
             />
             <label
-              htmlFor="comprobante"
               className="cursor-pointer block text-center"
+              htmlFor="comprobante"
             >
               {comprobante ? (
                 <div className="text-green-600">
@@ -203,28 +189,28 @@ export default function InformarPagoPage() {
         {/* Comentario */}
         <div>
           <label
-            htmlFor="comentario"
             className="block text-sm font-medium text-gray-700 mb-2"
+            htmlFor="comentario"
           >
             Comentario (opcional)
           </label>
           <textarea
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             id="comentario"
+            placeholder="Ej: Transferencia desde Banco Galicia, períodos enero y febrero"
+            rows={3}
             value={formData.comentario}
             onChange={(e) =>
               setFormData((f) => ({ ...f, comentario: e.target.value }))
             }
-            rows={3}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            placeholder="Ej: Transferencia desde Banco Galicia, períodos enero y febrero"
           />
         </div>
 
         {/* Submit */}
         <button
-          type="submit"
-          disabled={isSubmitting || !formData.monto}
           className="w-full bg-green-600 text-white rounded-xl py-4 font-medium hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px]"
+          disabled={isSubmitting || !formData.monto}
+          type="submit"
         >
           {isSubmitting ? 'Enviando...' : 'Informar Pago'}
         </button>

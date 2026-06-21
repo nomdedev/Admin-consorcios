@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
+import { formatCurrency, formatPeriodo, formatDate } from '@/lib/utils';
 
 interface Expensa {
   id: string;
@@ -35,19 +38,12 @@ export default function ExpensasPage() {
   useEffect(() => {
     const fetchExpensas = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const params = new URLSearchParams({ anio: year, limit: '12' });
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-portal/expensas?${params}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data: ExpensasResponse = await response.json();
-          setExpensas(data.data);
-          setSaldoActual(data.saldoActual);
-        }
+        const data = await apiClient.get<ExpensasResponse>('/mi-portal/expensas', {
+          anio: year,
+          limit: '12',
+        });
+        setExpensas(data.data);
+        setSaldoActual(data.saldoActual);
       } catch (error) {
         console.error('Error fetching expensas:', error);
       } finally {
@@ -57,24 +53,6 @@ export default function ExpensasPage() {
 
     fetchExpensas();
   }, [year]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatPeriodo = (periodo: string) => {
-    const [year, month] = periodo.split('-');
-    const date = new Date(parseInt(year || '2024'), parseInt(month || '1') - 1);
-    return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR');
-  };
 
   const filteredExpensas = filter === 'pendientes'
     ? expensas.filter((e) => e.estadoPago !== 'PAGADO')
@@ -113,9 +91,9 @@ export default function ExpensasPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-6 bg-gray-200 rounded w-1/4" />
           </div>
         ))}
       </div>
@@ -127,8 +105,8 @@ export default function ExpensasPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Mis Expensas</h1>
         <Link
-          href="/app/gastos-edificio"
           className="text-green-600 text-sm font-medium hover:underline"
+          href="/app/gastos-edificio"
         >
           Ver gastos del edificio →
         </Link>
@@ -142,8 +120,8 @@ export default function ExpensasPage() {
         </p>
         {saldoActual > 0 && (
           <Link
-            href="/app/pagos/nuevo"
             className="inline-block mt-2 text-sm text-red-600 font-medium hover:underline"
+            href="/app/pagos/nuevo"
           >
             Pagar ahora →
           </Link>
@@ -153,10 +131,10 @@ export default function ExpensasPage() {
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
         <select
+          aria-label="Filtrar por año"
+          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
-          aria-label="Filtrar por año"
         >
           {[...Array(5)].map((_, i) => {
             const y = new Date().getFullYear() - i;
@@ -168,22 +146,22 @@ export default function ExpensasPage() {
           })}
         </select>
         <button
-          onClick={() => setFilter('todas')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
             filter === 'todas'
               ? 'bg-green-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
+          onClick={() => setFilter('todas')}
         >
           Todas
         </button>
         <button
-          onClick={() => setFilter('pendientes')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
             filter === 'pendientes'
               ? 'bg-green-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
+          onClick={() => setFilter('pendientes')}
         >
           Pendientes
         </button>
@@ -198,9 +176,9 @@ export default function ExpensasPage() {
         <div className="space-y-4">
           {filteredExpensas.map((expensa) => (
             <Link
-              key={expensa.id}
-              href={`/app/expensas/${expensa.periodo}`}
               className="block bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow"
+              href={`/app/expensas/${expensa.periodo}`}
+              key={expensa.id}
             >
               <div className="flex justify-between items-start mb-3">
                 <div>

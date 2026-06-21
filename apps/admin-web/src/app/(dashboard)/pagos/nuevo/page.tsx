@@ -1,11 +1,19 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
+import {
+  useRegistrarPagoManual,
+  useCuentaCorriente,
+  type RegistrarPagoManualDto,
+} from '@/features/pagos';
+import { formatCurrency, formatPeriodo } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -19,13 +27,6 @@ import {
   Badge,
   AlertBanner,
 } from 'ui';
-import {
-  useRegistrarPagoManual,
-  useCuentaCorriente,
-  type RegistrarPagoManualDto,
-} from '@/features/pagos';
-import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
-import { formatCurrency, formatPeriodo } from '@/lib/utils';
 
 // Schema de validación
 const pagoManualSchema = z.object({
@@ -125,7 +126,7 @@ export default function NuevoPagoPage() {
         current.filter((p) => p !== periodo)
       );
     } else {
-      setValue('periodosAbonados', [...current, periodo].sort());
+      setValue('periodosAbonados', [...current, periodo].sort((a, b) => a.localeCompare(b)));
     }
   };
 
@@ -145,11 +146,68 @@ export default function NuevoPagoPage() {
 
       const result = await registrarMutation.mutateAsync(dto);
       router.push(`/pagos/${result.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
       const message =
-        error?.data?.message || error?.message || 'Error al registrar pago';
+        err?.data?.message || err?.message || 'Error al registrar pago';
       setSubmitError(message);
     }
+  };
+
+  // Renderiza estado de cuenta corriente
+  const renderCuentaCorriente = () => {
+    if (!cuentaCorriente) {
+      return <p className="text-muted-foreground">Sin datos de cuenta corriente</p>;
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+          <span className="font-medium">Saldo actual:</span>
+          <span
+            className={`text-xl font-bold ${
+              cuentaCorriente.saldoActual < 0
+                ? 'text-red-600'
+                : 'text-green-600'
+            }`}
+          >
+            {formatCurrency(cuentaCorriente.saldoActual)}
+          </span>
+        </div>
+
+        {cuentaCorriente.expensasPendientes?.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Expensas pendientes:</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {cuentaCorriente.expensasPendientes.map((exp) => (
+                <button
+                  className={`p-3 rounded-lg border text-left transition-colors ${
+                    selectedPeriodos?.includes(exp.periodo)
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  key={exp.periodo}
+                  type="button"
+                  onClick={() => togglePeriodo(exp.periodo)}
+                >
+                  <div className="font-medium">
+                    {formatPeriodo(exp.periodo)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatCurrency(exp.totalAPagar)}
+                  </div>
+                  {exp.intereses > 0 && (
+                    <div className="text-xs text-red-500">
+                      +{formatCurrency(exp.intereses)} interés
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -157,7 +215,7 @@ export default function NuevoPagoPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/pagos">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             ← Volver
           </Button>
         </Link>
@@ -172,14 +230,14 @@ export default function NuevoPagoPage() {
       {/* Error */}
       {submitError && (
         <AlertBanner
-          variant="error"
           title="Error al registrar pago"
+          variant="error"
         >
           {submitError}
         </AlertBanner>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {/* Selección de UF */}
         <Card>
           <CardHeader>
@@ -199,7 +257,7 @@ export default function NuevoPagoPage() {
                     id="consorcioId"
                     {...register('consorcioId')}
                     className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                    onChange={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                       register('consorcioId').onChange(e);
                       setValue('unidadFuncionalId', '');
                       setValue('periodosAbonados', []);
@@ -261,55 +319,8 @@ export default function NuevoPagoPage() {
             <CardContent>
               {loadingCC ? (
                 <Spinner size="sm" />
-              ) : cuentaCorriente ? (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-                    <span className="font-medium">Saldo actual:</span>
-                    <span
-                      className={`text-xl font-bold ${
-                        cuentaCorriente.saldoActual < 0
-                          ? 'text-red-600'
-                          : 'text-green-600'
-                      }`}
-                    >
-                      {formatCurrency(cuentaCorriente.saldoActual)}
-                    </span>
-                  </div>
-
-                  {cuentaCorriente.expensasPendientes?.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Expensas pendientes:</p>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {cuentaCorriente.expensasPendientes.map((exp) => (
-                          <button
-                            key={exp.periodo}
-                            type="button"
-                            onClick={() => togglePeriodo(exp.periodo)}
-                            className={`p-3 rounded-lg border text-left transition-colors ${
-                              selectedPeriodos?.includes(exp.periodo)
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <div className="font-medium">
-                              {formatPeriodo(exp.periodo)}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatCurrency(exp.totalAPagar)}
-                            </div>
-                            {exp.intereses > 0 && (
-                              <div className="text-xs text-red-500">
-                                +{formatCurrency(exp.intereses)} interés
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
               ) : (
-                <p className="text-muted-foreground">Sin datos de cuenta corriente</p>
+                renderCuentaCorriente()
               )}
             </CardContent>
           </Card>
@@ -328,9 +339,9 @@ export default function NuevoPagoPage() {
                 <div className="flex flex-wrap gap-2">
                   {selectedPeriodos.map((p) => (
                     <Badge
+                      className="cursor-pointer"
                       key={p}
                       variant="default"
-                      className="cursor-pointer"
                       onClick={() => togglePeriodo(p)}
                     >
                       {formatPeriodo(p)} ✕
@@ -352,7 +363,7 @@ export default function NuevoPagoPage() {
               <div className="flex gap-2 mt-2">
                 <select
                   className="flex-1 h-10 px-3 rounded-md border border-input bg-background"
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     if (e.target.value) {
                       togglePeriodo(e.target.value);
                       e.target.value = '';
@@ -376,16 +387,16 @@ export default function NuevoPagoPage() {
                 <Label htmlFor="monto">Monto *</Label>
                 <Input
                   id="monto"
-                  type="number"
                   step="0.01"
+                  type="number"
                   {...register('monto', { valueAsNumber: true })}
                   placeholder="0.00"
                 />
                 {montoSugerido > 0 && (
                   <Button
+                    size="sm"
                     type="button"
                     variant="ghost"
-                    size="sm"
                     onClick={() => setValue('monto', montoSugerido)}
                   >
                     Usar monto sugerido: {formatCurrency(montoSugerido)}
@@ -450,10 +461,10 @@ export default function NuevoPagoPage() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button disabled={isSubmitting} type="submit">
             {isSubmitting ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Registrando...
               </>
             ) : (

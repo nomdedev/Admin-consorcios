@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 import { formatCurrency, formatPeriodo } from '@/lib/utils';
 
 interface ResumenEdificio {
@@ -22,17 +24,8 @@ export default function ResumenEdificioPage() {
   useEffect(() => {
     const fetchResumen = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-portal/resumen-edificio`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setResumen(data);
-        }
+        const data = await apiClient.get<ResumenEdificio>('/mi-portal/resumen-edificio');
+        setResumen(data);
       } catch (error) {
         console.error('Error fetching resumen:', error);
       } finally {
@@ -49,9 +42,9 @@ export default function ResumenEdificioPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          <div className="bg-white rounded-xl p-6 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-8 bg-gray-200 rounded w-1/2" />
           </div>
         ))}
       </div>
@@ -62,7 +55,7 @@ export default function ResumenEdificioPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 mb-4">No se pudo cargar el resumen</p>
-        <Link href="/app/expensas" className="text-green-600 font-medium">
+        <Link className="text-green-600 font-medium" href="/app/expensas">
           ← Volver a expensas
         </Link>
       </div>
@@ -74,9 +67,9 @@ export default function ResumenEdificioPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/gastos-edificio"
-          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
           aria-label="Volver"
+          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/gastos-edificio"
         >
           ←
         </Link>
@@ -158,15 +151,15 @@ export default function ResumenEdificioPage() {
       {/* Links */}
       <div className="space-y-3">
         <Link
-          href="/app/gastos-edificio"
           className="block bg-white rounded-xl p-4 shadow text-center text-green-600 font-medium hover:bg-green-50 transition-colors min-h-[44px]"
+          href="/app/gastos-edificio"
         >
           📊 Ver detalle de gastos
         </Link>
 
         <Link
-          href="/app/expensas"
           className="block bg-gray-100 rounded-xl p-4 text-center text-gray-600 hover:bg-gray-200 transition-colors min-h-[44px]"
+          href="/app/expensas"
         >
           ← Volver a mis expensas
         </Link>

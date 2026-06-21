@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
+import { formatCurrency, formatPeriodo, formatDate } from '@/lib/utils';
 
 interface ExpensaDetalle {
   id: string;
@@ -48,17 +51,8 @@ export default function ExpensaDetallePage() {
   useEffect(() => {
     const fetchExpensa = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-portal/expensas/${periodo}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setExpensa(data);
-        }
+        const data = await apiClient.get<ExpensaDetalle>(`/mi-portal/expensas/${periodo}`);
+        setExpensa(data);
       } catch (error) {
         console.error('Error fetching expensa:', error);
       } finally {
@@ -80,44 +74,26 @@ export default function ExpensaDetallePage() {
       );
       if (response.ok) {
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `expensa-${periodo}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        a.remove();
+        globalThis.URL.revokeObjectURL(url);
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatPeriodo = (p: string) => {
-    const [year, month] = p.split('-');
-    const date = new Date(parseInt(year || '2024'), parseInt(month || '1') - 1);
-    return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR');
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-xl p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-          <div className="h-10 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4" />
+          <div className="h-10 bg-gray-200 rounded w-1/3" />
         </div>
       </div>
     );
@@ -127,7 +103,7 @@ export default function ExpensaDetallePage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 mb-4">Expensa no encontrada</p>
-        <Link href="/app/expensas" className="text-green-600 font-medium">
+        <Link className="text-green-600 font-medium" href="/app/expensas">
           ← Volver a expensas
         </Link>
       </div>
@@ -146,8 +122,8 @@ export default function ExpensaDetallePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/expensas"
           className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/expensas"
         >
           ←
         </Link>
@@ -178,8 +154,8 @@ export default function ExpensaDetallePage() {
         
         {expensa.estadoPago !== 'PAGADO' && (
           <Link
-            href={`/app/pagos/nuevo?periodo=${periodo}`}
             className="mt-4 inline-flex items-center px-4 py-2 bg-white text-green-600 font-medium rounded-lg hover:bg-green-50 transition-colors min-h-[44px]"
+            href={`/app/pagos/nuevo?periodo=${periodo}`}
           >
             Pagar ahora
           </Link>
@@ -209,23 +185,23 @@ export default function ExpensaDetallePage() {
           )}
           {expensa.saldoAnterior > 0 && (
             <DetalleLinea
+              isNegative
               label="Saldo anterior"
               value={expensa.saldoAnterior}
-              isNegative
             />
           )}
           {expensa.intereses > 0 && (
             <DetalleLinea
+              isNegative
               label="Intereses por mora"
               value={expensa.intereses}
-              isNegative
             />
           )}
           {expensa.bonificacion > 0 && (
             <DetalleLinea
+              isPositive
               label="Bonificación"
               value={-expensa.bonificacion}
-              isPositive
             />
           )}
           
@@ -249,7 +225,7 @@ export default function ExpensaDetallePage() {
           {expensa.gastosPorCategoria
             .filter((cat) => cat.gastos.some((g) => !g.esExtraordinario))
             .map((categoria) => (
-              <div key={categoria.categoria} className="mb-4 last:mb-0">
+              <div className="mb-4 last:mb-0" key={categoria.categoria}>
                 <div className="flex justify-between items-center py-2 border-b-2 border-gray-200 mb-2">
                   <span className="font-medium text-gray-700">{categoria.categoria}</span>
                   <span className="text-gray-600">{formatCurrency(categoria.subtotal)}</span>
@@ -259,8 +235,8 @@ export default function ExpensaDetallePage() {
                     .filter((g) => !g.esExtraordinario)
                     .map((gasto) => (
                       <div
-                        key={gasto.id}
                         className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
+                        key={gasto.id}
                       >
                         <div className="flex-1">
                           <p className="text-gray-800">{gasto.concepto}</p>
@@ -269,10 +245,10 @@ export default function ExpensaDetallePage() {
                           )}
                           {gasto.archivoUrl && (
                             <a
-                              href={gasto.archivoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
                               className="text-xs text-green-600 hover:underline inline-flex items-center gap-1"
+                              href={gasto.archivoUrl}
+                              rel="noopener noreferrer"
+                              target="_blank"
                             >
                               📄 Ver factura
                             </a>
@@ -296,7 +272,7 @@ export default function ExpensaDetallePage() {
           {expensa.gastosPorCategoria
             .filter((cat) => cat.gastos.some((g) => g.esExtraordinario))
             .map((categoria) => (
-              <div key={categoria.categoria} className="mb-4 last:mb-0">
+              <div className="mb-4 last:mb-0" key={categoria.categoria}>
                 <div className="flex justify-between items-center py-2 border-b-2 border-gray-200 mb-2">
                   <span className="font-medium text-gray-700">{categoria.categoria}</span>
                   <span className="text-gray-600">{formatCurrency(categoria.subtotal)}</span>
@@ -306,8 +282,8 @@ export default function ExpensaDetallePage() {
                     .filter((g) => g.esExtraordinario)
                     .map((gasto) => (
                       <div
-                        key={gasto.id}
                         className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
+                        key={gasto.id}
                       >
                         <div className="flex-1">
                           <p className="text-gray-800">{gasto.concepto}</p>
@@ -316,10 +292,10 @@ export default function ExpensaDetallePage() {
                           )}
                           {gasto.archivoUrl && (
                             <a
-                              href={gasto.archivoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
                               className="text-xs text-green-600 hover:underline inline-flex items-center gap-1"
+                              href={gasto.archivoUrl}
+                              rel="noopener noreferrer"
+                              target="_blank"
                             >
                               📄 Ver factura
                             </a>
@@ -336,16 +312,16 @@ export default function ExpensaDetallePage() {
 
       {/* Descargar PDF */}
       <button
-        onClick={handleDownloadPdf}
         className="block w-full bg-white rounded-xl p-4 shadow text-center text-green-600 font-medium hover:bg-green-50 transition-colors min-h-[44px]"
+        onClick={handleDownloadPdf}
       >
         📄 Descargar PDF de expensa
       </button>
 
       {/* Link a datos bancarios */}
       <Link
-        href="/app/datos-bancarios"
         className="block bg-gray-50 rounded-xl p-4 text-center text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]"
+        href="/app/datos-bancarios"
       >
         💳 Ver datos para depositar
       </Link>
@@ -353,39 +329,31 @@ export default function ExpensaDetallePage() {
   );
 }
 
+function getValueColorClass(isNegative?: boolean, isPositive?: boolean): string {
+  if (isNegative) return 'text-red-600';
+  if (isPositive) return 'text-green-600';
+  return 'text-gray-800';
+}
+
 function DetalleLinea({
   label,
   value,
   isNegative,
   isPositive,
-}: {
+}: Readonly<{
   label: string;
   value: number;
   isNegative?: boolean;
   isPositive?: boolean;
-}) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(Math.abs(amount));
-  };
-
+}>) {
   return (
     <div className="flex justify-between items-center">
       <span className="text-gray-600">{label}</span>
       <span
-        className={`font-medium ${
-          isNegative
-            ? 'text-red-600'
-            : isPositive
-            ? 'text-green-600'
-            : 'text-gray-800'
-        }`}
+        className={`font-medium ${getValueColorClass(isNegative, isPositive)}`}
       >
         {isPositive ? '-' : ''}
-        {formatCurrency(value)}
+        {formatCurrency(Math.abs(value))}
       </span>
     </div>
   );

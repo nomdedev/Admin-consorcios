@@ -6,6 +6,9 @@ module.exports = {
     "prettier",
   ],
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: true, // Habilita análisis de tipos para reglas que lo requieren
+  },
   plugins: ["@typescript-eslint", "import"],
   rules: {
     // TypeScript

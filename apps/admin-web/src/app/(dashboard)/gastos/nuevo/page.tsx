@@ -1,5 +1,6 @@
-import { Suspense } from "react";
 import { Spinner } from "@vecinosimple/ui";
+import { Suspense } from "react";
+
 import NuevoGastoForm from "./NuevoGastoForm";
 
 export default function NuevoGastoPage() {

@@ -5,7 +5,7 @@ import { Wrench, Clock, RefreshCw } from 'lucide-react';
 
 export default function Maintenance() {
   const handleRetry = () => {
-    window.location.reload();
+    globalThis.location.reload();
   };
 
   return (
@@ -40,7 +40,7 @@ export default function Maintenance() {
         </div>
 
         <div className="space-y-3">
-          <Button onClick={handleRetry} className="w-full" size="lg">
+          <Button className="w-full" size="lg" onClick={handleRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Verificar si ya está disponible
           </Button>

@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   AlertTriangle,
@@ -13,11 +10,12 @@ import {
   Mail,
   MessageCircle,
   Smartphone,
-  Shield,
   AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
 import {
   useAlerta,
   useResolverAlerta,
@@ -27,10 +25,10 @@ import {
   formatTiempoTranscurrido,
   getAlertaPrioridad,
 } from '@/features/alertas'
+import { cn, formatDate } from '@/lib/utils'
 
 export default function AlertaDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const alertaId = params.id as string
 
   const { data: alerta, isLoading, error } = useAlerta(alertaId)
@@ -72,8 +70,8 @@ export default function AlertaDetailPage() {
           La alerta que buscás no existe
         </p>
         <Link
-          href="/alertas"
           className="mt-4 inline-flex items-center gap-2 text-primary-600 hover:text-primary-700"
+          href="/alertas"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al panel
@@ -90,9 +88,9 @@ export default function AlertaDetailPage() {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/alertas"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Volver al panel"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            href="/alertas"
           >
             <ArrowLeft className="h-5 w-5 text-gray-500" />
           </Link>
@@ -137,8 +135,8 @@ export default function AlertaDetailPage() {
 
         {alerta.activa && (
           <button
-            onClick={() => setShowResolverModal(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            onClick={() => setShowResolverModal(true)}
           >
             <CheckCircle className="h-4 w-4" />
             Marcar como resuelta
@@ -365,17 +363,23 @@ export default function AlertaDetailPage() {
               Resolver Emergencia
             </h3>
             <p className="text-gray-500 mt-2">
-              Describí cómo se resolvió la situación. Esta información se 
+              Describí cómo se resolvió la situación. Esta información se
               notificará a todos los vecinos.
             </p>
 
-            <textarea
-              value={resolucion}
-              onChange={(e) => setResolucion(e.target.value)}
-              rows={4}
-              placeholder="Ej: Se reparó el caño principal. El servicio de agua ha sido restablecido."
-              className="w-full mt-4 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
+            <div>
+              <label className="sr-only" htmlFor="resolucion-textarea">
+                Resolución de la emergencia
+              </label>
+              <textarea
+                className="w-full mt-4 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                id="resolucion-textarea"
+                placeholder="Ej: Se reparó el caño principal. El servicio de agua ha sido restablecido."
+                rows={4}
+                value={resolucion}
+                onChange={(e) => setResolucion(e.target.value)}
+              />
+            </div>
             {resolucion.length > 0 && resolucion.length < 10 && (
               <p className="text-orange-500 text-sm mt-1">
                 Mínimo 10 caracteres
@@ -384,15 +388,15 @@ export default function AlertaDetailPage() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowResolverModal(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setShowResolverModal(false)}
               >
                 Cancelar
               </button>
               <button
-                onClick={handleResolver}
-                disabled={resolverAlerta.isPending || resolucion.length < 10}
                 className="px-4 py-2 text-white bg-green-600 hover:bg-green-700 disabled:bg-green-300 rounded-lg transition-colors"
+                disabled={resolverAlerta.isPending || resolucion.length < 10}
+                onClick={handleResolver}
               >
                 {resolverAlerta.isPending ? 'Guardando...' : 'Marcar como resuelta'}
               </button>

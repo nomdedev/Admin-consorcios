@@ -8,8 +8,6 @@ export default defineConfig({
   // Directorio donde se encuentran los tests
   testDir: './e2e',
   
-  // Excluir archivos de setup del patrón de tests
-  testIgnore: ['**/global.setup.ts'],
   
   // Timeout global para cada test (30 segundos)
   timeout: 30 * 1000,
@@ -84,9 +82,12 @@ export default defineConfig({
 
   // Servidor de desarrollo para ejecutar los tests
   webServer: {
-    command: 'pnpm dev',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutos para que arranque Next.js
+    env: {
+      TEST_MODE: 'true',
+    },
   },
 });

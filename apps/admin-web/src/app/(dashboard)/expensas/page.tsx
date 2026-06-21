@@ -16,8 +16,10 @@ import {
 import { Plus, FileText, RefreshCw, Calendar, DollarSign, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useExpensas } from "@/features/expensas";
+
 import { useConsorcios } from "@/features/consorcios";
+import { useExpensas } from "@/features/expensas";
+
 import type { EstadoExpensa } from "@/lib/types";
 
 const estadoColors: Record<EstadoExpensa, "default" | "warning" | "success" | "info"> = {
@@ -92,16 +94,16 @@ export default function ExpensasPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={isLoading} 
+            variant="secondary"
             onClick={() => refetch()}
-            disabled={isLoading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
           <Button 
-            onClick={() => router.push(`/expensas/nueva${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
             disabled={!consorcioId}
+            onClick={() => router.push(`/expensas/nueva${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
           >
             <Plus className="mr-2 h-5 w-5" />
             Nueva Expensa
@@ -121,9 +123,9 @@ export default function ExpensasPage() {
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Consorcio
-              </label>
+              </p>
               <Select value={consorcioId} onValueChange={setConsorcioId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar consorcio..." />
@@ -140,9 +142,9 @@ export default function ExpensasPage() {
             </div>
             
             <div className="w-48">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Estado
-              </label>
+              </p>
               <Select value={estadoFiltro} onValueChange={(v) => setEstadoFiltro(v as EstadoExpensa | "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los estados" />
@@ -170,7 +172,7 @@ export default function ExpensasPage() {
       ) : isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-48 animate-pulse rounded-lg bg-neutral-200" />
+            <div className="h-48 animate-pulse rounded-lg bg-neutral-200" key={i} />
           ))}
         </div>
       ) : expensas.length === 0 ? (
@@ -187,8 +189,8 @@ export default function ExpensasPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {expensas.map((expensa) => (
             <Card
-              key={expensa.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
+              key={expensa.id}
               onClick={() => router.push(`/expensas/${expensa.id}`)}
             >
               <CardContent className="p-5">
@@ -239,8 +241,8 @@ export default function ExpensasPage() {
 
                 <div className="mt-4 pt-4 border-t border-neutral-100 flex justify-between items-center">
                   <Button
-                    variant="ghost"
                     size="sm"
+                    variant="ghost"
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/expensas/${expensa.id}`);

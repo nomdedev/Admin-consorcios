@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 
 interface Ticket {
@@ -23,17 +25,8 @@ export default function TicketsPage() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-cuenta/tickets`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setTickets(data);
-        }
+        const data = await apiClient.get<Ticket[]>('/mi-cuenta/tickets');
+        setTickets(data);
       } catch (error) {
         console.error('Error fetching tickets:', error);
       } finally {
@@ -108,9 +101,9 @@ export default function TicketsPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-3" />
+            <div className="h-3 bg-gray-200 rounded w-1/3" />
           </div>
         ))}
       </div>
@@ -122,8 +115,8 @@ export default function TicketsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Mis Reclamos</h1>
         <Link
-          href="/app/tickets/nuevo"
           className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors min-h-[44px] flex items-center"
+          href="/app/tickets/nuevo"
         >
           + Nuevo
         </Link>
@@ -132,22 +125,22 @@ export default function TicketsPage() {
       {/* Filtros */}
       <div className="flex gap-2">
         <button
-          onClick={() => setFilter('abiertos')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
             filter === 'abiertos'
               ? 'bg-green-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
+          onClick={() => setFilter('abiertos')}
         >
           Abiertos
         </button>
         <button
-          onClick={() => setFilter('todos')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
             filter === 'todos'
               ? 'bg-green-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
+          onClick={() => setFilter('todos')}
         >
           Todos
         </button>
@@ -162,8 +155,8 @@ export default function TicketsPage() {
               : 'No tenés reclamos'}
           </p>
           <Link
-            href="/app/tickets/nuevo"
             className="text-green-600 font-medium hover:underline"
+            href="/app/tickets/nuevo"
           >
             Crear nuevo reclamo
           </Link>
@@ -172,9 +165,9 @@ export default function TicketsPage() {
         <div className="space-y-4">
           {filteredTickets.map((ticket) => (
             <Link
-              key={ticket.id}
-              href={`/app/tickets/${ticket.id}`}
               className="block bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow"
+              href={`/app/tickets/${ticket.id}`}
+              key={ticket.id}
             >
               <div className="flex items-start gap-3">
                 <span className="text-xl">{getPrioridadIcon(ticket.prioridad)}</span>

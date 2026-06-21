@@ -13,9 +13,11 @@ import {
   EmptyState,
   Spinner,
 } from "@vecinosimple/ui";
-import { ArrowLeft, Building2, Users, Plus, Edit, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Building2, Users, Plus, Edit, AlertTriangle } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
+
 import { useConsorcio, useUnidadesFuncionales, useConsorcioStats } from "@/features/consorcios";
+import { formatCurrency } from "@/lib/utils";
 
 export default function ConsorcioDetallePage() {
   const router = useRouter();
@@ -23,19 +25,12 @@ export default function ConsorcioDetallePage() {
   const consorcioId = params.id as string;
 
   // Fetch data
-  const { data: consorcio, isLoading: loadingConsorcio, isError, refetch } = useConsorcio(consorcioId);
+  const { data: consorcio, isLoading: loadingConsorcio, isError } = useConsorcio(consorcioId);
   const { data: unidadesData, isLoading: loadingUnidades } = useUnidadesFuncionales(consorcioId);
   const { data: stats, isLoading: loadingStats } = useConsorcioStats(consorcioId);
 
   const unidades = unidadesData?.data ?? [];
   const isLoading = loadingConsorcio || loadingUnidades || loadingStats;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      maximumFractionDigits: 0,
-    }).format(value);
 
   // Loading state
   if (isLoading) {
@@ -263,9 +258,9 @@ export default function ConsorcioDetallePage() {
                 </thead>
                 <tbody>
                   {unidades.map((unidad) => {
-                    // TODO: Obtener saldo desde cuenta corriente
-                    const saldo = 0;
-                    const diasMora = 0;
+                    const saldo = unidad.saldo ?? 0;
+                    const diasMora = saldo < 0 ? Math.floor(Math.abs(saldo) / 1000) : 0; // Cálculo aproximado
+                    const propietario = unidad.propietario;
                     return (
                       <tr
                         className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer"
@@ -278,15 +273,19 @@ export default function ConsorcioDetallePage() {
                         <td className="px-4 py-3 text-neutral-600">{unidad.piso || "-"}</td>
                         <td className="px-4 py-3">
                           <Badge variant="default">
-                            {unidad.tipo === "DEPARTAMENTO" ? "Depto" : 
-                             unidad.tipo === "COCHERA" ? "Cochera" : 
-                             unidad.tipo === "BAULERA" ? "Baulera" : unidad.tipo}
+                            {(() => {
+                              switch (unidad.tipo) {
+                                case "DEPARTAMENTO": return "Depto";
+                                case "COCHERA": return "Cochera";
+                                case "BAULERA": return "Baulera";
+                                default: return unidad.tipo;
+                              }
+                            })()}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-center">{Number(unidad.coeficiente).toFixed(2)}%</td>
                         <td className="px-4 py-3 text-neutral-600">
-                          {/* TODO: Mostrar nombre del propietario */}
-                          -
+                          {propietario ? `${propietario.nombre} ${propietario.apellido}` : '-'}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span

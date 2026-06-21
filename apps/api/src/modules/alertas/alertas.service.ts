@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { TipoEmergencia } from '@prisma/client';
+import { TipoEmergencia, Prisma } from '@prisma/client';
 import {
   CreateAlertaEmergenciaDto,
   ResolverAlertaDto,
@@ -16,12 +16,26 @@ import { EmailTemplateService } from '../email/email-template.service';
 import { PushService, PUSH_TOPICS } from '../push/push.service';
 import { WhatsAppService } from '../whatsapp/whatsapp.service';
 
+type AlertaConfig = (typeof EMERGENCIA_CONFIG)[TipoEmergencia];
+
+interface UsuarioNotificacion {
+  id: string;
+  email: string | null;
+  telefono: string | null;
+  nombre: string;
+  apellido: string;
+}
+
+interface DestinatarioNotificacion {
+  usuario: UsuarioNotificacion;
+}
+
 @Injectable()
 export class AlertasService {
   private readonly logger = new Logger(AlertasService.name);
 
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly emailTemplateService: EmailTemplateService,
     private readonly pushService: PushService,
@@ -131,7 +145,7 @@ export class AlertasService {
 
   private async enviarNotificaciones(
     alertaId: string,
-    destinatarios: any[],
+    destinatarios: DestinatarioNotificacion[],
     dto: CreateAlertaEmergenciaDto,
     consorcioNombre: string
   ) {
@@ -180,7 +194,7 @@ export class AlertasService {
       } catch (error) {
         const err = error as Error;
         this.logger.error(
-          `Error enviando notificación a ${this.maskEmail(usuario.email)}`,
+          `Error enviando notificación a ${this.maskEmail(usuario.email ?? '')}`,
           err.stack,
         );
         enviosFallidos++;
@@ -197,7 +211,11 @@ export class AlertasService {
     });
   }
 
-  private async enviarPush(usuario: any, dto: CreateAlertaEmergenciaDto, config: any) {
+  private async enviarPush(
+    usuario: UsuarioNotificacion,
+    dto: CreateAlertaEmergenciaDto,
+    config: AlertaConfig,
+  ) {
     if (!this.pushService.enabled) {
       this.logger.debug('[PUSH] Firebase no configurado, omitiendo push');
       return;
@@ -205,7 +223,7 @@ export class AlertasService {
 
     this.logger.debug(
       `[PUSH] Enviando notificación de emergencia`,
-      { titulo: dto.titulo, destinatario: this.maskEmail(usuario.email) },
+      { titulo: dto.titulo, destinatario: this.maskEmail(usuario.email ?? '') },
     );
     
     // Enviar al topic de emergencias del consorcio
@@ -225,7 +243,15 @@ export class AlertasService {
     });
   }
 
-  private async enviarEmail(usuario: any, dto: CreateAlertaEmergenciaDto, config: any, consorcioNombre: string) {
+  private async enviarEmail(
+    usuario: UsuarioNotificacion,
+    dto: CreateAlertaEmergenciaDto,
+    config: AlertaConfig,
+    consorcioNombre: string,
+  ) {
+    // El email ya fue validado en el caller, pero TypeScript necesita null check
+    if (!usuario.email) return;
+
     this.logger.debug(
       `[EMAIL] Enviando notificación`,
       { titulo: dto.titulo, destinatario: this.maskEmail(usuario.email) },
@@ -254,7 +280,15 @@ export class AlertasService {
     }
   }
 
-  private async enviarWhatsapp(usuario: any, dto: CreateAlertaEmergenciaDto, config: any, consorcioNombre: string) {
+  private async enviarWhatsapp(
+    usuario: UsuarioNotificacion,
+    dto: CreateAlertaEmergenciaDto,
+    config: AlertaConfig,
+    consorcioNombre: string,
+  ) {
+    // El teléfono ya fue validado en el caller, pero TypeScript necesita null check
+    if (!usuario.telefono) return;
+
     if (!this.whatsAppService.enabled) {
       this.logger.debug('[WHATSAPP] WhatsApp API no configurado, omitiendo envío');
       return;
@@ -274,19 +308,14 @@ export class AlertasService {
     );
   }
 
-  private async enviarSms(usuario: any, dto: CreateAlertaEmergenciaDto) {
-    // TODO: Implementar con Twilio o similar
+  private async enviarSms(usuario: UsuarioNotificacion, dto: CreateAlertaEmergenciaDto) {
+    // El teléfono ya fue validado en el caller, pero TypeScript necesita null check
+    if (!usuario.telefono) return;
+
     this.logger.debug(
       `[SMS] Enviando notificación`,
       { titulo: dto.titulo, destinatario: this.maskPhone(usuario.telefono) },
     );
-    
-    // const mensaje = `EMERGENCIA: ${dto.titulo}. ${dto.descripcion.substring(0, 100)}...`;
-    // await twilio.messages.create({
-    //   body: mensaje,
-    //   to: usuario.telefono,
-    //   from: process.env.TWILIO_PHONE,
-    // });
   }
 
   // ==========================================================================
@@ -340,7 +369,13 @@ export class AlertasService {
     return alertaResuelta;
   }
 
-  private async notificarResolucion(alerta: any) {
+  private async notificarResolucion(alerta: {
+    id: string;
+    consorcioId: string;
+    tipo: TipoEmergencia;
+    titulo: string;
+    resolucion: string | null;
+  }) {
     const usuarios = await this.prisma.usuarioConsorcio.findMany({
       where: {
         consorcioId: alerta.consorcioId,
@@ -348,8 +383,6 @@ export class AlertasService {
       },
       select: { usuarioId: true },
     });
-
-    const config = EMERGENCIA_CONFIG[alerta.tipo as TipoEmergencia];
 
     for (const { usuarioId } of usuarios) {
       await this.prisma.notificacion.create({
@@ -398,7 +431,7 @@ export class AlertasService {
       hasta?: Date;
     }
   ) {
-    const where: any = { consorcioId };
+    const where: Prisma.AlertaEmergenciaWhereInput = { consorcioId };
 
     if (filtros?.activa !== undefined) {
       where.activa = filtros.activa;

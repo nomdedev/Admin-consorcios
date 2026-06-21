@@ -1,10 +1,11 @@
-import { Controller, Post, Body, UseGuards, Request, Get } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards, Request, Get, Res, Req, UnauthorizedException } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle, SkipThrottle } from "@nestjs/throttler";
 import { AuthService } from "./auth.service";
 import { LoginDto, VerifyMagicLinkDto, AuthResponseDto } from "./dto/auth.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RequestWithUser } from "../../common/interfaces";
+import { Response, Request as ExpressRequest } from "express";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -24,19 +25,37 @@ export class AuthController {
   // ✅ SEGURIDAD: Rate limit para prevenir adivinación de tokens
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 intentos por minuto
   async verify(
-    @Body() verifyDto: VerifyMagicLinkDto
+    @Body() verifyDto: VerifyMagicLinkDto,
+    @Res({ passthrough: true }) response?: Response
   ): Promise<AuthResponseDto> {
-    return this.authService.verifyMagicLink(verifyDto);
+    return this.authService.verifyMagicLink(verifyDto, response);
   }
 
   @Post("refresh")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Refrescar token JWT" })
+  @ApiOperation({ summary: "Refrescar token JWT usando cookie" })
   // ✅ SEGURIDAD: Rate limit moderado para refresh
   @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 por minuto
-  async refresh(@Request() req: RequestWithUser) {
-    return this.authService.refreshToken(req.user.sub);
+  async refresh(
+    @Req() request: ExpressRequest,
+    @Res({ passthrough: true }) response?: Response
+  ): Promise<AuthResponseDto> {
+    const refreshToken = request.cookies?.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException("No refresh token provided");
+    }
+    return this.authService.refreshToken(refreshToken, response);
+  }
+
+  @Post("logout")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Cerrar sesión y limpiar refresh token" })
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 por minuto
+  async logout(
+    @Request() req: RequestWithUser,
+    @Res({ passthrough: true }) response?: Response
+  ) {
+    return this.authService.logout(req.user.sub, response);
   }
 
   @Get("me")

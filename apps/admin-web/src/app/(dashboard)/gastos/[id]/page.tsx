@@ -1,9 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Card,
@@ -27,9 +24,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@vecinosimple/ui";
-import { ArrowLeft, Receipt, Save, Trash2, FileText, Calendar, DollarSign } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, Receipt, Save, Trash2, FileText, DollarSign } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { useGasto, useUpdateGasto, useDeleteGasto, useCategoriasGasto } from "@/features/gastos";
 
 // Schema de validación
@@ -54,7 +55,7 @@ const gastoSchema = z.object({
 
 type GastoFormData = z.infer<typeof gastoSchema>;
 
-export default function GastoDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GastoDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = use(params);
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -154,7 +155,7 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="space-y-6">
         <Link href="/gastos">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -175,7 +176,7 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/gastos">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
@@ -210,9 +211,9 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
               <Button variant="secondary" onClick={() => { setIsEditing(false); reset(); }}>
                 Cancelar
               </Button>
-              <Button onClick={handleSubmit(onSubmit)} disabled={updateGasto.isPending}>
+              <Button disabled={updateGasto.isPending} onClick={handleSubmit(onSubmit)}>
                 {updateGasto.isPending ? (
-                  <Spinner size="sm" className="mr-2" />
+                  <Spinner className="mr-2" size="sm" />
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
@@ -244,39 +245,42 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
             {isEditing ? (
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="concepto">
                     Concepto *
                   </label>
                   <Input
+                    id="concepto"
                     {...register("concepto")}
                     error={errors.concepto?.message}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="descripcionGasto">
                     Descripción
                   </label>
-                  <Textarea {...register("descripcion")} rows={3} />
+                  <Textarea id="descripcionGasto" {...register("descripcion")} rows={3} />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="monto">
                       Monto *
                     </label>
                     <Input
-                      type="number"
+                      id="monto"
                       step="0.01"
+                      type="number"
                       {...register("monto", { valueAsNumber: true })}
                       error={errors.monto?.message}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fechaGasto">
                       Fecha *
                     </label>
                     <Input
+                      id="fechaGasto"
                       type="date"
                       {...register("fechaGasto")}
                       error={errors.fechaGasto?.message}
@@ -286,9 +290,9 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    <span className="block text-sm font-medium text-neutral-700 mb-1">
                       Categoría
-                    </label>
+                    </span>
                     <Select 
                       value={watch("categoriaId") ?? ""} 
                       onValueChange={(v) => setValue("categoriaId", v)}
@@ -360,8 +364,8 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="pt-4 border-t border-neutral-200">
                     <p className="text-sm text-neutral-500 mb-1">Asignado a expensa</p>
                     <Link 
-                      href={`/expensas/${gasto.expensa.id}`}
                       className="text-brand-600 hover:underline"
+                      href={`/expensas/${gasto.expensa.id}`}
                     >
                       {gasto.expensa.periodo}
                     </Link>
@@ -384,9 +388,9 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <span className="block text-sm font-medium text-neutral-700 mb-1">
                     Tipo de comprobante
-                  </label>
+                  </span>
                   <Select 
                     value={watch("tipoComprobante") ?? ""} 
                     onValueChange={(v) => setValue("tipoComprobante", v)}
@@ -407,31 +411,31 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="numeroComprobante">
                       Número
                     </label>
-                    <Input {...register("numeroComprobante")} />
+                    <Input id="numeroComprobante" {...register("numeroComprobante")} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="caeAfip">
                       CAE AFIP
                     </label>
-                    <Input {...register("caeAfip")} />
+                    <Input id="caeAfip" {...register("caeAfip")} />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="fechaComprobante">
                     Fecha del comprobante
                   </label>
-                  <Input type="date" {...register("fechaComprobante")} />
+                  <Input id="fechaComprobante" type="date" {...register("fechaComprobante")} />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="archivoUrl">
                     URL del archivo
                   </label>
-                  <Input {...register("archivoUrl")} placeholder="https://..." />
+                  <Input id="archivoUrl" {...register("archivoUrl")} placeholder="https://..." />
                 </div>
               </div>
             ) : (
@@ -476,10 +480,10 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
                 {gasto.archivoUrl && (
                   <div className="pt-4 border-t border-neutral-200">
                     <a
-                      href={gasto.archivoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 transition-colors"
+                      href={gasto.archivoUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       <FileText className="h-4 w-4" />
                       Ver comprobante adjunto
@@ -498,7 +502,7 @@ export default function GastoDetailPage({ params }: { params: Promise<{ id: stri
           <DialogHeader>
             <DialogTitle>¿Eliminar gasto?</DialogTitle>
             <DialogDescription>
-              Esta acción no se puede deshacer. El gasto "{gasto.concepto}" será eliminado permanentemente.
+              Esta acción no se puede deshacer. El gasto &quot;{gasto.concepto}&quot; será eliminado permanentemente.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

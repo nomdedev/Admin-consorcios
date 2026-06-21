@@ -1,25 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import {
   Building2,
   Plus,
   Search,
   Star,
-  CheckCircle,
-  XCircle,
   Phone,
   Mail,
-  MapPin,
   Wrench,
-  Filter,
   BadgeCheck,
-  FileText,
   Briefcase,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatCurrency } from '@/lib/utils'
+import { useConsorcios } from '@/features/consorcios'
 import {
   useProveedores,
   useProveedoresConsorcio,
@@ -27,6 +22,7 @@ import {
   type Proveedor,
   servicioLabels,
 } from '@/features/proveedores'
+import { cn } from '@/lib/utils'
 
 export default function ProveedoresPage() {
   const [consorcioId, setConsorcioId] = useState<string>('')
@@ -35,6 +31,7 @@ export default function ProveedoresPage() {
   const [soloVerificados, setSoloVerificados] = useState(false)
   const [vistaMarketplace, setVistaMarketplace] = useState(true)
 
+  const { data: consorciosData } = useConsorcios({ limit: 100 })
   const { data: servicios } = useServiciosDisponibles()
 
   // Según la vista, usamos marketplace o proveedores del consorcio
@@ -83,15 +80,15 @@ export default function ProveedoresPage() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/proveedores/trabajos"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/proveedores/trabajos"
           >
             <Briefcase className="h-4 w-4" />
             Ver Trabajos
           </Link>
           <Link
-            href="/proveedores/nuevo"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href="/proveedores/nuevo"
           >
             <Plus className="h-4 w-4" />
             Nuevo Proveedor
@@ -159,24 +156,24 @@ export default function ProveedoresPage() {
           <div className="flex-shrink-0">
             <div className="inline-flex rounded-lg border border-gray-200 p-1">
               <button
-                onClick={() => setVistaMarketplace(true)}
                 className={cn(
                   'px-4 py-2 text-sm font-medium rounded-md transition-colors',
                   vistaMarketplace
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 )}
+                onClick={() => setVistaMarketplace(true)}
               >
                 Marketplace
               </button>
               <button
-                onClick={() => setVistaMarketplace(false)}
                 className={cn(
                   'px-4 py-2 text-sm font-medium rounded-md transition-colors',
                   !vistaMarketplace
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 )}
+                onClick={() => setVistaMarketplace(false)}
               >
                 Mis Proveedores
               </button>
@@ -187,14 +184,16 @@ export default function ProveedoresPage() {
           {!vistaMarketplace && (
             <div className="flex-1 max-w-xs">
               <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 value={consorcioId}
                 onChange={(e) => setConsorcioId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">Seleccionar consorcio...</option>
-                {/* TODO: Cargar consorcios reales */}
-                <option value="demo-1">Edificio Demo 1</option>
-                <option value="demo-2">Edificio Demo 2</option>
+                {consorciosData?.data?.map((consorcio) => (
+                  <option key={consorcio.id} value={consorcio.id}>
+                    {consorcio.nombre}
+                  </option>
+                ))}
               </select>
             </div>
           )}
@@ -204,11 +203,11 @@ export default function ProveedoresPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
-                type="text"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Buscar por nombre o CUIT..."
+                type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -216,9 +215,9 @@ export default function ProveedoresPage() {
           {/* Filtro de servicio */}
           <div className="w-full md:w-48">
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               value={servicioFiltro}
               onChange={(e) => setServicioFiltro(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Todos los servicios</option>
               {servicios?.map((servicio) => (
@@ -233,10 +232,10 @@ export default function ProveedoresPage() {
           {vistaMarketplace && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
-                type="checkbox"
                 checked={soloVerificados}
-                onChange={(e) => setSoloVerificados(e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                type="checkbox"
+                onChange={(e) => setSoloVerificados(e.target.checked)}
               />
               <span className="text-sm text-gray-700">Solo verificados</span>
             </label>
@@ -264,8 +263,8 @@ export default function ProveedoresPage() {
               : 'No tenés proveedores asociados a este consorcio'}
           </p>
           <Link
-            href="/proveedores/nuevo"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href="/proveedores/nuevo"
           >
             <Plus className="h-4 w-4" />
             Agregar Proveedor
@@ -289,8 +288,8 @@ export default function ProveedoresPage() {
 function ProveedorCard({ proveedor }: { proveedor: Proveedor }) {
   return (
     <Link
-      href={`/proveedores/${proveedor.id}`}
       className="bg-white rounded-xl border border-gray-200 p-5 hover:border-primary-300 hover:shadow-md transition-all"
+      href={`/proveedores/${proveedor.id}`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -318,8 +317,8 @@ function ProveedorCard({ proveedor }: { proveedor: Proveedor }) {
         <div className="flex flex-wrap gap-1">
           {proveedor.servicios.slice(0, 3).map((servicio) => (
             <span
-              key={servicio}
               className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full"
+              key={servicio}
             >
               {servicioLabels[servicio] || servicio}
             </span>

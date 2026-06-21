@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { db, PaqueteLocal } from '@/offline/db'
+import { useState, useEffect } from 'react'
+
+import { db } from '@/offline/db'
+
+import type { PaqueteLocal } from '@/offline/db';
 
 export default function EntregarPaquetePage() {
   const router = useRouter()
@@ -20,28 +23,28 @@ export default function EntregarPaquetePage() {
   })
   
   useEffect(() => {
+    const loadPaquete = async () => {
+      try {
+        const p = await db.paquetes.get(paqueteId)
+        if (p) {
+          setPaquete(p)
+        }
+      } catch (error) {
+        console.error('Error loading paquete:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     loadPaquete()
   }, [paqueteId])
-  
-  const loadPaquete = async () => {
-    try {
-      const p = await db.paquetes.get(paqueteId)
-      if (p) {
-        setPaquete(p)
-      }
-    } catch (error) {
-      console.error('Error loading paquete:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!paquete) return
-    
+
     setIsSaving(true)
-    
+
     try {
       // Actualizar paquete con datos de entrega
       await db.paquetes.update(paqueteId, {
@@ -50,13 +53,9 @@ export default function EntregarPaquetePage() {
         firmaDni: formData.dniRetira,
         syncStatus: 'pending' // Marcar para re-sincronizar
       })
-      
-      // Intentar sincronizar si hay conexión
-      if (navigator.onLine) {
-        // En producción: llamar al API
-        console.log('Sincronizando entrega...')
-      }
-      
+
+      // El sync manager se encargará de sincronizar cuando haya conexión
+
       router.push('/app/paquetes')
     } catch (error) {
       console.error('Error al entregar paquete:', error)
@@ -70,7 +69,7 @@ export default function EntregarPaquetePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-2" />
           <p className="text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -82,7 +81,7 @@ export default function EntregarPaquetePage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Paquete no encontrado</p>
-          <Link href="/app/paquetes" className="text-blue-600 font-medium">
+          <Link className="text-blue-600 font-medium" href="/app/paquetes">
             Volver a paquetes
           </Link>
         </div>
@@ -94,7 +93,7 @@ export default function EntregarPaquetePage() {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <div className="bg-blue-600 text-white p-6">
-          <Link href="/app/paquetes" className="text-blue-200 text-sm mb-2 block">
+          <Link className="text-blue-200 text-sm mb-2 block" href="/app/paquetes">
             ← Volver
           </Link>
           <h1 className="text-xl font-bold">Paquete ya entregado</h1>
@@ -142,7 +141,7 @@ export default function EntregarPaquetePage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-blue-600 text-white p-6">
-        <Link href="/app/paquetes" className="text-blue-200 text-sm mb-2 block">
+        <Link className="text-blue-200 text-sm mb-2 block" href="/app/paquetes">
           ← Volver
         </Link>
         <h1 className="text-xl font-bold">Entregar paquete</h1>
@@ -164,53 +163,53 @@ export default function EntregarPaquetePage() {
         </div>
         
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm space-y-4">
+        <form className="bg-white rounded-xl p-6 shadow-sm space-y-4" onSubmit={handleSubmit}>
           <h3 className="font-semibold text-gray-900 mb-2">Datos de quien retira</h3>
           
           <div>
-            <label htmlFor="nombreRetira" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nombreRetira">
               Nombre completo *
             </label>
             <input
-              type="text"
-              id="nombreRetira"
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              id="nombreRetira"
               placeholder="Juan Pérez"
+              type="text"
               value={formData.nombreRetira}
               onChange={(e) => setFormData(prev => ({ ...prev, nombreRetira: e.target.value }))}
             />
           </div>
           
           <div>
-            <label htmlFor="dniRetira" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="dniRetira">
               DNI *
             </label>
             <input
-              type="text"
-              id="dniRetira"
               required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              id="dniRetira"
               inputMode="numeric"
               maxLength={8}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="12345678"
+              type="text"
               value={formData.dniRetira}
-              onChange={(e) => setFormData(prev => ({ ...prev, dniRetira: e.target.value.replace(/\D/g, '') }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, dniRetira: e.target.value.replaceAll(/\D/g, '') }))}
             />
             <p className="text-xs text-gray-500 mt-1">Solo se guardarán los últimos 4 dígitos</p>
           </div>
           
           <div className="pt-4">
             <button
-              type="submit"
-              disabled={isSaving || !formData.nombreRetira || !formData.dniRetira}
               className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              disabled={isSaving || !formData.nombreRetira || !formData.dniRetira}
+              type="submit"
             >
               {isSaving ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle className="opacity-25" cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
                   </svg>
                   Registrando...
                 </span>

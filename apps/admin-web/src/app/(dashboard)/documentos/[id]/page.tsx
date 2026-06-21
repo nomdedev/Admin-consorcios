@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   FileText,
@@ -17,8 +14,10 @@ import {
   Save,
   X,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
 import { useAuth } from '@/features/auth'
 import {
   useDocumento,
@@ -32,6 +31,7 @@ import {
   formatFileSize,
   getFileIcon,
 } from '@/features/documentos'
+import { cn, formatDate } from '@/lib/utils'
 
 export default function DocumentoDetailPage() {
   const params = useParams()
@@ -110,8 +110,8 @@ export default function DocumentoDetailPage() {
           El documento que buscás no existe o fue eliminado
         </p>
         <Link
-          href="/documentos"
           className="mt-4 inline-flex items-center gap-2 text-primary-600 hover:text-primary-700"
+          href="/documentos"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al listado
@@ -126,19 +126,19 @@ export default function DocumentoDetailPage() {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/documentos"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Volver a documentos"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            href="/documentos"
           >
             <ArrowLeft className="h-5 w-5 text-gray-500" />
           </Link>
           <div>
             {isEditing ? (
               <input
+                className="text-2xl font-bold text-gray-900 border-b-2 border-primary-500 outline-none bg-transparent"
                 type="text"
                 value={editForm.nombre}
                 onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
-                className="text-2xl font-bold text-gray-900 border-b-2 border-primary-500 outline-none bg-transparent"
               />
             ) : (
               <h1 className="text-2xl font-bold text-gray-900">{documento.nombre}</h1>
@@ -171,16 +171,16 @@ export default function DocumentoDetailPage() {
           {isEditing ? (
             <>
               <button
-                onClick={() => setIsEditing(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
+                onClick={() => setIsEditing(false)}
               >
                 <X className="h-4 w-4" />
                 Cancelar
               </button>
               <button
-                onClick={handleSave}
-                disabled={updateDocumento.isPending}
                 className="px-4 py-2 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
+                disabled={updateDocumento.isPending}
+                onClick={handleSave}
               >
                 <Save className="h-4 w-4" />
                 {updateDocumento.isPending ? 'Guardando...' : 'Guardar'}
@@ -189,15 +189,15 @@ export default function DocumentoDetailPage() {
           ) : (
             <>
               <button
-                onClick={handleStartEdit}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
+                onClick={handleStartEdit}
               >
                 <Edit2 className="h-4 w-4" />
                 Editar
               </button>
               <button
-                onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 text-red-700 bg-white border border-red-300 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                onClick={() => setShowDeleteModal(true)}
               >
                 <Trash2 className="h-4 w-4" />
                 Eliminar
@@ -221,18 +221,18 @@ export default function DocumentoDetailPage() {
 
             <div className="flex justify-center gap-3 mt-6">
               <a
-                href={documento.archivoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                href={documento.archivoUrl}
+                rel="noopener noreferrer"
+                target="_blank"
               >
                 <ExternalLink className="h-4 w-4" />
                 Abrir archivo
               </a>
               <a
-                href={documento.archivoUrl}
-                download={documento.archivoNombre}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                download={documento.archivoNombre}
+                href={documento.archivoUrl}
               >
                 <Download className="h-4 w-4" />
                 Descargar
@@ -251,13 +251,13 @@ export default function DocumentoDetailPage() {
           <div className="space-y-4">
             {/* Descripción */}
             <div>
-              <label className="text-sm text-gray-500">Descripción</label>
+              <p className="text-sm text-gray-500">Descripción</p>
               {isEditing ? (
                 <textarea
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  rows={3}
                   value={editForm.descripcion}
                   onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
-                  rows={3}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               ) : (
                 <p className="text-gray-900">
@@ -268,12 +268,12 @@ export default function DocumentoDetailPage() {
 
             {/* Categoría */}
             <div>
-              <label className="text-sm text-gray-500">Categoría</label>
+              <p className="text-sm text-gray-500">Categoría</p>
               {isEditing ? (
                 <select
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   value={editForm.categoria}
                   onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value as CategoriaDocumento })}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   {CATEGORIAS_DOCUMENTO.map((cat) => (
                     <option key={cat} value={cat}>
@@ -291,30 +291,30 @@ export default function DocumentoDetailPage() {
             {/* Visibilidad */}
             {isEditing && (
               <div>
-                <label className="text-sm text-gray-500">Visibilidad</label>
+                <p className="text-sm text-gray-500">Visibilidad</p>
                 <div className="flex gap-2 mt-1">
                   <button
-                    type="button"
-                    onClick={() => setEditForm({ ...editForm, esPublico: true })}
                     className={cn(
                       'flex-1 px-3 py-2 text-sm rounded-lg border transition-colors',
                       editForm.esPublico
                         ? 'border-green-500 bg-green-50 text-green-700'
                         : 'border-gray-300 text-gray-700'
                     )}
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, esPublico: true })}
                   >
                     <Globe className="h-4 w-4 inline mr-1" />
                     Público
                   </button>
                   <button
-                    type="button"
-                    onClick={() => setEditForm({ ...editForm, esPublico: false })}
                     className={cn(
                       'flex-1 px-3 py-2 text-sm rounded-lg border transition-colors',
                       !editForm.esPublico
                         ? 'border-orange-500 bg-orange-50 text-orange-700'
                         : 'border-gray-300 text-gray-700'
                     )}
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, esPublico: false })}
                   >
                     <Lock className="h-4 w-4 inline mr-1" />
                     Privado
@@ -339,7 +339,7 @@ export default function DocumentoDetailPage() {
 
             {/* Archivo */}
             <div className="pt-4 border-t border-gray-200">
-              <label className="text-sm text-gray-500">Detalles del archivo</label>
+              <p className="text-sm text-gray-500">Detalles del archivo</p>
               <div className="mt-2 text-sm">
                 <p><span className="text-gray-500">Nombre:</span> {documento.archivoNombre}</p>
                 <p><span className="text-gray-500">Tipo:</span> {documento.archivoTipo}</p>
@@ -358,20 +358,20 @@ export default function DocumentoDetailPage() {
               ¿Eliminar documento?
             </h3>
             <p className="text-gray-500 mt-2">
-              Esta acción no se puede deshacer. El documento "{documento.nombre}" 
+              Esta acción no se puede deshacer. El documento &quot;{documento.nombre}&quot;
               será eliminado permanentemente.
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setShowDeleteModal(false)}
               >
                 Cancelar
               </button>
               <button
-                onClick={handleDelete}
-                disabled={deleteDocumento.isPending}
                 className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                disabled={deleteDocumento.isPending}
+                onClick={handleDelete}
               >
                 {deleteDocumento.isPending ? 'Eliminando...' : 'Eliminar'}
               </button>

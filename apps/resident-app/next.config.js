@@ -1,3 +1,4 @@
+const { withSentryConfig } = require('@sentry/nextjs');
 const withPWA = require("next-pwa")({
   dest: "public",
   register: true,
@@ -8,15 +9,14 @@ const withPWA = require("next-pwa")({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@vecinosimple/ui", "@vecinosimple/business-logic"],
-  eslint: {
-    // Deshabilitamos ESLint durante build para permitir warnings de props order
-    // TODO: Habilitar una vez corregidos los warnings
-    ignoreDuringBuilds: true,
-  },
+  // NOTE: TypeScript valida correctamente durante el build
   typescript: {
-    // Errores de TypeScript ya corregidos - habilitar validación en producción
     ignoreBuildErrors: false,
   },
 };
 
-module.exports = withPWA(nextConfig);
+module.exports = withSentryConfig(
+  withPWA(nextConfig),
+  { silent: true },
+  { hideSourceMaps: true }
+);

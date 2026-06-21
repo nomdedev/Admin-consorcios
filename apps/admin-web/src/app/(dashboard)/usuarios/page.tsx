@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
+
 import { Spinner } from 'ui';
+
 import UsuariosListContent from './UsuariosListContent';
 
 export default function UsuariosPage() {

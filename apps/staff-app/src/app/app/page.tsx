@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
 import { db, getPendingSync } from '@/offline/db';
 
 interface Stats {
@@ -119,32 +120,32 @@ export default function AppHomePage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <QuickAction
+          color="bg-blue-500"
           href="/app/bitacora/nuevo"
           icon="📝"
           label="Nueva entrada"
           subtitle="Bitácora"
-          color="bg-blue-500"
         />
         <QuickAction
+          color="bg-green-500"
           href="/app/paquetes/recibir"
           icon="📦"
           label="Recibir paquete"
           subtitle="Paquetería"
-          color="bg-green-500"
         />
         <QuickAction
+          color="bg-purple-500"
           href="/app/rondas/nueva"
           icon="🔒"
           label="Iniciar ronda"
           subtitle="Vigilancia"
-          color="bg-purple-500"
         />
         <QuickAction
+          color="bg-orange-500"
           href="/app/paquetes/entregar"
           icon="✅"
           label="Entregar paquete"
           subtitle={`${stats.paquetesPendientes} pendientes`}
-          color="bg-orange-500"
         />
       </div>
 
@@ -180,8 +181,8 @@ export default function AppHomePage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold text-gray-800">Actividad reciente</h2>
           <Link
-            href="/app/bitacora"
             className="text-blue-600 text-sm font-medium"
+            href="/app/bitacora"
           >
             Ver todo
           </Link>
@@ -207,8 +208,8 @@ function QuickAction({
 }) {
   return (
     <Link
-      href={href}
       className="bg-white rounded-xl shadow p-4 hover:shadow-md transition-shadow min-h-[100px] flex flex-col justify-between"
+      href={href}
     >
       <div className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center text-xl`}>
         {icon}
@@ -295,8 +296,8 @@ function RecentActivity() {
     <div className="space-y-3">
       {activities.map((activity) => (
         <div
-          key={activity.localId}
           className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0"
+          key={activity.localId}
         >
           <span className="text-xl">{getTipoIcon(activity.tipo)}</span>
           <div className="flex-1 min-w-0">

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(if:*)",
+      "Bash(then echo \"ADVERTENCIA: .env existe en raíz\")",
+      "Bash(else echo:*)",
+      "Bash(fi:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npm run lint:*)",
+      "Bash(tee:*)",
+      "Bash(npm audit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npx next build:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(npm update:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(Select-String:*)",
+      "Bash(Select-Object:*)",
+      "Bash(npx eslint:*)"
+    ]
+  },
+  "spinnerTipsEnabled": true
+}

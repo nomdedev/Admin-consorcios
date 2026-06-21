@@ -1,16 +1,16 @@
 'use client';
 
 import { Button } from '@vecinosimple/ui';
-import { AlertTriangle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, RefreshCw, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -20,15 +20,15 @@ export default function Error({
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    globalThis.addEventListener('online', handleOnline);
+    globalThis.addEventListener('offline', handleOffline);
 
     // Log the error
     console.error('Resident App error:', error);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      globalThis.removeEventListener('online', handleOnline);
+      globalThis.removeEventListener('offline', handleOffline);
     };
   }, [error]);
 
@@ -71,12 +71,12 @@ export default function Error({
         </div>
 
         <div className="space-y-3">
-          <Button onClick={reset} className="w-full" size="lg" disabled={!isOnline}>
+          <Button className="w-full" disabled={!isOnline} size="lg" onClick={reset}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Intentar nuevamente
           </Button>
 
-          <Button variant="secondary" asChild className="w-full">
+          <Button asChild className="w-full" variant="secondary">
             <a href="/app">
               Ir a mi panel
             </a>

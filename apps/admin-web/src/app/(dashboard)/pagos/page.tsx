@@ -1,7 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useState, useMemo } from 'react';
+
+import { useConsorcios } from '@/features/consorcios';
+import {
+  usePagos,
+  usePagosStats,
+  type FilterPagosDto,
+  type MetodoPago,
+  type EstadoPago,
+  type Pago,
+} from '@/features/pagos';
+import { formatCurrency, formatDate, formatPeriodo } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -13,16 +24,6 @@ import {
   Badge,
   Spinner,
 } from 'ui';
-import {
-  usePagos,
-  usePagosStats,
-  type FilterPagosDto,
-  type MetodoPago,
-  type EstadoPago,
-  type Pago,
-} from '@/features/pagos';
-import { useConsorcios } from '@/features/consorcios';
-import { formatCurrency, formatDate, formatPeriodo } from '@/lib/utils';
 
 // Helpers para badges - variantes del Badge de ./ui: default, success, warning, error, info
 const estadoBadge: Record<
@@ -71,12 +72,12 @@ function PagoRow({ pago }: { pago: Pago }) {
       <td className="p-4">
         <div className="flex flex-wrap gap-1">
           {pago.periodosAbonados.slice(0, 3).map((p) => (
-            <Badge key={p} variant="default" className="text-xs">
+            <Badge className="text-xs" key={p} variant="default">
               {formatPeriodo(p)}
             </Badge>
           ))}
           {pago.periodosAbonados.length > 3 && (
-            <Badge variant="default" className="text-xs">
+            <Badge className="text-xs" variant="default">
               +{pago.periodosAbonados.length - 3}
             </Badge>
           )}
@@ -96,7 +97,7 @@ function PagoRow({ pago }: { pago: Pago }) {
       </td>
       <td className="p-4">
         <Link href={`/pagos/${pago.id}`}>
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             Ver
           </Button>
         </Link>
@@ -244,14 +245,15 @@ export default function PagosPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* Consorcio */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Consorcio</label>
+              <label className="text-sm font-medium" htmlFor="consorcio-filter">Consorcio</label>
               <select
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="consorcio-filter"
                 value={consorcioFilter}
                 onChange={(e) => {
                   setConsorcioFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="">Todos</option>
                 {consorcios.map((c) => (
@@ -264,14 +266,15 @@ export default function PagosPage() {
 
             {/* Estado */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Estado</label>
+              <label className="text-sm font-medium" htmlFor="estado-filter">Estado</label>
               <select
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="estado-filter"
                 value={estadoFilter}
                 onChange={(e) => {
                   setEstadoFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="">Todos</option>
                 {Object.entries(estadoBadge).map(([value, { label }]) => (
@@ -284,14 +287,15 @@ export default function PagosPage() {
 
             {/* Método de pago */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Método</label>
+              <label className="text-sm font-medium" htmlFor="metodo-filter">Método</label>
               <select
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="metodo-filter"
                 value={metodoFilter}
                 onChange={(e) => {
                   setMetodoFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="">Todos</option>
                 {Object.entries(metodoPagoLabels).map(([value, label]) => (
@@ -304,14 +308,15 @@ export default function PagosPage() {
 
             {/* Período */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Período</label>
+              <label className="text-sm font-medium" htmlFor="periodo-filter">Período</label>
               <select
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                id="periodo-filter"
                 value={periodoFilter}
                 onChange={(e) => {
                   setPeriodoFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="">Todos</option>
                 {periodosOptions.map((p) => (
@@ -324,8 +329,9 @@ export default function PagosPage() {
 
             {/* Fecha desde */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Desde</label>
+              <label className="text-sm font-medium" htmlFor="fecha-desde">Desde</label>
               <Input
+                id="fecha-desde"
                 type="date"
                 value={fechaDesde}
                 onChange={(e) => {
@@ -337,8 +343,9 @@ export default function PagosPage() {
 
             {/* Fecha hasta */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Hasta</label>
+              <label className="text-sm font-medium" htmlFor="fecha-hasta">Hasta</label>
               <Input
+                id="fecha-hasta"
                 type="date"
                 value={fechaHasta}
                 onChange={(e) => {
@@ -352,8 +359,8 @@ export default function PagosPage() {
           {/* Botón limpiar */}
           <div className="mt-4 flex justify-end">
             <Button
-              variant="ghost"
               size="sm"
+              variant="ghost"
               onClick={() => {
                 setConsorcioFilter('');
                 setEstadoFilter('');
@@ -416,13 +423,13 @@ export default function PagosPage() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t bg-muted/30">
-                      <td colSpan={3} className="p-4 font-medium">
+                      <td className="p-4 font-medium" colSpan={3}>
                         Subtotal página
                       </td>
                       <td className="p-4 font-mono font-bold">
                         {formatCurrency(sumaPagina)}
                       </td>
-                      <td colSpan={4}></td>
+                      <td colSpan={4} />
                     </tr>
                   </tfoot>
                 </table>
@@ -436,18 +443,18 @@ export default function PagosPage() {
                   </p>
                   <div className="flex gap-2">
                     <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
                       Anterior
                     </Button>
                     <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     >
                       Siguiente
                     </Button>

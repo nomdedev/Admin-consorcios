@@ -1,5 +1,6 @@
-import { Suspense } from "react";
 import { Spinner } from "@vecinosimple/ui";
+import { Suspense } from "react";
+
 import NuevoTicketForm from "./NuevoTicketForm";
 
 export default function NuevoTicketPage() {

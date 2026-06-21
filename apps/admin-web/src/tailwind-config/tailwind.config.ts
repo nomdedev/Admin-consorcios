@@ -1,3 +1,6 @@
+import forms from "@tailwindcss/forms";
+import typography from "@tailwindcss/typography";
+
 import type { Config } from "tailwindcss";
 
 // =============================================================================
@@ -153,10 +156,10 @@ const config: Config = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms")({
+    forms({
       strategy: "class", // No aplicar estilos por defecto
     }),
-    require("@tailwindcss/typography"),
+    typography,
   ],
 };
 

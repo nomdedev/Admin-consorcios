@@ -4,13 +4,13 @@ import { Button } from '@vecinosimple/ui';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect } from 'react';
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Application error:', error);
@@ -32,11 +32,11 @@ export default function Error({
           </p>
         </div>
         <div className="space-y-4">
-          <Button onClick={reset} className="w-full">
+          <Button className="w-full" onClick={reset}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Intentar nuevamente
           </Button>
-          <Button variant="secondary" asChild className="w-full">
+          <Button asChild className="w-full" variant="secondary">
             <a href="/">
               Volver al inicio
             </a>

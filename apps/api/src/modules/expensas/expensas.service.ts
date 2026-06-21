@@ -21,6 +21,7 @@ import {
   EstadoExpensa,
   ProrrateoResultDto,
   DetalleExpensaResponseDto,
+  ExpensaResponseDto,
 } from './dto';
 import { Prisma, Rol } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -138,8 +139,8 @@ export class ExpensasService {
     // SEGURIDAD: Validar que el período no sea muy futuro (máximo 3 meses adelante)
     const ahora = new Date();
     const partesPeriodo = dto.periodo.split('-');
-    const anio = parseInt(partesPeriodo[0] || '0', 10);
-    const mes = parseInt(partesPeriodo[1] || '1', 10);
+    const anio = Number.parseInt(partesPeriodo[0] || '0', 10);
+    const mes = Number.parseInt(partesPeriodo[1] || '1', 10);
     const periodoDate = new Date(anio, mes - 1, 1);
     const tresMesesAdelante = new Date(ahora.getFullYear(), ahora.getMonth() + 3, 1);
     
@@ -406,12 +407,12 @@ export class ExpensasService {
         fechaSegundoVencimiento: datosActualizables.fechaSegundoVencimiento
           ? new Date(datosActualizables.fechaSegundoVencimiento)
           : undefined,
-        recargoSegundoVencimiento: datosActualizables.recargoSegundoVencimiento !== undefined
-          ? new Decimal(datosActualizables.recargoSegundoVencimiento)
-          : undefined,
-        fondoReserva: datosActualizables.fondoReserva !== undefined
-          ? new Decimal(datosActualizables.fondoReserva)
-          : undefined,
+        recargoSegundoVencimiento: datosActualizables.recargoSegundoVencimiento === undefined
+          ? undefined
+          : new Decimal(datosActualizables.recargoSegundoVencimiento),
+        fondoReserva: datosActualizables.fondoReserva === undefined
+          ? undefined
+          : new Decimal(datosActualizables.fondoReserva),
       },
     });
 
@@ -732,12 +733,14 @@ export class ExpensasService {
     const totalARecaudar = detallesCalculados.reduce((sum, d) => sum + d.total, 0);
 
     return {
+      // NOTE: Los tipos de Prisma tienen Decimal, el DTO espera number.
+      // La serialización de NestJS convierte automáticamente Decimal a number.
       expensa: {
         ...expensa,
         totalGastosOrdinarios: totalOrdinario,
         totalGastosExtraordinarios: totalExtraordinario,
         estado: EstadoExpensa.LIQUIDADA,
-      } as any,
+      } as unknown as ExpensaResponseDto,
       detalles: detallesCalculados,
       resumen: {
         totalUnidades: unidades.length,
@@ -847,8 +850,8 @@ export class ExpensasService {
 
   private calcularPeriodoAnterior(periodo: string): string {
     const partes = periodo.split('-');
-    const anio = parseInt(partes[0] || '0', 10);
-    const mes = parseInt(partes[1] || '1', 10);
+    const anio = Number.parseInt(partes[0] || '0', 10);
+    const mes = Number.parseInt(partes[1] || '1', 10);
     const fecha = new Date(anio, mes - 2, 1); // mes - 1 (0-indexed) - 1 (anterior)
     const anioAnterior = fecha.getFullYear();
     const mesAnterior = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -900,9 +903,9 @@ export class ExpensasService {
     
     // Remover tags HTML potencialmente peligrosos
     return texto
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-      .replace(/on\w+\s*=/gi, '')
+      .replaceAll(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replaceAll(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replaceAll(/on\w+\s*=/gi, '')
       .trim();
   }
 
@@ -1082,7 +1085,7 @@ export class ExpensasService {
       const mes = partes[1] ?? '01';
       const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      const mesIdx = parseInt(mes, 10) - 1;
+      const mesIdx = Number.parseInt(mes, 10) - 1;
       const periodoFormateado = `${meses[mesIdx] ?? mes} ${anio}`;
 
       // Enviar notificación a cada usuario

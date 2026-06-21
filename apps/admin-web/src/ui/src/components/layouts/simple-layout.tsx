@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { ArrowLeft } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "../../lib/utils";
 import { Button } from "../primitives/button";
@@ -44,10 +44,10 @@ export const SimpleLayout: React.FC<SimpleLayoutProps> = ({
         <div className="flex items-center gap-3">
           {(backHref || onBack) && (
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
               aria-label="Volver"
+              size="sm"
+              variant="ghost"
+              onClick={onBack}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

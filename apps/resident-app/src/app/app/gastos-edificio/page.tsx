@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 import { formatCurrency, formatDate, formatPeriodo } from '@/lib/utils';
 
 interface Gasto {
@@ -43,17 +45,8 @@ export default function GastosEdificioPage() {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-portal/gastos-edificio/categorias`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setCategorias(data);
-        }
+        const data = await apiClient.get<Categoria[]>('/mi-portal/gastos-edificio/categorias');
+        setCategorias(data);
       } catch (error) {
         console.error('Error fetching categorias:', error);
       }
@@ -66,26 +59,14 @@ export default function GastosEdificioPage() {
     const fetchGastos = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('accessToken');
-        const params = new URLSearchParams();
-        
-        if (filters.periodo) params.append('periodo', filters.periodo);
-        if (filters.categoriaId) params.append('categoriaId', filters.categoriaId);
-        if (filters.esExtraordinario) {
-          params.append('esExtraordinario', filters.esExtraordinario);
-        }
+        const params: Record<string, string> = {};
+        if (filters.periodo) params.periodo = filters.periodo;
+        if (filters.categoriaId) params.categoriaId = filters.categoriaId;
+        if (filters.esExtraordinario) params.esExtraordinario = filters.esExtraordinario;
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-portal/gastos-edificio?${params}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data: GastosResponse = await response.json();
-          setGastos(data.data);
-          setTotalMonto(data.totalMonto);
-        }
+        const data = await apiClient.get<GastosResponse>('/mi-portal/gastos-edificio', params);
+        setGastos(data.data);
+        setTotalMonto(data.totalMonto);
       } catch (error) {
         console.error('Error fetching gastos:', error);
       } finally {
@@ -112,9 +93,9 @@ export default function GastosEdificioPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/expensas"
-          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
           aria-label="Volver a expensas"
+          className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/expensas"
         >
           ←
         </Link>
@@ -137,10 +118,10 @@ export default function GastosEdificioPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">
         <select
+          aria-label="Filtrar por período"
+          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
           value={filters.periodo}
           onChange={(e) => setFilters((f) => ({ ...f, periodo: e.target.value }))}
-          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
-          aria-label="Filtrar por período"
         >
           {periodoOptions.map((p) => (
             <option key={p} value={p}>
@@ -150,10 +131,10 @@ export default function GastosEdificioPage() {
         </select>
 
         <select
+          aria-label="Filtrar por categoría"
+          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
           value={filters.categoriaId}
           onChange={(e) => setFilters((f) => ({ ...f, categoriaId: e.target.value }))}
-          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
-          aria-label="Filtrar por categoría"
         >
           <option value="">Todas las categorías</option>
           {categorias.map((cat) => (
@@ -164,12 +145,12 @@ export default function GastosEdificioPage() {
         </select>
 
         <select
+          aria-label="Filtrar por tipo"
+          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
           value={filters.esExtraordinario}
           onChange={(e) =>
             setFilters((f) => ({ ...f, esExtraordinario: e.target.value }))
           }
-          className="px-4 py-2 rounded-lg border border-gray-300 bg-white min-h-[44px]"
-          aria-label="Filtrar por tipo"
         >
           <option value="">Todos los tipos</option>
           <option value="false">Ordinarios</option>
@@ -181,9 +162,9 @@ export default function GastosEdificioPage() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+            <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+              <div className="h-3 bg-gray-200 rounded w-1/3" />
             </div>
           ))}
         </div>
@@ -194,7 +175,7 @@ export default function GastosEdificioPage() {
       ) : (
         <div className="space-y-4">
           {gastos.map((gasto) => (
-            <div key={gasto.id} className="bg-white rounded-xl p-4 shadow">
+            <div className="bg-white rounded-xl p-4 shadow" key={gasto.id}>
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-800">{gasto.concepto}</p>
@@ -224,10 +205,10 @@ export default function GastosEdificioPage() {
               {gasto.archivoUrl && (
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <a
-                    href={gasto.archivoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700 hover:underline min-h-[44px] py-2"
+                    href={gasto.archivoUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
                   >
                     📄 Ver comprobante
                     {gasto.tipoComprobante && (
@@ -246,8 +227,8 @@ export default function GastosEdificioPage() {
 
       {/* Link a resumen de edificio */}
       <Link
-        href="/app/resumen-edificio"
         className="block bg-gray-50 rounded-xl p-4 text-center text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]"
+        href="/app/resumen-edificio"
       >
         📊 Ver resumen general del edificio
       </Link>

@@ -1,10 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import {
   AlertTriangle,
-  Plus,
   Bell,
   CheckCircle,
   Clock,
@@ -12,9 +9,9 @@ import {
   Filter,
   RefreshCw,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
-import { useAuth } from '@/features/auth'
 import {
   useAlertas,
   useAlertasActivas,
@@ -27,6 +24,8 @@ import {
   formatTiempoTranscurrido,
   getAlertaPrioridad,
 } from '@/features/alertas'
+import { useAuth } from '@/features/auth'
+import { cn, formatDate } from '@/lib/utils'
 
 export default function AlertasPage() {
   const { consorcioId } = useAuth()
@@ -56,8 +55,8 @@ export default function AlertasPage() {
           </p>
         </div>
         <Link
-          href="/alertas/nueva"
           className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          href="/alertas/nueva"
         >
           <AlertTriangle className="h-4 w-4" />
           Nueva Emergencia
@@ -80,9 +79,9 @@ export default function AlertasPage() {
               </p>
             </div>
             <button
-              onClick={() => refetch()}
               className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
               title="Actualizar"
+              onClick={() => refetch()}
             >
               <RefreshCw className="h-5 w-5" />
             </button>
@@ -149,9 +148,9 @@ export default function AlertasPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
             <select
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               value={filtroTipo}
               onChange={(e) => setFiltroTipo(e.target.value as TipoEmergencia | '')}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Todos los tipos</option>
               {TIPOS_EMERGENCIA.map((tipo) => (
@@ -165,14 +164,14 @@ export default function AlertasPage() {
           <div className="flex gap-2">
             {(['todas', 'activas', 'resueltas'] as const).map((estado) => (
               <button
-                key={estado}
-                onClick={() => setFiltroEstado(estado)}
                 className={cn(
                   'px-4 py-2 rounded-lg font-medium transition-colors capitalize',
                   filtroEstado === estado
                     ? 'bg-primary-100 text-primary-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 )}
+                key={estado}
+                onClick={() => setFiltroEstado(estado)}
               >
                 {estado}
               </button>
@@ -199,7 +198,7 @@ export default function AlertasPage() {
           </div>
         ) : (
           alertas?.map((alerta) => (
-            <AlertaCard key={alerta.id} alerta={alerta} />
+            <AlertaCard alerta={alerta} key={alerta.id} />
           ))
         )}
       </div>
@@ -212,7 +211,6 @@ function AlertaCard({ alerta }: { alerta: AlertaEmergencia }) {
 
   return (
     <Link
-      href={`/alertas/${alerta.id}`}
       className={cn(
         'block bg-white rounded-xl border-2 p-6 transition-all hover:shadow-md',
         alerta.activa
@@ -223,6 +221,7 @@ function AlertaCard({ alerta }: { alerta: AlertaEmergencia }) {
             : 'border-yellow-300 bg-yellow-50'
           : 'border-gray-200'
       )}
+      href={`/alertas/${alerta.id}`}
     >
       <div className="flex items-start gap-4">
         {/* Icon */}

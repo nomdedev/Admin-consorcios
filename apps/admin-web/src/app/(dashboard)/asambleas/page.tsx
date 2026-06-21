@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import {
   Vote,
   Plus,
@@ -9,29 +7,30 @@ import {
   Users,
   Clock,
   CheckCircle,
-  XCircle,
   PlayCircle,
   Search,
-  Filter,
   MapPin,
   Video,
   FileText,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
 import {
   useAsambleas,
   type Asamblea,
   type EstadoAsamblea,
   estadoAsambleaLabels,
-  estadoAsambleaColors,
 } from '@/features/asambleas'
+import { useConsorcios } from '@/features/consorcios'
+import { cn } from '@/lib/utils'
 
 export default function AsambleasPage() {
   const [consorcioId, setConsorcioId] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoAsamblea | ''>('')
 
+  const { data: consorciosData } = useConsorcios({ limit: 100 })
   const { data, isLoading } = useAsambleas(consorcioId || undefined, {
     estado: estadoFiltro || undefined,
   })
@@ -63,8 +62,8 @@ export default function AsambleasPage() {
         </div>
 
         <Link
-          href="/asambleas/nueva"
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+          href="/asambleas/nueva"
         >
           <Plus className="h-4 w-4" />
           Nueva Asamblea
@@ -128,41 +127,43 @@ export default function AsambleasPage() {
           {/* Selector de consorcio */}
           <div className="flex-1">
             <label
-              htmlFor="consorcio"
               className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="consorcio"
             >
               Consorcio
             </label>
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               id="consorcio"
               value={consorcioId}
               onChange={(e) => setConsorcioId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Seleccionar consorcio...</option>
-              {/* TODO: Cargar consorcios reales */}
-              <option value="demo-1">Edificio Demo 1</option>
-              <option value="demo-2">Edificio Demo 2</option>
+              {consorciosData?.data?.map((consorcio) => (
+                <option key={consorcio.id} value={consorcio.id}>
+                  {consorcio.nombre}
+                </option>
+              ))}
             </select>
           </div>
 
           {/* Búsqueda */}
           <div className="flex-1">
             <label
-              htmlFor="search"
               className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="search"
             >
               Buscar
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
-                type="text"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 id="search"
                 placeholder="Buscar por título..."
+                type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -170,18 +171,18 @@ export default function AsambleasPage() {
           {/* Filtro de estado */}
           <div className="w-full md:w-48">
             <label
-              htmlFor="estado"
               className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="estado"
             >
               Estado
             </label>
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               id="estado"
               value={estadoFiltro}
               onChange={(e) =>
                 setEstadoFiltro(e.target.value as EstadoAsamblea | '')
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Todos</option>
               <option value="PROGRAMADA">Programadas</option>
@@ -221,8 +222,8 @@ export default function AsambleasPage() {
               : 'Creá la primera asamblea del consorcio'}
           </p>
           <Link
-            href="/asambleas/nueva"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href="/asambleas/nueva"
           >
             <Plus className="h-4 w-4" />
             Nueva Asamblea
@@ -231,7 +232,7 @@ export default function AsambleasPage() {
       ) : (
         <div className="grid gap-4">
           {asambleasFiltradas.map((asamblea) => (
-            <AsambleaCard key={asamblea.id} asamblea={asamblea} />
+            <AsambleaCard asamblea={asamblea} key={asamblea.id} />
           ))}
         </div>
       )}
@@ -261,8 +262,8 @@ function AsambleaCard({ asamblea }: { asamblea: Asamblea }) {
 
   return (
     <Link
-      href={`/asambleas/${asamblea.id}`}
       className="bg-white rounded-xl border border-gray-200 p-6 hover:border-primary-300 hover:shadow-md transition-all"
+      href={`/asambleas/${asamblea.id}`}
     >
       <div className="flex flex-col lg:flex-row lg:items-start gap-4">
         {/* Fecha destacada */}

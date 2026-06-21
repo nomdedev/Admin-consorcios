@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { Rol, TipoVinculoUF, EstadoInvitacion } from '@prisma/client';
+import { Prisma, Rol, TipoVinculoUF, EstadoInvitacion } from '@prisma/client';
 import {
   CreateInvitacionDto,
   CreateInvitacionBulkDto,
@@ -139,10 +139,17 @@ export class ClaimingService {
    * Crea invitaciones en bulk para múltiples unidades
    */
   async crearInvitacionesBulk(dto: CreateInvitacionBulkDto, adminId: string) {
-    const resultados = {
+    // Tipo basado en lo que devuelve crearInvitacion (modelo Prisma con includes)
+    type InvitacionCreada = Awaited<ReturnType<ClaimingService['crearInvitacion']>>;
+    
+    const resultados: {
+      totalGeneradas: number;
+      invitaciones: InvitacionCreada[];
+      errores: string[];
+    } = {
       totalGeneradas: 0,
-      invitaciones: [] as any[],
-      errores: [] as string[],
+      invitaciones: [],
+      errores: [],
     };
 
     // Obtener unidades a procesar
@@ -400,7 +407,7 @@ export class ClaimingService {
       unidadFuncionalId?: string;
     }
   ) {
-    const where: any = { consorcioId };
+    const where: Prisma.InvitacionUnidadWhereInput = { consorcioId };
 
     if (filtros?.estado) {
       where.estado = filtros.estado;

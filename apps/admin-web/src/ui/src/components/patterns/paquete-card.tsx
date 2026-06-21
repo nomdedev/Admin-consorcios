@@ -1,13 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { Package, User, Clock, Check, Camera } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "../../lib/utils";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../primitives/card";
-import { Button } from "../primitives/button";
 import { Badge } from "../primitives/badge";
-import { Avatar } from "../primitives/avatar";
+import { Button } from "../primitives/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../primitives/card";
 
 // =============================================================================
 // PaqueteCard - Tarjeta de paquete recibido (Staff App)
@@ -73,7 +72,7 @@ export const PaqueteCard: React.FC<PaqueteCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
-              <Package className="h-6 w-6 text-brand-600" aria-hidden="true" />
+              <Package aria-hidden="true" className="h-6 w-6 text-brand-600" />
             </div>
             <div>
               <CardTitle className="text-lg">
@@ -91,18 +90,18 @@ export const PaqueteCard: React.FC<PaqueteCardProps> = ({
             <Badge variant={entregado ? "success" : "warning"}>
               {entregado ? (
                 <>
-                  <Check className="mr-1 h-4 w-4" aria-hidden="true" />
+                  <Check aria-hidden="true" className="mr-1 h-4 w-4" />
                   Entregado
                 </>
               ) : (
                 <>
-                  <Clock className="mr-1 h-4 w-4" aria-hidden="true" />
+                  <Clock aria-hidden="true" className="mr-1 h-4 w-4" />
                   Pendiente
                 </>
               )}
             </Badge>
             {syncBadge && (
-              <Badge variant={syncBadge.variant} className="text-xs">
+              <Badge className="text-xs" variant={syncBadge.variant}>
                 {syncBadge.label}
               </Badge>
             )}
@@ -125,10 +124,11 @@ export const PaqueteCard: React.FC<PaqueteCardProps> = ({
         {/* Foto del paquete */}
         {paquete.fotoUrl && (
           <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-neutral-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={paquete.fotoUrl}
               alt={`Foto del paquete para ${paquete.destinatarioUF}`}
               className="h-full w-full object-cover"
+              src={paquete.fotoUrl}
             />
           </div>
         )}
@@ -136,13 +136,13 @@ export const PaqueteCard: React.FC<PaqueteCardProps> = ({
         {/* Timestamps */}
         <div className="space-y-1 text-sm text-neutral-500">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" aria-hidden="true" />
+            <Clock aria-hidden="true" className="h-4 w-4" />
             <span>Recibido: {formatDateTime(paquete.recibidoAt)}</span>
           </div>
           
           {entregado && paquete.entregadoAt && (
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-status-alDia" aria-hidden="true" />
+              <Check aria-hidden="true" className="h-4 w-4 text-status-alDia" />
               <span>
                 Entregado: {formatDateTime(paquete.entregadoAt)}
                 {paquete.entregadoA && ` a ${paquete.entregadoA}`}
@@ -156,22 +156,22 @@ export const PaqueteCard: React.FC<PaqueteCardProps> = ({
         <CardFooter className="flex gap-2">
           {onTomarFoto && !paquete.fotoUrl && (
             <Button
+              aria-label="Tomar foto del paquete"
+              className="flex-1"
               variant="secondary"
               onClick={() => onTomarFoto(paquete)}
-              className="flex-1"
-              aria-label="Tomar foto del paquete"
             >
-              <Camera className="mr-2 h-5 w-5" aria-hidden="true" />
+              <Camera aria-hidden="true" className="mr-2 h-5 w-5" />
               Foto
             </Button>
           )}
           {onEntregar && (
             <Button
-              onClick={() => onEntregar(paquete)}
-              className="flex-1"
               aria-label={`Registrar entrega de paquete para ${paquete.destinatarioUF}`}
+              className="flex-1"
+              onClick={() => onEntregar(paquete)}
             >
-              <User className="mr-2 h-5 w-5" aria-hidden="true" />
+              <User aria-hidden="true" className="mr-2 h-5 w-5" />
               Entregar
             </Button>
           )}

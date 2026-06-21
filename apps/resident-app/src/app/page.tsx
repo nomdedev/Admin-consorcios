@@ -24,8 +24,8 @@ export default function HomePage() {
             administración desde cualquier lugar.
           </p>
           <Link
-            href="/login"
             className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors min-h-[44px]"
+            href="/login"
           >
             Iniciar Sesión
           </Link>
@@ -34,19 +34,19 @@ export default function HomePage() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6">
           <FeatureCard
+            description="Consultá el detalle de tus expensas mensuales y tu cuenta corriente"
             icon="📋"
             title="Expensas"
-            description="Consultá el detalle de tus expensas mensuales y tu cuenta corriente"
           />
           <FeatureCard
+            description="Pagá tus expensas online de forma rápida y segura"
             icon="💳"
             title="Pagos"
-            description="Pagá tus expensas online de forma rápida y segura"
           />
           <FeatureCard
+            description="Enterate de las novedades y avisos importantes de tu edificio"
             icon="📢"
             title="Comunicados"
-            description="Enterate de las novedades y avisos importantes de tu edificio"
           />
         </div>
 

@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface Pago {
@@ -23,17 +25,8 @@ export default function PagosPage() {
   useEffect(() => {
     const fetchPagos = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-cuenta/pagos`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setPagos(data);
-        }
+        const data = await apiClient.get<Pago[]>('/mi-cuenta/pagos');
+        setPagos(data);
       } catch (error) {
         console.error('Error fetching pagos:', error);
       } finally {
@@ -93,9 +86,9 @@ export default function PagosPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3" />
+            <div className="h-6 bg-gray-200 rounded w-1/4" />
           </div>
         ))}
       </div>
@@ -107,8 +100,8 @@ export default function PagosPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Mis Pagos</h1>
         <Link
-          href="/app/pagos/nuevo"
           className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors min-h-[44px] flex items-center"
+          href="/app/pagos/nuevo"
         >
           + Nuevo pago
         </Link>
@@ -119,8 +112,8 @@ export default function PagosPage() {
           <div className="text-5xl mb-4">💳</div>
           <p className="text-gray-500 mb-4">Aún no tenés pagos registrados</p>
           <Link
-            href="/app/pagos/nuevo"
             className="text-green-600 font-medium hover:underline"
+            href="/app/pagos/nuevo"
           >
             Realizar primer pago
           </Link>
@@ -129,9 +122,9 @@ export default function PagosPage() {
         <div className="space-y-4">
           {pagos.map((pago) => (
             <Link
-              key={pago.id}
-              href={`/app/pagos/${pago.id}`}
               className="block bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow"
+              href={`/app/pagos/${pago.id}`}
+              key={pago.id}
             >
               <div className="flex items-start gap-3">
                 <div className="text-2xl">{getMetodoPagoIcon(pago.metodoPago)}</div>

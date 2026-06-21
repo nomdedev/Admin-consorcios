@@ -4,9 +4,12 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+
 import { apiClient } from '@/lib/api-client';
-import type { LoginResponse } from '@/lib/types';
+
 import { useAuthStore } from '../store/auth-store';
+
+import type { LoginResponse } from '@/lib/types';
 
 interface LoginCredentials {
   email: string;

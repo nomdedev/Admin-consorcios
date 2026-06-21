@@ -1,8 +1,5 @@
 'use client'
 
-import { useState, use } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   ArrowLeft,
   Vote,
@@ -15,8 +12,6 @@ import {
   StopCircle,
   XCircle,
   Plus,
-  Trash2,
-  Edit2,
   FileText,
   CheckCircle,
   AlertTriangle,
@@ -27,17 +22,15 @@ import {
   Loader2,
   Download,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState, use } from 'react'
 
-import { cn, formatDate } from '@/lib/utils'
-import { useAuth } from '@/features/auth'
 import {
   useAsamblea,
   useIniciarAsamblea,
   useFinalizarAsamblea,
   useCancelarAsamblea,
-  useAgregarPuntoOrden,
-  useEliminarPuntoOrden,
-  useRegistrarAsistencia,
   useAsistencia,
   useQuorum,
   useEmitirVoto,
@@ -50,6 +43,8 @@ import {
   estadoAsambleaLabels,
   tipoVotoLabels,
 } from '@/features/asambleas'
+import { useAuth } from '@/features/auth'
+import { cn, formatDate } from '@/lib/utils'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -57,7 +52,7 @@ interface PageProps {
 
 export default function AsambleaDetallePage({ params }: PageProps) {
   const { id } = use(params)
-  const router = useRouter()
+  const _router = useRouter()
   const { consorcioId } = useAuth()
 
   const { data: asamblea, isLoading, error } = useAsamblea(id, consorcioId ?? '')
@@ -107,8 +102,8 @@ export default function AsambleaDetallePage({ params }: PageProps) {
           No se pudo encontrar la asamblea solicitada
         </p>
         <Link
-          href="/asambleas"
           className="inline-flex items-center gap-2 mt-4 text-primary-600 hover:text-primary-700"
+          href="/asambleas"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver a asambleas
@@ -121,7 +116,7 @@ export default function AsambleaDetallePage({ params }: PageProps) {
   const esProgramada = asamblea.estado === 'PROGRAMADA'
   const esEnCurso = asamblea.estado === 'EN_CURSO'
   const esFinalizada = asamblea.estado === 'FINALIZADA'
-  const esCancelada = asamblea.estado === 'CANCELADA'
+  const _esCancelada = asamblea.estado === 'CANCELADA'
 
   const badgeColors: Record<EstadoAsamblea, string> = {
     PROGRAMADA: 'bg-gray-100 text-gray-700',
@@ -175,9 +170,9 @@ export default function AsambleaDetallePage({ params }: PageProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <Link
-            href="/asambleas"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
             aria-label="Volver a asambleas"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
+            href="/asambleas"
           >
             <ArrowLeft className="h-5 w-5 text-gray-500" />
           </Link>
@@ -206,15 +201,15 @@ export default function AsambleaDetallePage({ params }: PageProps) {
           {esProgramada && (
             <>
               <button
-                onClick={() => setShowConfirmacion('iniciar')}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                onClick={() => setShowConfirmacion('iniciar')}
               >
                 <PlayCircle className="h-4 w-4" />
                 Iniciar
               </button>
               <button
-                onClick={() => setShowConfirmacion('cancelar')}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                onClick={() => setShowConfirmacion('cancelar')}
               >
                 <XCircle className="h-4 w-4" />
                 Cancelar
@@ -223,8 +218,8 @@ export default function AsambleaDetallePage({ params }: PageProps) {
           )}
           {esEnCurso && (
             <button
-              onClick={() => setShowConfirmacion('finalizar')}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+              onClick={() => setShowConfirmacion('finalizar')}
             >
               <StopCircle className="h-4 w-4" />
               Finalizar
@@ -232,9 +227,9 @@ export default function AsambleaDetallePage({ params }: PageProps) {
           )}
           {esFinalizada && !asamblea.actaUrl && (
             <button
-              onClick={handleGenerarActa}
-              disabled={generarActa.isPending}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+              disabled={generarActa.isPending}
+              onClick={handleGenerarActa}
             >
               {generarActa.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -246,10 +241,10 @@ export default function AsambleaDetallePage({ params }: PageProps) {
           )}
           {asamblea.actaUrl && (
             <a
-              href={asamblea.actaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+              href={asamblea.actaUrl}
+              rel="noopener noreferrer"
+              target="_blank"
             >
               <Download className="h-4 w-4" />
               Descargar Acta
@@ -333,10 +328,10 @@ export default function AsambleaDetallePage({ params }: PageProps) {
             </div>
           </div>
           <a
-            href={asamblea.linkVirtual}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-white hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+            href={asamblea.linkVirtual}
+            rel="noopener noreferrer"
+            target="_blank"
           >
             Unirse
             <ExternalLink className="h-4 w-4" />
@@ -355,8 +350,8 @@ export default function AsambleaDetallePage({ params }: PageProps) {
               </h2>
               {esProgramada && (
                 <button
-                  onClick={() => setShowAgregarPunto(true)}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                  onClick={() => setShowAgregarPunto(true)}
                 >
                   <Plus className="h-4 w-4" />
                   Agregar punto
@@ -370,11 +365,11 @@ export default function AsambleaDetallePage({ params }: PageProps) {
                   .sort((a, b) => a.orden - b.orden)
                   .map((punto) => (
                     <PuntoOrdenItem
-                      key={punto.id}
-                      punto={punto}
                       asambleaId={id}
                       consorcioId={consorcioId}
                       estadoAsamblea={asamblea.estado}
+                      key={punto.id}
+                      punto={punto}
                     />
                   ))
               ) : (
@@ -385,8 +380,8 @@ export default function AsambleaDetallePage({ params }: PageProps) {
                   </p>
                   {esProgramada && (
                     <button
-                      onClick={() => setShowAgregarPunto(true)}
                       className="mt-4 inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
+                      onClick={() => setShowAgregarPunto(true)}
                     >
                       <Plus className="h-4 w-4" />
                       Agregar el primer punto
@@ -459,8 +454,8 @@ export default function AsambleaDetallePage({ params }: PageProps) {
                 <div className="divide-y divide-gray-100">
                   {asistencias.map((asistencia) => (
                     <div
-                      key={asistencia.usuarioId}
                       className="p-3 flex items-center justify-between"
+                      key={asistencia.usuarioId}
                     >
                       <div className="flex items-center gap-2">
                         {asistencia.presente ? (
@@ -514,12 +509,18 @@ export default function AsambleaDetallePage({ params }: PageProps) {
             </p>
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowConfirmacion(null)}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setShowConfirmacion(null)}
               >
                 Cancelar
               </button>
               <button
+                className={cn(
+                  'px-4 py-2 text-white rounded-lg transition-colors',
+                  showConfirmacion === 'cancelar'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-primary-600 hover:bg-primary-700'
+                )}
                 onClick={
                   showConfirmacion === 'iniciar'
                     ? handleIniciar
@@ -527,12 +528,6 @@ export default function AsambleaDetallePage({ params }: PageProps) {
                     ? handleFinalizar
                     : handleCancelar
                 }
-                className={cn(
-                  'px-4 py-2 text-white rounded-lg transition-colors',
-                  showConfirmacion === 'cancelar'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-primary-600 hover:bg-primary-700'
-                )}
               >
                 Confirmar
               </button>
@@ -666,25 +661,25 @@ function PuntoOrdenItem({
               {showVotar ? (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleVotar('A_FAVOR')}
-                    disabled={emitirVoto.isPending}
                     className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
+                    disabled={emitirVoto.isPending}
+                    onClick={() => handleVotar('A_FAVOR')}
                   >
                     <ThumbsUp className="h-4 w-4" />
                     A favor
                   </button>
                   <button
-                    onClick={() => handleVotar('EN_CONTRA')}
-                    disabled={emitirVoto.isPending}
                     className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+                    disabled={emitirVoto.isPending}
+                    onClick={() => handleVotar('EN_CONTRA')}
                   >
                     <ThumbsDown className="h-4 w-4" />
                     En contra
                   </button>
                   <button
-                    onClick={() => handleVotar('ABSTENCION')}
-                    disabled={emitirVoto.isPending}
                     className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    disabled={emitirVoto.isPending}
+                    onClick={() => handleVotar('ABSTENCION')}
                   >
                     <Minus className="h-4 w-4" />
                     Abstención
@@ -692,8 +687,8 @@ function PuntoOrdenItem({
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowVotar(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                  onClick={() => setShowVotar(true)}
                 >
                   <Vote className="h-4 w-4" />
                   Emitir voto

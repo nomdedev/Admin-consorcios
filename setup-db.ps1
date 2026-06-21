@@ -14,4 +14,4 @@ foreach ($line in $envLines) {
 Write-Host "DATABASE_URL is set: $([bool]$env:DATABASE_URL)"
 Write-Host "Executing migrations..."
 cd packages/database
-pnpm migrate:dev
+npm run migrate:dev

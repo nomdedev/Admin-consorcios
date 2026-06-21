@@ -15,12 +15,14 @@ import {
   Input,
   StatCard,
 } from "@vecinosimple/ui";
-import { Plus, AlertCircle, RefreshCw, Search, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, AlertCircle, RefreshCw, Search, Clock, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useTickets, useTicketStats } from "@/features/tickets";
+
 import { useConsorcios } from "@/features/consorcios";
+import { useTickets, useTicketStats } from "@/features/tickets";
 import { useDebouncedValue } from "@/lib/hooks/use-debounce";
+
 import type { EstadoTicket, PrioridadTicket } from "@/lib/types";
 
 const estadoColors: Record<EstadoTicket, "default" | "warning" | "success" | "info" | "error"> = {
@@ -52,8 +54,8 @@ export default function TicketsPage() {
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoTicket | "">("");
   const [prioridadFiltro, setPrioridadFiltro] = useState<PrioridadTicket | "">("");
   const [search, setSearch] = useState("");
-  
-  const debouncedSearch = useDebouncedValue(search, 300);
+
+  const _debouncedSearch = useDebouncedValue(search, 300);
   
   // Fetch consorcios
   const { data: consorciosData } = useConsorcios({ limit: 100 });
@@ -95,16 +97,16 @@ export default function TicketsPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={isLoading} 
+            variant="secondary"
             onClick={() => refetch()}
-            disabled={isLoading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
           <Button 
-            onClick={() => router.push(`/tickets/nuevo${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
             disabled={!consorcioId}
+            onClick={() => router.push(`/tickets/nuevo${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
           >
             <Plus className="mr-2 h-5 w-5" />
             Nuevo Ticket
@@ -123,28 +125,28 @@ export default function TicketsPage() {
       {consorcioId && stats && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
+            description="Tickets totales"
+            icon={<AlertCircle className="h-6 w-6" />}
             title="Total"
             value={stats.total}
-            icon={<AlertCircle className="h-6 w-6" />}
-            description="Tickets totales"
           />
           <StatCard
+            description="Pendientes de atención"
+            icon={<Clock className="h-6 w-6" />}
             title="Abiertos"
             value={stats.abiertos}
-            icon={<Clock className="h-6 w-6" />}
-            description="Pendientes de atención"
           />
           <StatCard
+            description="En proceso"
+            icon={<RefreshCw className="h-6 w-6" />}
             title="En Progreso"
             value={stats.enProgreso}
-            icon={<RefreshCw className="h-6 w-6" />}
-            description="En proceso"
           />
           <StatCard
+            description="Este mes"
+            icon={<CheckCircle2 className="h-6 w-6" />}
             title="Resueltos"
             value={stats.resueltos}
-            icon={<CheckCircle2 className="h-6 w-6" />}
-            description="Este mes"
           />
         </div>
       )}
@@ -154,9 +156,9 @@ export default function TicketsPage() {
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Consorcio
-              </label>
+              </p>
               <Select value={consorcioId} onValueChange={setConsorcioId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar consorcio..." />
@@ -173,9 +175,9 @@ export default function TicketsPage() {
             </div>
             
             <div className="w-40">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Estado
-              </label>
+              </p>
               <Select value={estadoFiltro} onValueChange={(v) => setEstadoFiltro(v as EstadoTicket | "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
@@ -192,9 +194,9 @@ export default function TicketsPage() {
             </div>
 
             <div className="w-40">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <p className="block text-sm font-medium text-neutral-700 mb-1">
                 Prioridad
-              </label>
+              </p>
               <Select value={prioridadFiltro} onValueChange={(v) => setPrioridadFiltro(v as PrioridadTicket | "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todas" />
@@ -231,7 +233,7 @@ export default function TicketsPage() {
       ) : isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-neutral-200" />
+            <div className="h-24 animate-pulse rounded-lg bg-neutral-200" key={i} />
           ))}
         </div>
       ) : tickets.length === 0 ? (
@@ -248,8 +250,8 @@ export default function TicketsPage() {
         <div className="space-y-3">
           {tickets.map((ticket) => (
             <Card
-              key={ticket.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
+              key={ticket.id}
               onClick={() => router.push(`/tickets/${ticket.id}`)}
             >
               <CardContent className="p-4">

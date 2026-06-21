@@ -1,8 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Button,
   Input,
@@ -20,8 +18,11 @@ import {
   Textarea,
 } from "@vecinosimple/ui";
 import { ArrowLeft, Megaphone, Save, Mail, MessageSquare } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { useCreateComunicado } from "@/features/comunicados";
 import { useConsorcios } from "@/features/consorcios";
 
@@ -97,7 +98,7 @@ export default function NuevoComunicadoForm() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/comunicados">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -129,14 +130,14 @@ export default function NuevoComunicadoForm() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicado-consorcio">
                     Consorcio *
                   </label>
-                  <Select 
-                    value={watch("consorcioId")} 
+                  <Select
+                    value={watch("consorcioId")}
                     onValueChange={(v) => setValue("consorcioId", v)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="comunicado-consorcio">
                       <SelectValue placeholder="Seleccionar consorcio..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -153,21 +154,23 @@ export default function NuevoComunicadoForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicado-titulo">
                     Título *
                   </label>
                   <Input
+                    id="comunicado-titulo"
                     {...register("titulo")}
-                    placeholder="Ej: Corte programado de agua"
                     error={errors.titulo?.message}
+                    placeholder="Ej: Corte programado de agua"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicado-contenido">
                     Contenido *
                   </label>
                   <Textarea
+                    id="comunicado-contenido"
                     {...register("contenido")}
                     placeholder="Escribe el mensaje para los vecinos..."
                     rows={8}
@@ -178,8 +181,9 @@ export default function NuevoComunicadoForm() {
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer" htmlFor="comunicado-importante">
                     <input
+                      id="comunicado-importante"
                       type="checkbox"
                       {...register("importante")}
                       className="rounded border-neutral-300 text-red-600"
@@ -205,10 +209,11 @@ export default function NuevoComunicadoForm() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicado-desde">
                     Publicar desde *
                   </label>
                   <Input
+                    id="comunicado-desde"
                     type="datetime-local"
                     {...register("publicarDesde")}
                     error={errors.publicarDesde?.message}
@@ -216,10 +221,11 @@ export default function NuevoComunicadoForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicado-hasta">
                     Publicar hasta (opcional)
                   </label>
                   <Input
+                    id="comunicado-hasta"
                     type="datetime-local"
                     {...register("publicarHasta")}
                   />
@@ -237,8 +243,9 @@ export default function NuevoComunicadoForm() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50">
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50" htmlFor="comunicado-email">
                     <input
+                      id="comunicado-email"
                       type="checkbox"
                       {...register("enviarEmail")}
                       className="rounded border-neutral-300"
@@ -254,8 +261,9 @@ export default function NuevoComunicadoForm() {
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50">
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50" htmlFor="comunicado-whatsapp">
                     <input
+                      id="comunicado-whatsapp"
                       type="checkbox"
                       {...register("enviarWhatsapp")}
                       className="rounded border-neutral-300"
@@ -288,10 +296,10 @@ export default function NuevoComunicadoForm() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting || createComunicado.isPending}>
+          <Button disabled={isSubmitting || createComunicado.isPending} type="submit">
             {isSubmitting || createComunicado.isPending ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Creando...
               </>
             ) : (

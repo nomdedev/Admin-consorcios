@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import { cn } from "../../lib/utils";
 import { Button } from "../primitives/button";
 
@@ -22,11 +23,11 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
   ({ className, icon, title, description, action, ...props }, ref) => {
     return (
       <div
-        ref={ref}
         className={cn(
           "flex flex-col items-center justify-center py-12 px-6 text-center",
           className
         )}
+        ref={ref}
         {...props}
       >
         {icon && (
@@ -42,7 +43,7 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         )}
         
         {action && (
-          <Button onClick={action.onClick} className="mt-6">
+          <Button className="mt-6" onClick={action.onClick}>
             {action.label}
           </Button>
         )}

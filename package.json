@@ -2,7 +2,7 @@
   "name": "vecinosimple",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "npm@10.0.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -13,6 +13,10 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "build:admin-web": "npm run --workspace=@vecinosimple/admin-web build",
+    "build:resident-app": "npm run --workspace=@vecinosimple/resident-app build",
+    "build:staff-app": "npm run --workspace=@vecinosimple/staff-app build",
+    "build:api": "npm run --workspace=@vecinosimple/api build",
     "postinstall": "turbo run build --filter=@vecinosimple/database",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
@@ -26,12 +30,16 @@
     "db:push": "turbo run push --filter=@vecinosimple/database",
     "db:seed": "turbo run seed --filter=@vecinosimple/database",
     "db:studio": "turbo run studio --filter=@vecinosimple/database",
+    "setup:prod": "./scripts/setup-production.sh",
+    "deploy:db": "./scripts/deploy-db.sh",
+    "smoke:test": "./scripts/smoke-test.sh",
+    "rollback": "./scripts/rollback.sh",
     "prepare": "husky"
   },
   "devDependencies": {
     "husky": "^9.0.0",
     "lint-staged": "^15.2.0",
-    "next": "^14.1.0",
+    "next": "^16.1.6",
     "prettier": "^3.2.0",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "turbo": "^2.7.6"

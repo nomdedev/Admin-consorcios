@@ -47,15 +47,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {/* Label - solo se muestra si se proporciona */}
         {label && (
           <label
-            htmlFor={inputId}
             className={cn(
               "mb-2 block text-base font-medium text-neutral-900",
               hideLabel && "sr-only"
             )}
+            htmlFor={inputId}
           >
             {label}
             {props.required && (
-              <span className="ml-1 text-status-grave" aria-hidden="true">
+              <span aria-hidden="true" className="ml-1 text-status-grave">
                 *
               </span>
             )}
@@ -70,9 +70,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
           <input
-            ref={ref}
-            id={inputId}
-            type={type}
+            aria-describedby={
+              [hintId, errorId].filter(Boolean).join(" ") || undefined
+            }
+            aria-invalid={error ? "true" : undefined}
             className={cn(
               // Base
               "w-full rounded-input border bg-white py-3",
@@ -90,17 +91,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               "disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500",
               className
             )}
-            aria-invalid={error ? "true" : undefined}
-            aria-describedby={
-              [hintId, errorId].filter(Boolean).join(" ") || undefined
-            }
+            id={inputId}
+            ref={ref}
+            type={type}
             {...props}
           />
         </div>
 
         {/* Hint */}
         {hint && !error && (
-          <p id={hintId} className="mt-2 text-sm text-neutral-600">
+          <p className="mt-2 text-sm text-neutral-600" id={hintId}>
             {hint}
           </p>
         )}
@@ -108,8 +108,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {/* Error */}
         {error && (
           <p
-            id={errorId}
             className="mt-2 text-sm font-medium text-status-grave"
+            id={errorId}
             role="alert"
           >
             {error}

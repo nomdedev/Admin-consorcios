@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
 import {
   Building2,
   Plus,
@@ -9,18 +7,17 @@ import {
   Users,
   Clock,
   DollarSign,
-  Settings,
   CheckCircle,
-  XCircle,
-  MoreVertical,
   Search,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { cn, formatCurrency } from '@/lib/utils'
 import { useAmenities, type Amenity } from '@/features/amenities'
+import { cn, formatCurrency } from '@/lib/utils'
 
 export default function AmenitiesPage() {
-  const [consorcioId, setConsorcioId] = useState<string>('')
+  const [consorcioId, _setConsorcioId] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
 
   const { data: amenities, isLoading } = useAmenities(consorcioId || undefined)
@@ -51,15 +48,15 @@ export default function AmenitiesPage() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/amenities/reservas"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href="/amenities/reservas"
           >
             <Calendar className="h-4 w-4" />
             Ver Reservas
           </Link>
           <Link
-            href="/amenities/nuevo"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href="/amenities/nuevo"
           >
             <Plus className="h-4 w-4" />
             Nuevo Amenity
@@ -122,15 +119,16 @@ export default function AmenitiesPage() {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="buscar-amenity">Buscar</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                id="buscar-amenity"
+                placeholder="Buscar por nombre..."
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nombre..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -154,8 +152,8 @@ export default function AmenitiesPage() {
           </p>
           {!searchTerm && (
             <Link
-              href="/amenities/nuevo"
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+              href="/amenities/nuevo"
             >
               <Plus className="h-4 w-4" />
               Crear Amenity
@@ -165,7 +163,7 @@ export default function AmenitiesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {amenitiesFiltrados.map((amenity) => (
-            <AmenityCard key={amenity.id} amenity={amenity} />
+            <AmenityCard amenity={amenity} key={amenity.id} />
           ))}
         </div>
       )}
@@ -240,14 +238,14 @@ function AmenityCard({ amenity }: { amenity: Amenity }) {
         {/* Acciones */}
         <div className="flex items-center gap-2 mt-4">
           <Link
-            href={`/amenities/${amenity.id}`}
             className="flex-1 px-3 py-2 text-sm font-medium text-center text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            href={`/amenities/${amenity.id}`}
           >
             Ver detalle
           </Link>
           <Link
-            href={`/amenities/${amenity.id}/reservar`}
             className="flex-1 px-3 py-2 text-sm font-medium text-center text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href={`/amenities/${amenity.id}/reservar`}
           >
             Reservar
           </Link>

@@ -1,16 +1,16 @@
 'use client';
 
 import { Button } from '@vecinosimple/ui';
-import { AlertTriangle, RefreshCw, Wifi, WifiOff, Database, Server } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Wifi, WifiOff, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   const [isOnline, setIsOnline] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -20,15 +20,15 @@ export default function Error({
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    globalThis.addEventListener('online', handleOnline);
+    globalThis.addEventListener('offline', handleOffline);
 
     // Log the error for debugging
     console.error('Staff App error:', error);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      globalThis.removeEventListener('online', handleOnline);
+      globalThis.removeEventListener('offline', handleOffline);
     };
   }, [error]);
 
@@ -101,12 +101,12 @@ export default function Error({
         )}
 
         <div className="space-y-3">
-          <Button onClick={handleRetry} className="w-full" size="lg" disabled={!isOnline}>
+          <Button className="w-full" disabled={!isOnline} size="lg" onClick={handleRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Reintentar ({retryCount}/3)
           </Button>
 
-          <Button variant="secondary" asChild className="w-full">
+          <Button asChild className="w-full" variant="secondary">
             <a href="/app">
               Panel principal
             </a>

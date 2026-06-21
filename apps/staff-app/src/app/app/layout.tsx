@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { db, getPendingSync } from '@/offline/db';
+import { useState, useEffect } from 'react';
+
+import { apiClient } from '@/lib/api-client';
+import { getPendingSync } from '@/offline/db';
 
 interface User {
   id: string;
@@ -15,7 +17,7 @@ interface User {
   };
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
@@ -27,25 +29,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-          window.location.href = '/login';
+          globalThis.location.href = '/login';
           return;
         }
 
         // Intentar obtener datos del usuario (puede fallar si offline)
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data);
-            // Guardar en localStorage para uso offline
-            localStorage.setItem('cachedUser', JSON.stringify(data));
-          }
+          const data = await apiClient.get<User>('/auth/me');
+          setUser(data);
+          // Guardar en localStorage para uso offline
+          localStorage.setItem('cachedUser', JSON.stringify(data));
         } catch {
           // Si falla, usar datos cacheados
           const cached = localStorage.getItem('cachedUser');
@@ -87,7 +80,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -112,8 +105,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </span>
             )}
             <Link
-              href="/app/perfil"
               className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium"
+              href="/app/perfil"
             >
               {user ? `${user.nombre[0]}${user.apellido[0]}` : '?'}
             </Link>
@@ -134,13 +127,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 (item.href !== '/app' && pathname.startsWith(item.href));
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
                   className={`flex flex-col items-center py-2 px-3 min-w-[64px] min-h-[44px] ${
                     isActive
                       ? 'text-blue-600'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
+                  href={item.href}
+                  key={item.href}
                 >
                   <span className="text-xl mb-1">{item.icon}</span>
                   <span className="text-xs font-medium">{item.label}</span>

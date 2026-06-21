@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+
+import { apiClient } from '@/lib/api-client';
+import { formatDate } from '@/lib/utils';
 
 interface Comunicado {
   id: string;
@@ -19,17 +21,8 @@ export default function ComunicadosPage() {
   useEffect(() => {
     const fetchComunicados = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mi-cuenta/comunicados`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setComunicados(data);
-        }
+        const data = await apiClient.get<Comunicado[]>('/mi-cuenta/comunicados');
+        setComunicados(data);
       } catch (error) {
         console.error('Error fetching comunicados:', error);
       } finally {
@@ -40,21 +33,13 @@ export default function ComunicadosPage() {
     fetchComunicados();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
+          <div className="bg-white rounded-xl p-4 animate-pulse" key={i}>
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-3" />
+            <div className="h-16 bg-gray-200 rounded" />
           </div>
         ))}
       </div>
@@ -74,12 +59,12 @@ export default function ComunicadosPage() {
         <div className="space-y-4">
           {comunicados.map((comunicado) => (
             <article
-              key={comunicado.id}
               className={`bg-white rounded-xl p-6 shadow ${
                 comunicado.importante
                   ? 'border-l-4 border-yellow-500'
                   : ''
               }`}
+              key={comunicado.id}
             >
               <div className="flex items-start gap-3 mb-3">
                 {comunicado.importante && (

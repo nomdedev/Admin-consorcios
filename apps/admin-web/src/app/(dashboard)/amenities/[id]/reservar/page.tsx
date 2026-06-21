@@ -1,12 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { format, addHours, setHours, setMinutes, startOfDay, isBefore, addDays } from 'date-fns'
+import { format, addHours, setHours, setMinutes, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   ArrowLeft,
@@ -17,9 +12,14 @@ import {
   Loader2,
   Building2,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
-import { cn, formatCurrency } from '@/lib/utils'
 import { useAmenity, useDisponibilidad, useCreateReserva } from '@/features/amenities'
+import { cn, formatCurrency } from '@/lib/utils'
 
 // Schema de validación
 const reservaSchema = z.object({
@@ -138,7 +138,7 @@ export default function ReservarAmenityPage() {
       <div className="text-center py-12">
         <Building2 className="h-16 w-16 mx-auto text-gray-300" />
         <h3 className="mt-4 text-lg font-medium text-gray-900">Amenity no encontrado</h3>
-        <Link href="/amenities" className="mt-2 text-primary-600 hover:underline">
+        <Link className="mt-2 text-primary-600 hover:underline" href="/amenities">
           Volver a amenities
         </Link>
       </div>
@@ -150,8 +150,8 @@ export default function ReservarAmenityPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href={`/amenities/${amenityId}`}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          href={`/amenities/${amenityId}`}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -182,20 +182,21 @@ export default function ReservarAmenityPage() {
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {/* Fecha */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="reserva-fecha">
             <Calendar className="h-4 w-4 inline mr-2" />
             Fecha de reserva
           </label>
           <input
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
+            id="reserva-fecha"
+            max={maxDate}
+            min={minDate}
             type="date"
             value={selectedDate}
             onChange={handleDateChange}
-            min={minDate}
-            max={maxDate}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
           />
           {errors.fecha && (
             <p className="mt-2 text-sm text-red-600">{errors.fecha.message}</p>
@@ -210,7 +211,7 @@ export default function ReservarAmenityPage() {
 
         {/* Horario */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="reserva-horario">
             <Clock className="h-4 w-4 inline mr-2" />
             Horario
           </label>
@@ -229,10 +230,6 @@ export default function ReservarAmenityPage() {
 
                   return (
                     <button
-                      key={slot}
-                      type="button"
-                      onClick={() => !isOcupado && setValue('horaInicio', slot)}
-                      disabled={isOcupado}
                       className={cn(
                         'px-3 py-2 text-sm rounded-lg border transition-all',
                         isOcupado
@@ -241,6 +238,10 @@ export default function ReservarAmenityPage() {
                             ? 'bg-primary-600 text-white border-primary-600'
                             : 'bg-white text-gray-700 border-gray-300 hover:border-primary-500 hover:bg-primary-50'
                       )}
+                      disabled={isOcupado}
+                      key={slot}
+                      type="button"
+                      onClick={() => !isOcupado && setValue('horaInicio', slot)}
                     >
                       {slot}
                     </button>
@@ -272,10 +273,11 @@ export default function ReservarAmenityPage() {
 
         {/* Duración */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="reserva-duracion">
             Duración
           </label>
           <select
+            id="reserva-duracion"
             {...register('duracion', { valueAsNumber: true })}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
@@ -296,14 +298,15 @@ export default function ReservarAmenityPage() {
 
         {/* Motivo */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="reserva-motivo">
             Motivo (opcional)
           </label>
           <textarea
             {...register('motivo')}
-            rows={3}
-            placeholder="Ej: Cumpleaños, reunión familiar, etc."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            id="reserva-motivo"
+            placeholder="Ej: Cumpleaños, reunión familiar, etc."
+            rows={3}
           />
           {errors.motivo && (
             <p className="mt-2 text-sm text-red-600">{errors.motivo.message}</p>
@@ -340,15 +343,15 @@ export default function ReservarAmenityPage() {
         {/* Acciones */}
         <div className="flex justify-end gap-3">
           <Link
-            href={`/amenities/${amenityId}`}
             className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+            href={`/amenities/${amenityId}`}
           >
             Cancelar
           </Link>
           <button
-            type="submit"
-            disabled={createReserva.isPending || !watchHoraInicio}
             className="px-6 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={createReserva.isPending || !watchHoraInicio}
+            type="submit"
           >
             {createReserva.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             {amenity.requiereAprobacion ? 'Solicitar reserva' : 'Confirmar reserva'}

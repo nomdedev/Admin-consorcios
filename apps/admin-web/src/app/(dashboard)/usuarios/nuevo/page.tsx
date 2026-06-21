@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
+import { useCreateUsuario, type CreateUsuarioDto } from '@/features/usuarios';
 import {
   Card,
   CardContent,
@@ -18,8 +21,7 @@ import {
   Spinner,
   AlertBanner,
 } from 'ui';
-import { useCreateUsuario, type CreateUsuarioDto } from '@/features/usuarios';
-import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
+
 import type { Rol, TipoVinculoUF } from '@/lib/types';
 
 // Schema de validación
@@ -129,9 +131,10 @@ export default function NuevoUsuarioPage() {
 
       const result = await createMutation.mutateAsync(dto);
       router.push(`/usuarios/${result.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
       const message =
-        error?.data?.message || error?.message || 'Error al crear usuario';
+        err?.data?.message || err?.message || 'Error al crear usuario';
       setSubmitError(message);
     }
   };
@@ -141,7 +144,7 @@ export default function NuevoUsuarioPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/usuarios">
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
             ← Volver
           </Button>
         </Link>
@@ -156,14 +159,14 @@ export default function NuevoUsuarioPage() {
       {/* Error */}
       {submitError && (
         <AlertBanner
-          variant="error"
           title="Error al crear usuario"
+          variant="error"
         >
           {submitError}
         </AlertBanner>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {/* Datos personales */}
         <Card>
           <CardHeader>
@@ -372,10 +375,10 @@ export default function NuevoUsuarioPage() {
               Cancelar
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button disabled={isSubmitting} type="submit">
             {isSubmitting ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="mr-2" size="sm" />
                 Creando...
               </>
             ) : (

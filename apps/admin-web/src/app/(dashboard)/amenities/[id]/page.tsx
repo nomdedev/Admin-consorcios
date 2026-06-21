@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -17,10 +14,11 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  AlertTriangle,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { cn, formatCurrency, formatDateTime } from '@/lib/utils'
 import {
   useAmenity,
   useReservas,
@@ -30,6 +28,7 @@ import {
   getEstadoReservaConfig,
   type Reserva,
 } from '@/features/amenities'
+import { cn, formatCurrency } from '@/lib/utils'
 
 export default function AmenityDetallePage() {
   const params = useParams()
@@ -83,7 +82,7 @@ export default function AmenityDetallePage() {
       <div className="text-center py-12">
         <Building2 className="h-16 w-16 mx-auto text-gray-300" />
         <h3 className="mt-4 text-lg font-medium text-gray-900">Amenity no encontrado</h3>
-        <Link href="/amenities" className="mt-2 text-primary-600 hover:underline">
+        <Link className="mt-2 text-primary-600 hover:underline" href="/amenities">
           Volver a amenities
         </Link>
       </div>
@@ -96,8 +95,8 @@ export default function AmenityDetallePage() {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
           <Link
-            href="/amenities"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
+            href="/amenities"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -128,8 +127,8 @@ export default function AmenityDetallePage() {
             </span>
           )}
           <Link
-            href={`/amenities/${amenityId}/reservar`}
             className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            href={`/amenities/${amenityId}/reservar`}
           >
             Reservar
           </Link>
@@ -187,24 +186,24 @@ export default function AmenityDetallePage() {
       <div className="border-b border-gray-200">
         <nav className="flex gap-8">
           <button
-            onClick={() => setActiveTab('info')}
             className={cn(
               'pb-4 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'info'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             )}
+            onClick={() => setActiveTab('info')}
           >
             Información
           </button>
           <button
-            onClick={() => setActiveTab('reservas')}
             className={cn(
               'pb-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'reservas'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             )}
+            onClick={() => setActiveTab('reservas')}
           >
             Reservas
             {reservasPendientes.length > 0 && (
@@ -214,13 +213,13 @@ export default function AmenityDetallePage() {
             )}
           </button>
           <button
-            onClick={() => setActiveTab('reglas')}
             className={cn(
               'pb-4 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'reglas'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             )}
+            onClick={() => setActiveTab('reglas')}
           >
             Reglas
           </button>
@@ -264,17 +263,17 @@ export default function AmenityDetallePage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
             <div className="space-y-3">
               <Link
-                href={`/amenities/${amenityId}/editar`}
                 className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                href={`/amenities/${amenityId}/editar`}
               >
                 <Edit className="h-5 w-5" />
                 <span>Editar amenity</span>
               </Link>
 
               <button
-                onClick={handleToggleActivo}
-                disabled={updateAmenity.isPending}
                 className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+                disabled={updateAmenity.isPending}
+                onClick={handleToggleActivo}
               >
                 {amenity.activo ? (
                   <>
@@ -290,9 +289,9 @@ export default function AmenityDetallePage() {
               </button>
 
               <button
-                onClick={handleDelete}
-                disabled={deleteAmenity.isPending}
                 className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                disabled={deleteAmenity.isPending}
+                onClick={handleDelete}
               >
                 <Trash2 className="h-5 w-5" />
                 <span>Eliminar amenity</span>
@@ -340,11 +339,11 @@ export default function AmenityDetallePage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {reservas.map((reserva) => (
                   <ReservaRow
+                    isPending={procesarReserva.isPending}
                     key={reserva.id}
                     reserva={reserva}
                     onAprobar={() => handleAprobarReserva(reserva.id, true)}
                     onRechazar={() => handleAprobarReserva(reserva.id, false)}
-                    isPending={procesarReserva.isPending}
                   />
                 ))}
               </tbody>
@@ -358,8 +357,8 @@ export default function AmenityDetallePage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Reglas de uso</h3>
             <Link
-              href={`/amenities/${amenityId}/reglas`}
               className="text-sm text-primary-600 hover:underline"
+              href={`/amenities/${amenityId}/reglas`}
             >
               Configurar reglas
             </Link>
@@ -420,18 +419,18 @@ function ReservaRow({ reserva, onAprobar, onRechazar, isPending }: ReservaRowPro
         {reserva.estado === 'PENDIENTE' && (
           <div className="flex items-center justify-end gap-2">
             <button
-              onClick={onAprobar}
-              disabled={isPending}
               className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+              disabled={isPending}
               title="Aprobar"
+              onClick={onAprobar}
             >
               <CheckCircle className="h-5 w-5" />
             </button>
             <button
-              onClick={onRechazar}
-              disabled={isPending}
               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              disabled={isPending}
               title="Rechazar"
+              onClick={onRechazar}
             >
               <XCircle className="h-5 w-5" />
             </button>

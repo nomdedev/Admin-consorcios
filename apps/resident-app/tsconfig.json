@@ -3,9 +3,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@vecinosimple/api-client": ["../../packages/api-client/src"],
+      "@vecinosimple/api-client/*": ["../../packages/api-client/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "vitest.config.ts", "playwright.config.ts", "src/test/**/*"]
+  "exclude": ["node_modules", "vitest.config.ts", "playwright.config.ts"]
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Settings,
   Building2,
@@ -18,6 +17,7 @@ import {
   AlertCircle,
   ChevronRight,
 } from 'lucide-react'
+import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -87,6 +87,39 @@ export default function ConfiguracionPage() {
     setSaved(false)
   }
 
+  const saveButtonContent = (() => {
+    if (saving) {
+      return {
+        icon: (
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+        ),
+        text: 'Guardando...'
+      }
+    }
+
+    if (saved) {
+      return {
+        icon: <Check className="h-4 w-4" />,
+        text: 'Guardado'
+      }
+    }
+
+    return {
+      icon: <Save className="h-4 w-4" />,
+      text: 'Guardar cambios'
+    }
+  })()
+
+  const getRoleBadgeClass = (rol: string) => {
+    if (rol === 'ADMINISTRADOR') {
+      return 'bg-purple-100 text-purple-700'
+    }
+    if (rol === 'ADMIN_STAFF') {
+      return 'bg-blue-100 text-blue-700'
+    }
+    return 'bg-gray-100 text-gray-700'
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,31 +135,17 @@ export default function ConfiguracionPage() {
         </div>
 
         <button
-          onClick={handleSave}
-          disabled={saving}
           className={cn(
             'px-4 py-2 rounded-lg transition-colors flex items-center gap-2',
             saved
               ? 'bg-green-600 text-white'
               : 'bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-300'
           )}
+          disabled={saving}
+          onClick={handleSave}
         >
-          {saving ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              Guardando...
-            </>
-          ) : saved ? (
-            <>
-              <Check className="h-4 w-4" />
-              Guardado
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Guardar cambios
-            </>
-          )}
+          {saveButtonContent.icon}
+          {saveButtonContent.text}
         </button>
       </div>
 
@@ -139,14 +158,14 @@ export default function ConfiguracionPage() {
               const Icon = tab.icon
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
                     activeTab === tab.id
                       ? 'bg-primary-50 text-primary-700 border-l-4 border-primary-600'
                       : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
                   )}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                 >
                   <Icon className={cn(
                     'h-5 w-5',
@@ -176,62 +195,67 @@ export default function ConfiguracionPage() {
                   
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-nombre">
                         Nombre del edificio
                       </label>
                       <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-nombre"
                         type="text"
                         value={config.nombreConsorcio}
                         onChange={(e) => updateConfig('nombreConsorcio', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-cuit">
                         CUIT
                       </label>
                       <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-cuit"
                         type="text"
                         value={config.cuit}
                         onChange={(e) => updateConfig('cuit', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-direccion">
                         Dirección
                       </label>
                       <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-direccion"
                         type="text"
                         value={config.direccion}
                         onChange={(e) => updateConfig('direccion', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-email">
                         Email de contacto
                       </label>
                       <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-email"
                         type="email"
                         value={config.email}
                         onChange={(e) => updateConfig('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-telefono">
                         Teléfono
                       </label>
                       <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-telefono"
                         type="tel"
                         value={config.telefono}
                         onChange={(e) => updateConfig('telefono', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -258,14 +282,15 @@ export default function ConfiguracionPage() {
                       { key: 'emailAsambleas', label: 'Convocatorias a asambleas', desc: 'Recordatorios de próximas reuniones' },
                     ].map((item) => (
                       <label
-                        key={item.key}
+                        aria-label={item.label}
                         className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        key={item.key}
                       >
                         <input
-                          type="checkbox"
                           checked={config[item.key as keyof typeof config] as boolean}
-                          onChange={(e) => updateConfig(item.key, e.target.checked)}
                           className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                          type="checkbox"
+                          onChange={(e) => updateConfig(item.key, e.target.checked)}
                         />
                         <div>
                           <span className="font-medium text-gray-900 flex items-center gap-2">
@@ -290,12 +315,15 @@ export default function ConfiguracionPage() {
                   </p>
 
                   <div className="space-y-3">
-                    <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label
+                      aria-label="Alertas de emergencia"
+                      className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       <input
-                        type="checkbox"
                         checked={config.whatsappEmergencias}
-                        onChange={(e) => updateConfig('whatsappEmergencias', e.target.checked)}
                         className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        type="checkbox"
+                        onChange={(e) => updateConfig('whatsappEmergencias', e.target.checked)}
                       />
                       <div>
                         <span className="font-medium text-gray-900 flex items-center gap-2">
@@ -306,12 +334,15 @@ export default function ConfiguracionPage() {
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label
+                      aria-label="Recordatorios de pago"
+                      className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       <input
-                        type="checkbox"
                         checked={config.whatsappRecordatorios}
-                        onChange={(e) => updateConfig('whatsappRecordatorios', e.target.checked)}
                         className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        type="checkbox"
+                        onChange={(e) => updateConfig('whatsappRecordatorios', e.target.checked)}
                       />
                       <div>
                         <span className="font-medium text-gray-900 flex items-center gap-2">
@@ -336,13 +367,14 @@ export default function ConfiguracionPage() {
 
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-dia-vencimiento">
                         Día de vencimiento
                       </label>
                       <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-dia-vencimiento"
                         value={config.diaVencimiento}
                         onChange={(e) => updateConfig('diaVencimiento', Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         {Array.from({ length: 28 }, (_, i) => i + 1).map(dia => (
                           <option key={dia} value={dia}>{dia}</option>
@@ -352,13 +384,14 @@ export default function ConfiguracionPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-dias-gracia">
                         Días de gracia
                       </label>
                       <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-dias-gracia"
                         value={config.diasGracia}
                         onChange={(e) => updateConfig('diasGracia', Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         {[0, 3, 5, 7, 10, 15].map(dias => (
                           <option key={dias} value={dias}>{dias} días</option>
@@ -368,18 +401,19 @@ export default function ConfiguracionPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-tasa-interes">
                         Tasa de interés
                       </label>
                       <div className="relative">
                         <input
-                          type="number"
-                          min="0"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
+                          id="config-tasa-interes"
                           max="10"
+                          min="0"
                           step="0.5"
+                          type="number"
                           value={config.tasaInteres}
                           onChange={(e) => updateConfig('tasaInteres', Number(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
                       </div>
@@ -396,7 +430,10 @@ export default function ConfiguracionPage() {
                   </h2>
 
                   <div className="space-y-3">
-                    <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label
+                      aria-label="Mercado Pago"
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                           <span className="text-lg">💳</span>
@@ -407,14 +444,17 @@ export default function ConfiguracionPage() {
                         </div>
                       </div>
                       <input
-                        type="checkbox"
                         checked={config.mercadoPagoActivo}
-                        onChange={(e) => updateConfig('mercadoPagoActivo', e.target.checked)}
                         className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        type="checkbox"
+                        onChange={(e) => updateConfig('mercadoPagoActivo', e.target.checked)}
                       />
                     </label>
 
-                    <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label
+                      aria-label="Transferencia Bancaria"
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                           <span className="text-lg">🏦</span>
@@ -425,10 +465,10 @@ export default function ConfiguracionPage() {
                         </div>
                       </div>
                       <input
-                        type="checkbox"
                         checked={config.transferenciaActiva}
-                        onChange={(e) => updateConfig('transferenciaActiva', e.target.checked)}
                         className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        type="checkbox"
+                        onChange={(e) => updateConfig('transferenciaActiva', e.target.checked)}
                       />
                     </label>
                   </div>
@@ -455,12 +495,15 @@ export default function ConfiguracionPage() {
                   </h2>
 
                   <div className="space-y-4">
-                    <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label
+                      aria-label="Requerir 2FA para administradores"
+                      className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       <input
-                        type="checkbox"
                         checked={config.twoFactorRequired}
-                        onChange={(e) => updateConfig('twoFactorRequired', e.target.checked)}
                         className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        type="checkbox"
+                        onChange={(e) => updateConfig('twoFactorRequired', e.target.checked)}
                       />
                       <div>
                         <span className="font-medium text-gray-900 flex items-center gap-2">
@@ -475,13 +518,14 @@ export default function ConfiguracionPage() {
                     </label>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-session-timeout">
                         Timeout de sesión (minutos)
                       </label>
                       <select
+                        className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-session-timeout"
                         value={config.sessionTimeout}
                         onChange={(e) => updateConfig('sessionTimeout', Number(e.target.value))}
-                        className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         <option value={15}>15 minutos</option>
                         <option value={30}>30 minutos</option>
@@ -494,13 +538,14 @@ export default function ConfiguracionPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="config-password-length">
                         Longitud mínima de contraseña
                       </label>
                       <select
+                        className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="config-password-length"
                         value={config.passwordMinLength}
                         onChange={(e) => updateConfig('passwordMinLength', Number(e.target.value))}
-                        className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         <option value={6}>6 caracteres</option>
                         <option value={8}>8 caracteres</option>
@@ -544,8 +589,8 @@ export default function ConfiguracionPage() {
                       { nombre: 'María García', email: 'maria@admin.com', rol: 'ADMINISTRADOR', avatar: '👩‍💼' },
                       { nombre: 'Juan Pérez', email: 'juan@admin.com', rol: 'ADMIN_STAFF', avatar: '👨‍💻' },
                       { nombre: 'Carlos López', email: 'carlos@edificio.com', rol: 'ENCARGADO', avatar: '👷' },
-                    ].map((user, i) => (
-                      <div key={i} className="flex items-center justify-between p-4">
+                    ].map((user) => (
+                      <div className="flex items-center justify-between p-4" key={user.email}>
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{user.avatar}</span>
                           <div>
@@ -555,9 +600,7 @@ export default function ConfiguracionPage() {
                         </div>
                         <span className={cn(
                           'px-2 py-1 rounded-full text-xs font-medium',
-                          user.rol === 'ADMINISTRADOR' ? 'bg-purple-100 text-purple-700' :
-                          user.rol === 'ADMIN_STAFF' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
+                          getRoleBadgeClass(user.rol)
                         )}>
                           {user.rol}
                         </span>
@@ -588,21 +631,22 @@ export default function ConfiguracionPage() {
                       { id: 'auto', label: 'Automático', icon: '🌓' },
                     ].map((tema) => (
                       <label
-                        key={tema.id}
+                        aria-label={tema.label}
                         className={cn(
                           'p-4 border-2 rounded-lg cursor-pointer text-center transition-colors',
                           config.tema === tema.id
                             ? 'border-primary-500 bg-primary-50'
                             : 'border-gray-200 hover:border-gray-300'
                         )}
+                        key={tema.id}
                       >
                         <input
-                          type="radio"
-                          name="tema"
-                          value={tema.id}
                           checked={config.tema === tema.id}
-                          onChange={(e) => updateConfig('tema', e.target.value)}
                           className="sr-only"
+                          name="tema"
+                          type="radio"
+                          value={tema.id}
+                          onChange={(e) => updateConfig('tema', e.target.value)}
                         />
                         <span className="text-2xl block mb-2">{tema.icon}</span>
                         <span className="font-medium text-gray-900">{tema.label}</span>
@@ -623,31 +667,34 @@ export default function ConfiguracionPage() {
 
                   <div className="flex items-center gap-4">
                     <input
+                      className="w-12 h-12 rounded-lg border border-gray-300 cursor-pointer"
+                      id="config-color-picker"
                       type="color"
                       value={config.colorPrimario}
                       onChange={(e) => updateConfig('colorPrimario', e.target.value)}
-                      className="w-12 h-12 rounded-lg border border-gray-300 cursor-pointer"
                     />
+                    <label className="sr-only" htmlFor="config-color-hex">Color primario en hexadecimal</label>
                     <input
+                      className="px-3 py-2 border border-gray-300 rounded-lg w-32 font-mono"
+                      id="config-color-hex"
+                      pattern="^#[0-9A-Fa-f]{6}$"
                       type="text"
                       value={config.colorPrimario}
                       onChange={(e) => updateConfig('colorPrimario', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg w-32 font-mono"
-                      pattern="^#[0-9A-Fa-f]{6}$"
                     />
 
                     {/* Presets */}
                     <div className="flex gap-2">
                       {['#4CAF50', '#2196F3', '#9C27B0', '#FF5722', '#607D8B'].map((color) => (
                         <button
-                          key={color}
-                          onClick={() => updateConfig('colorPrimario', color)}
+                          aria-label={`Seleccionar color ${color}`}
                           className={cn(
                             'w-8 h-8 rounded-full border-2 transition-transform hover:scale-110',
                             config.colorPrimario === color ? 'border-gray-900' : 'border-transparent'
                           )}
+                          key={color}
                           style={{ backgroundColor: color }}
-                          aria-label={`Seleccionar color ${color}`}
+                          onClick={() => updateConfig('colorPrimario', color)}
                         />
                       ))}
                     </div>

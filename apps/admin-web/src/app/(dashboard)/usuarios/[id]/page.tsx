@@ -1,11 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import {
   Card,
   CardContent,
@@ -19,6 +14,13 @@ import {
   Badge,
   AlertBanner,
 } from '@vecinosimple/ui';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
 import {
   useUsuario,
   useUpdateUsuario,
@@ -26,9 +28,10 @@ import {
   useDeactivateUsuario,
   useReinvitarUsuario,
 } from '@/features/usuarios';
-import { useConsorcios, useUnidadesFuncionales } from '@/features/consorcios';
-import type { Rol, TipoVinculoUF, EstadoUsuario } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
+
+import type { Rol, EstadoUsuario } from '@/lib/types';
+
 
 // Schema para edición
 const editUsuarioSchema = z.object({
@@ -134,8 +137,9 @@ export default function UsuarioDetallePage() {
     try {
       await updateMutation.mutateAsync({ id: usuarioId, data });
       setSuccess('Usuario actualizado correctamente');
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al actualizar');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al actualizar');
     }
   };
 
@@ -155,8 +159,9 @@ export default function UsuarioDetallePage() {
       setSuccess('Rol asignado correctamente');
       setShowNuevoRol(false);
       nuevoRolForm.reset();
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al asignar rol');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al asignar rol');
     }
   };
 
@@ -166,8 +171,9 @@ export default function UsuarioDetallePage() {
     try {
       await deactivateMutation.mutateAsync(usuarioId);
       router.push('/usuarios');
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al desactivar');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al desactivar');
     }
   };
 
@@ -177,8 +183,9 @@ export default function UsuarioDetallePage() {
     try {
       await reinvitarMutation.mutateAsync(usuarioId);
       setSuccess('Invitación reenviada');
-    } catch (e: any) {
-      setError(e?.data?.message || 'Error al reenviar');
+    } catch (e: unknown) {
+      const error = e as { data?: { message?: string } };
+      setError(error?.data?.message || 'Error al reenviar');
     }
   };
 
@@ -194,12 +201,12 @@ export default function UsuarioDetallePage() {
     return (
       <div className="max-w-2xl mx-auto">
         <AlertBanner
-          variant="error"
           title="Error al cargar usuario"
+          variant="error"
         >
           {queryError?.message || 'Usuario no encontrado'}
         </AlertBanner>
-        <Link href="/usuarios" className="mt-4 inline-block">
+        <Link className="mt-4 inline-block" href="/usuarios">
           <Button variant="secondary">← Volver a usuarios</Button>
         </Link>
       </div>
@@ -215,7 +222,7 @@ export default function UsuarioDetallePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/usuarios">
-            <Button variant="ghost" size="sm">
+            <Button size="sm" variant="ghost">
               ← Volver
             </Button>
           </Link>
@@ -232,18 +239,18 @@ export default function UsuarioDetallePage() {
         <div className="flex gap-2">
           {estado === 'PENDIENTE_VERIFICACION' && (
             <Button
+              disabled={reinvitarMutation.isPending}
               variant="secondary"
               onClick={handleReinvitar}
-              disabled={reinvitarMutation.isPending}
             >
               {reinvitarMutation.isPending ? <Spinner size="sm" /> : 'Reenviar Invitación'}
             </Button>
           )}
           {estado !== 'INACTIVO' && (
             <Button
+              disabled={deactivateMutation.isPending}
               variant="danger"
               onClick={handleDeactivate}
-              disabled={deactivateMutation.isPending}
             >
               Desactivar
             </Button>
@@ -253,10 +260,10 @@ export default function UsuarioDetallePage() {
 
       {/* Alerts */}
       {error && (
-        <AlertBanner variant="error" title="Error">{error}</AlertBanner>
+        <AlertBanner title="Error" variant="error">{error}</AlertBanner>
       )}
       {success && (
-        <AlertBanner variant="success" title="Éxito">{success}</AlertBanner>
+        <AlertBanner title="Éxito" variant="success">{success}</AlertBanner>
       )}
 
       {/* Información del usuario */}
@@ -266,7 +273,7 @@ export default function UsuarioDetallePage() {
           <CardDescription>Datos básicos del usuario</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={editForm.handleSubmit(onUpdateSubmit)} className="space-y-4">
+          <form className="space-y-4" onSubmit={editForm.handleSubmit(onUpdateSubmit)}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
@@ -290,7 +297,7 @@ export default function UsuarioDetallePage() {
 
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input value={usuario.email} disabled />
+              <Input disabled value={usuario.email} />
               <p className="text-xs text-muted-foreground">
                 El email no se puede modificar
               </p>
@@ -316,10 +323,10 @@ export default function UsuarioDetallePage() {
 
             <div className="flex justify-end">
               <Button
-                type="submit"
                 disabled={
                   updateMutation.isPending || !editForm.formState.isDirty
                 }
+                type="submit"
               >
                 {updateMutation.isPending ? <Spinner size="sm" /> : 'Guardar Cambios'}
               </Button>
@@ -338,8 +345,8 @@ export default function UsuarioDetallePage() {
             </CardDescription>
           </div>
           <Button
-            variant="secondary"
             size="sm"
+            variant="secondary"
             onClick={() => setShowNuevoRol(!showNuevoRol)}
           >
             {showNuevoRol ? 'Cancelar' : '+ Asignar Rol'}
@@ -349,8 +356,8 @@ export default function UsuarioDetallePage() {
           {/* Form nuevo rol */}
           {showNuevoRol && (
             <form
-              onSubmit={nuevoRolForm.handleSubmit(onNuevoRolSubmit)}
               className="p-4 border rounded-lg bg-muted/50 space-y-4"
+              onSubmit={nuevoRolForm.handleSubmit(onNuevoRolSubmit)}
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -415,7 +422,7 @@ export default function UsuarioDetallePage() {
               )}
 
               <div className="flex justify-end">
-                <Button type="submit" disabled={asignarRolMutation.isPending}>
+                <Button disabled={asignarRolMutation.isPending} type="submit">
                   {asignarRolMutation.isPending ? <Spinner size="sm" /> : 'Asignar Rol'}
                 </Button>
               </div>
@@ -425,19 +432,19 @@ export default function UsuarioDetallePage() {
           {/* Lista de roles actuales */}
           {usuario.rolesConsorcio && usuario.rolesConsorcio.length > 0 ? (
             <div className="divide-y">
-              {usuario.rolesConsorcio.map((rc: any) => (
+              {usuario.rolesConsorcio.map((rc) => (
                 <div
-                  key={rc.id}
                   className="py-3 flex items-center justify-between"
+                  key={rc.id}
                 >
                   <div>
                     <div className="font-medium">
-                      {rc.consorcio?.nombre || 'Consorcio'}
+                      {rc.consorcioNombre || 'Consorcio'}
                     </div>
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <Badge variant="info">{rolLabels[rc.rol as Rol]}</Badge>
-                      {rc.unidadFuncional && (
-                        <span>• UF: {rc.unidadFuncional.codigo}</span>
+                      {rc.unidadFuncionalCodigo && (
+                        <span>• UF: {rc.unidadFuncionalCodigo}</span>
                       )}
                       {rc.tipoVinculo && <span>• {rc.tipoVinculo}</span>}
                       {!rc.activo && (

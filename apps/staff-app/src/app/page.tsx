@@ -22,8 +22,8 @@ export default function HomePage() {
             rondas de vigilancia. Todo funciona sin conexión.
           </p>
           <Link
-            href="/login"
             className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
+            href="/login"
           >
             Iniciar Sesión
           </Link>
@@ -32,19 +32,19 @@ export default function HomePage() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6">
           <FeatureCard
+            description="Registrá ingresos, egresos y novedades del edificio"
             icon="📋"
             title="Bitácora"
-            description="Registrá ingresos, egresos y novedades del edificio"
           />
           <FeatureCard
+            description="Recepcioná y entregá paquetes de los vecinos"
             icon="📦"
             title="Paquetes"
-            description="Recepcioná y entregá paquetes de los vecinos"
           />
           <FeatureCard
+            description="Registrá tus rondas de vigilancia con checkpoints"
             icon="🔒"
             title="Rondas"
-            description="Registrá tus rondas de vigilancia con checkpoints"
           />
         </div>
 

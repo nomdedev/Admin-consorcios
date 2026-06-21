@@ -6,6 +6,7 @@ import { LoginDto, VerifyMagicLinkDto } from "./dto/auth.dto";
 import crypto from "node:crypto";
 import { EmailService } from "../email/email.service";
 import { EmailTemplateService } from "../email/email-template.service";
+import { Response } from "express";
 
 @Injectable()
 export class AuthService {
@@ -112,8 +113,9 @@ export class AuthService {
 
   /**
    * Verifica el Magic Link y retorna tokens JWT
+   * Ahora establece refresh token en cookie httpOnly
    */
-  async verifyMagicLink(verifyDto: VerifyMagicLinkDto) {
+  async verifyMagicLink(verifyDto: VerifyMagicLinkDto, response?: Response) {
     const { token } = verifyDto;
 
     const usuario = await this.prisma.usuario.findFirst({
@@ -142,12 +144,41 @@ export class AuthService {
       },
     });
 
-    // Generar JWT
+    // Generar access token (15 minutos)
     const accessToken = this.jwtService.sign({
       sub: usuario.id,
       email: usuario.email,
     });
 
+    // Generar refresh token criptográficamente seguro (7 días)
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
+    const refreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Guardar hash del refresh token en base de datos
+    await this.prisma.usuario.update({
+      where: { id: usuario.id },
+      data: {
+        refreshTokenHash,
+        refreshTokenExpires,
+      },
+    });
+
+    // Establecer cookie httpOnly con refresh token
+    if (response) {
+      response.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: this.configService.get<string>('NODE_ENV') === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      });
+    }
+
+    // Retornar access token en body (para uso en React)
     return {
       accessToken,
       usuario: {
@@ -180,22 +211,101 @@ export class AuthService {
   }
 
   /**
-   * Refrescar JWT
+   * Refrescar JWT usando refresh token de cookie
    */
-  async refreshToken(usuarioId: string) {
-    const usuario = await this.prisma.usuario.findUnique({
-      where: { id: usuarioId },
+  async refreshToken(refreshToken: string, response?: Response) {
+    // Calcular hash del refresh token
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
+
+    // Buscar usuario con este refresh token
+    const usuario = await this.prisma.usuario.findFirst({
+      where: {
+        refreshTokenHash,
+        refreshTokenExpires: {
+          gt: new Date(), // No expirado
+        },
+        estado: "ACTIVO",
+      },
     });
 
-    if (!usuario || usuario.estado !== "ACTIVO") {
-      throw new UnauthorizedException("Usuario no disponible");
+    if (!usuario) {
+      // Limpiar cookie inválida
+      if (response) {
+        response.clearCookie('refreshToken', {
+          path: '/api/auth/refresh',
+        });
+      }
+      throw new UnauthorizedException("Refresh token inválido o expirado");
     }
 
+    // Generar nuevo access token
     const accessToken = this.jwtService.sign({
       sub: usuario.id,
       email: usuario.email,
     });
 
-    return { accessToken };
+    // Rotar refresh token (seguridad: generar uno nuevo)
+    const newRefreshToken = crypto.randomBytes(32).toString('hex');
+    const newRefreshTokenHash = crypto
+      .createHash('sha256')
+      .update(newRefreshToken)
+      .digest('hex');
+    const newRefreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Actualizar refresh token en base de datos
+    await this.prisma.usuario.update({
+      where: { id: usuario.id },
+      data: {
+        refreshTokenHash: newRefreshTokenHash,
+        refreshTokenExpires: newRefreshTokenExpires,
+      },
+    });
+
+    // Establecer nueva cookie
+    if (response) {
+      response.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: this.configService.get<string>('NODE_ENV') === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    return {
+      accessToken,
+      usuario: {
+        id: usuario.id,
+        email: usuario.email,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+      },
+    };
+  }
+
+  /**
+   * Cerrar sesión (limpiar refresh token)
+   */
+  async logout(usuarioId: string, response?: Response) {
+    // Eliminar refresh token de base de datos
+    await this.prisma.usuario.update({
+      where: { id: usuarioId },
+      data: {
+        refreshTokenHash: null,
+        refreshTokenExpires: null,
+      },
+    });
+
+    // Limpiar cookie
+    if (response) {
+      response.clearCookie('refreshToken', {
+        path: '/api/auth/refresh',
+      });
+    }
+
+    return { success: true };
   }
 }

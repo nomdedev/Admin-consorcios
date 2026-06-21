@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { db, generateLocalId, type BitacoraLocal } from '@/offline/db';
 
 const TIPOS = [
@@ -80,8 +81,7 @@ export default function NuevaEntradaBitacoraPage() {
             });
           }
         } catch {
-          // Si falla, queda pendiente
-          console.log('Sync failed, will retry later');
+          // Si falla, queda pendiente - se reintentará con el sync manager
         }
       }
 
@@ -98,15 +98,15 @@ export default function NuevaEntradaBitacoraPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/app/bitacora"
           className="text-gray-500 hover:text-gray-700 p-2 -ml-2"
+          href="/app/bitacora"
         >
           ←
         </Link>
         <h1 className="text-2xl font-bold text-gray-800">Nueva entrada</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Tipo */}
         <div className="bg-white rounded-xl p-6 shadow">
           <span className="text-sm font-medium text-gray-700 mb-3 block">
@@ -115,14 +115,14 @@ export default function NuevaEntradaBitacoraPage() {
           <div className="grid grid-cols-3 gap-3">
             {TIPOS.map((tipo) => (
               <button
-                key={tipo.value}
-                type="button"
-                onClick={() => setFormData({ ...formData, tipo: tipo.value })}
                 className={`p-4 rounded-lg text-center transition-colors border-2 min-h-[80px] ${
                   formData.tipo === tipo.value
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
+                key={tipo.value}
+                type="button"
+                onClick={() => setFormData({ ...formData, tipo: tipo.value })}
               >
                 <span className="text-2xl block mb-1">{tipo.icon}</span>
                 <span className="text-xs font-medium text-gray-700">
@@ -139,48 +139,51 @@ export default function NuevaEntradaBitacoraPage() {
             <h3 className="font-medium text-gray-800">Datos del visitante</h3>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="visitanteNombre">
                 Nombre completo
               </label>
               <input
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                id="visitanteNombre"
+                placeholder="Juan Pérez"
                 type="text"
                 value={formData.visitanteNombre}
                 onChange={(e) =>
                   setFormData({ ...formData, visitanteNombre: e.target.value })
                 }
-                placeholder="Juan Pérez"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="visitanteDni">
                 DNI (opcional)
               </label>
               <input
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                id="visitanteDni"
+                maxLength={8}
+                placeholder="12345678"
                 type="text"
                 value={formData.visitanteDni}
                 onChange={(e) =>
                   setFormData({ ...formData, visitanteDni: e.target.value })
                 }
-                placeholder="12345678"
-                maxLength={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="visitanteDestino">
                 Destino
               </label>
               <input
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                id="visitanteDestino"
+                placeholder="Ej: 4A, Administración"
                 type="text"
                 value={formData.visitanteDestino}
                 onChange={(e) =>
                   setFormData({ ...formData, visitanteDestino: e.target.value })
                 }
-                placeholder="Ej: 4A, Administración"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
               />
             </div>
           </div>
@@ -193,14 +196,14 @@ export default function NuevaEntradaBitacoraPage() {
               Descripción
             </span>
             <textarea
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Detallá lo que sucedió..."
+              rows={4}
               value={formData.descripcion}
               onChange={(e) =>
                 setFormData({ ...formData, descripcion: e.target.value })
               }
-              placeholder="Detallá lo que sucedió..."
-              rows={4}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </label>
         </div>
@@ -213,14 +216,14 @@ export default function NuevaEntradaBitacoraPage() {
           <div className="flex flex-wrap gap-2">
             {UBICACIONES.map((ubicacion) => (
               <button
-                key={ubicacion}
-                type="button"
-                onClick={() => setFormData({ ...formData, ubicacion })}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-[40px] ${
                   formData.ubicacion === ubicacion
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
+                key={ubicacion}
+                type="button"
+                onClick={() => setFormData({ ...formData, ubicacion })}
               >
                 {ubicacion}
               </button>
@@ -230,9 +233,9 @@ export default function NuevaEntradaBitacoraPage() {
 
         {/* Submit */}
         <button
-          type="submit"
-          disabled={isLoading || !formData.descripcion}
           className="w-full py-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
+          disabled={isLoading || !formData.descripcion}
+          type="submit"
         >
           {isLoading ? 'Guardando...' : 'Guardar entrada'}
         </button>

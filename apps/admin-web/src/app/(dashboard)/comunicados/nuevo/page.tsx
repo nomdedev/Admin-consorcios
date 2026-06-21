@@ -1,5 +1,6 @@
-import { Suspense } from "react";
 import { Spinner } from "@vecinosimple/ui";
+import { Suspense } from "react";
+
 import NuevoComunicadoForm from "./NuevoComunicadoForm";
 
 export default function NuevoComunicadoPage() {

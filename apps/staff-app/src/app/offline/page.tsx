@@ -5,7 +5,7 @@ import { WifiOff, RefreshCw, Database, Clock } from 'lucide-react';
 
 export default function Offline() {
   const handleRetry = () => {
-    window.location.reload();
+    globalThis.location.reload();
   };
 
   return (
@@ -49,12 +49,12 @@ export default function Offline() {
         </div>
 
         <div className="space-y-3">
-          <Button onClick={handleRetry} className="w-full" size="lg">
+          <Button className="w-full" size="lg" onClick={handleRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Verificar conexión
           </Button>
 
-          <Button variant="secondary" asChild className="w-full">
+          <Button asChild className="w-full" variant="secondary">
             <a href="/app">
               Continuar trabajando
             </a>

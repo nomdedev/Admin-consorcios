@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@vecinosimple/ui";
-import { Plus, Megaphone, RefreshCw, Eye, Bell } from "lucide-react";
+import { Plus, Megaphone, RefreshCw, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
 import { useComunicados } from "@/features/comunicados";
 import { useConsorcios } from "@/features/consorcios";
 
@@ -63,16 +64,16 @@ export default function ComunicadosPage() {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="secondary" 
+            disabled={isLoading} 
+            variant="secondary"
             onClick={() => refetch()}
-            disabled={isLoading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
           <Button 
-            onClick={() => router.push(`/comunicados/nuevo${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
             disabled={!consorcioId}
+            onClick={() => router.push(`/comunicados/nuevo${consorcioId ? `?consorcio=${consorcioId}` : ""}`)}
           >
             <Plus className="mr-2 h-5 w-5" />
             Nuevo Comunicado
@@ -92,11 +93,11 @@ export default function ComunicadosPage() {
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="comunicados-consorcio">
                 Consorcio
               </label>
               <Select value={consorcioId} onValueChange={setConsorcioId}>
-                <SelectTrigger>
+                <SelectTrigger id="comunicados-consorcio">
                   <SelectValue placeholder="Seleccionar consorcio..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,7 +124,7 @@ export default function ComunicadosPage() {
       ) : isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-lg bg-neutral-200" />
+            <div className="h-32 animate-pulse rounded-lg bg-neutral-200" key={i} />
           ))}
         </div>
       ) : comunicados.length === 0 ? (
@@ -142,10 +143,10 @@ export default function ComunicadosPage() {
             const activo = isActive(comunicado);
             return (
               <Card
-                key={comunicado.id}
                 className={`cursor-pointer hover:shadow-md transition-shadow ${
                   comunicado.importante ? "border-l-4 border-l-red-500" : ""
                 }`}
+                key={comunicado.id}
                 onClick={() => router.push(`/comunicados/${comunicado.id}`)}
               >
                 <CardContent className="p-5">
@@ -187,8 +188,8 @@ export default function ComunicadosPage() {
                         <span title="Se enviará por WhatsApp">📱</span>
                       )}
                       <Button
-                        variant="ghost"
                         size="sm"
+                        variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/comunicados/${comunicado.id}`);

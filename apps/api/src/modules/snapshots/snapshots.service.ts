@@ -5,8 +5,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { EstadoExpensa } from '@prisma/client';
-import * as crypto from 'crypto';
+import { EstadoExpensa, Prisma } from '@prisma/client';
+import * as crypto from 'node:crypto';
 import {
   CerrarExpensaDto,
   CreateNotaCreditoDebitoDto,
@@ -132,7 +132,7 @@ export class SnapshotsService {
           consorcioId: expensa.consorcioId,
           expensaId: expensa.id,
           periodo: expensa.periodo,
-          datosCompletos: datosCompletos as any,
+          datosCompletos: datosCompletos as unknown as Prisma.InputJsonValue,
           hashIntegridad,
           cerradoPor: usuarioId,
           motivoCierre: dto.motivoCierre,
@@ -169,7 +169,7 @@ export class SnapshotsService {
 
     return {
       ...resultado,
-      datosCompletos, // Incluir datos para referencia
+      datosCompletos: datosCompletos as unknown as Prisma.JsonValue,
     };
   }
 
@@ -179,7 +179,7 @@ export class SnapshotsService {
 
   private calcularHash(datos: ExpensaSnapshotData): string {
     // Ordenar las claves para consistencia
-    const datosOrdenados = JSON.stringify(datos, Object.keys(datos).sort());
+    const datosOrdenados = JSON.stringify(datos, Object.keys(datos).sort((a, b) => a.localeCompare(b)));
     return crypto.createHash('sha256').update(datosOrdenados).digest('hex');
   }
 

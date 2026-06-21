@@ -2,9 +2,11 @@
  * Tests para hooks de Notificaciones
  */
 
-import { describe, it, expect } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import { createWrapper } from '@/test/test-utils';
+
 import {
   useNotificaciones,
   useContadorNotificaciones,
